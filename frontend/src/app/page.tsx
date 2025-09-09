@@ -3,7 +3,7 @@ import Link from "next/link"
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white to-blue-50">
+    <main className="min-h-screen bg-gradient-to-br from-white to-blue-400">
         <section className="max-w-7xl mx-auto px-6 py-20 flex flex-col md:flex-row items-center justify-between">
           {}
         </section>
@@ -21,7 +21,7 @@ export default function Home() {
         <Link href="/calculator" passHref>
           <button
             type="button"
-            className="md:ml-10 bg-white border border-black border-4 text-black font-bold px-8 py-4 text-xl rounded transition"
+            className="md:ml-10 bg-blue-40 border border-black border-2 text-black font-bold px-8 py-4 text-xl rounded transition"
             >Calculate Now</button>
         </Link>
     </main>
