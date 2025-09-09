@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link"
 
 export default function Home() {
   return (
@@ -16,7 +17,13 @@ export default function Home() {
             Avoid surprises and simplify international trade.
           </p>
         </div>
-      
+
+        <Link href="/calculator" passHref>
+          <button
+            type="button"
+            className="md:ml-10 bg-white border border-black border-4 text-black font-bold px-8 py-4 text-xl rounded transition"
+            >Calculate Now</button>
+        </Link>
     </main>
   );
 }
