@@ -1,7 +1,9 @@
   "use client";
-  import { useMemo, useState } from "react";
-  import Select from 'react-select';
+  import React, { useMemo, useState } from "react";
+  import Select, {StylesConfig} from 'react-select';
   import countryList from 'react-select-country-list';
+  import hsCodeList from '../lib/tariff-list';
+  import tariffs from '../lib/tariffs.json';
   // must install npm install react-select
   // npm install react-select-country-list --save
 
@@ -13,18 +15,26 @@
     const [quantity, setQuantity] = useState('');
     const [value, setValue] = useState('');
     const options = useMemo(() => countryList().getData(), []); 
+    const hsCodeOptions = useMemo(() => hsCodeList().getOptions(), []);
 
-    const handleHsCode = (e) => setHsCode(e.target.value);
     const handleProdCost = (e) => setProdCost(e.target.value);
     const handleSalePrice = (e) => setSalePrice(e.target.value);
     const handlePricingDate = (e) => setPricingDate(e.target.value);
     const handleQuantity = (e) => setQuantity(e.target.value);
-    const changeHandler = value => {
-      setValue(value)
-    }
+    const [selectedOption, setSelectedOption] = useState(null);
+    const [selectedHsCode, setSelectedHsCode] = useState(null);
+
+    const changeHandler = (option) => {
+        setSelectedOption(option);
+    };
+    const handleHsCodeChange = (option) => {
+      setSelectedHsCode(option);
+      setHsCode(option ? option.value: "");
+    };
+
 
     return (
-    <main className="min-h-screen bg-gradient-to-br from-white to-blue-50">
+    <main className="min-h-screen bg-gradient-to-br from-white to-blue-400">
       <div className="flex w-full min-h-screen max-w-7xl mx-auto p-8">
 
         <div className="w-4/5 pr-6">
@@ -32,12 +42,16 @@
           <div className="flex items-center gap-8">
             <div className="flex flex-col">
               <label className="font-bold mb-1 text-black" htmlFor="hsCode">Enter HS Code:</label>
-              <input
-                id="hsCode"
-                type="text"
-                className="text-black border border-black rounded px-2.5 py-1.5 w-64"
-                value={hsCode}
-                onChange={handleHsCode}
+              <Select 
+                instanceId="hsCodeSelect"
+                id="hsCodeSelect"
+                className="w-64 text-black border border-black rounded"
+                options={hsCodeOptions}
+                isSearchable={true}
+                isClearable={true}
+                value={selectedHsCode}
+                placeholder="Search.."
+                onChange={handleHsCodeChange}
               />
               <div className="mb-8"></div>
               <label className="font-bold mb-1 text-black" htmlFor="prodCost">Current Product Cost:</label>
@@ -46,7 +60,7 @@
                 <input 
                   id="prodCost"
                   type="number"min={0}
-                  className="text-black border border-black rounded px-2.5 py-1.5 w-64 pl-7"
+                  className="text-black border border-black rounded px-2.5 py-1.5 w-64 pl-7 bg-white"
                   value={prodCost}
                   onChange={handleProdCost}
                 />
@@ -56,19 +70,28 @@
               <input 
                 id="pricingDate"
                 type="date"
-                className="text-black border border-black rounded px-2.5 py-1.5 w-64"
+                className="text-black border border-black rounded px-2.5 py-1.5 w-64 bg-white"
                 value={pricingDate}
                 onChange={handlePricingDate}
               />  
+              <div className="mb-8"></div>
+                <button 
+                  className="bg-blue-200 border border-black border-2 text-black font-bold px-8 text-xl rounded transition w-64"
+                  type="button"
+                  >Calculate</button>
             </div>
 
             <div className="flex flex-col">
               <label className="font-bold mb-1 text-black" htmlFor="countryOrigin">Enter Country of Origin:</label>
               <Select 
+                instanceId="countryOrigin"
                 id="countryOrigin"
                 className="w-64 text-black border border-black rounded"
                 options={options}
-                value={value}
+                isSearchable={true}
+                isClearable={true}
+                value={selectedOption}
+                placeholder="Search.."
                 onChange={changeHandler}
               />
               <div className="mb-8"></div>
@@ -78,7 +101,7 @@
                 <input 
                   id="salePrice"
                   type="number" min={0}
-                  className="text-black border border-black rounded px-2.5 py-1.5 w-64 pl-7"
+                  className="text-black border border-black rounded px-2.5 py-1.5 w-64 pl-7 bg-white"
                   value={salePrice}
                   onChange={handleSalePrice}
                 />
@@ -88,10 +111,15 @@
               <input 
                   id="quantity"
                   type="number" min={0}
-                  className="text-black border border-black rounded px-2.5 py-1.5 w-64"
+                  className="text-black border border-black rounded px-2.5 py-1.5 w-64 bg-white"
                   value={quantity}
                   onChange={handleQuantity}
                 />
+                <div className="mb-8"></div>
+                <button 
+                  className="bg-blue-200 border border-black border-2 text-black font-bold px-8 text-xl rounded transition w-64"
+                  type="button"
+                  >Save</button>
             </div>
           </div>
         </div>
