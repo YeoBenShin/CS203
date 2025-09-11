@@ -12,10 +12,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Tariffy",
-  description: "One stop solution for your tariff tracking",
-};
+// export const metadata: Metadata = {
+//   title: "Tariffy",
+//   description: "One stop solution for your tariff tracking",
+// };
 
 export default function RootLayout({ children }) {
   return (
@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
 
           <ul className="flex space-x-6 text-sm font-medium">
             <li>
-              <Link href="#" className="text-black text-base text-lg hover:text-blue-600">About Us</Link>
+              <Link href="#" className="text-black text-lg hover:text-blue-600">About Us</Link>
             </li>
           </ul>
         </nav>

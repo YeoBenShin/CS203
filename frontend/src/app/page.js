@@ -13,7 +13,7 @@ export default function Home() {
             Import Duties & Taxes with Tariffs Easily
           </h1>
           <p className="text-gray-700 text-lg mb-6">
-            Get an accurate estimate of the shipment’s total landed cost.
+            Get an accurate estimate of the shipment's total landed cost.
             Avoid surprises and simplify international trade.
           </p>
         </div>
@@ -21,7 +21,7 @@ export default function Home() {
         <Link href="/calculator" passHref>
           <button
             type="button"
-            className="md:ml-10 bg-blue-40 border border-black border-2 text-black font-bold px-8 py-4 text-xl rounded transition"
+            className="md:ml-10 bg-blue-40 border border-black text-black font-bold px-8 py-4 text-xl rounded transition"
             >Calculate Now</button>
         </Link>
     </main>

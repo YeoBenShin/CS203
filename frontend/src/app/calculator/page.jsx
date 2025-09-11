@@ -117,7 +117,7 @@
                 />
                 <div className="mb-8"></div>
                 <button 
-                  className="bg-blue-200 border border-black border-2 text-black font-bold px-8 text-xl rounded transition w-64"
+                  className="bg-blue-200 border-black border-2 text-black font-bold px-8 text-xl rounded transition w-64"
                   type="button"
                   >Save</button>
             </div>
