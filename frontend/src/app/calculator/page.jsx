@@ -33,14 +33,47 @@
     };
 
 
+
+    // State for calculation result
+    const [calcResult, setCalcResult] = useState(null);
+
+    // Function to send data to backend for calculation
+    const handleCalculate = async () => {
+      // For demo, use prodCost, quantity, and a dummy rate (e.g., 0.05)
+      const data = {
+        prodCost: parseFloat(prodCost),
+        quantity: parseInt(quantity),
+        rate: 0.05 // You can replace this with a real value if you have it
+      };
+      try {
+        const response = await fetch("http://localhost:8080/tariff/calculate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        });
+        if (response.ok) {
+          const result = await response.json();
+          setCalcResult(result.totalCost);
+        } else {
+          setCalcResult(null);
+          alert("Failed to calculate tariff.");
+        }
+      } catch (error) {
+        setCalcResult(null);
+        alert("Error: " + error.message);
+      }
+    };
+
     return (
     <main className="min-h-screen bg-gradient-to-br from-white to-blue-400">
       <div className="flex w-full min-h-screen max-w-7xl mx-auto p-8">
 
         <div className="w-4/5 pr-6">
           <label className="text-xl text-black font-bold block mb-4">Tariff Calculator</label>
-          <div className="flex items-center gap-8">
-            <div className="flex flex-col">
+          <div className="flex items-start gap-8">
+            <div className="flex flex-col justify-start">
               <label className="font-bold mb-1 text-black" htmlFor="hsCode">Enter HS Code:</label>
               <Select 
                 instanceId="hsCodeSelect"
@@ -75,13 +108,21 @@
                 onChange={handlePricingDate}
               />  
               <div className="mb-8"></div>
+              <div className="flex flex-row items-center gap-4">
                 <button 
                   className="bg-blue-200 border border-black border-2 text-black font-bold px-8 text-xl rounded transition w-64"
                   type="button"
+                  onClick={handleCalculate}
                   >Calculate</button>
+              </div>
+              <div style={{ minHeight: '2.5rem' }}>
+                {calcResult !== null && (
+                  <div className="mt-4 text-black font-bold">Total Cost: ${calcResult.toFixed(2)}</div>
+                )}
+              </div>
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col justify-start">
               <label className="font-bold mb-1 text-black" htmlFor="countryOrigin">Enter Country of Origin:</label>
               <Select 
                 instanceId="countryOrigin"
@@ -119,6 +160,7 @@
                 <button 
                   className="bg-blue-200 border-black border-2 text-black font-bold px-8 text-xl rounded transition w-64"
                   type="button"
+                  style={{ marginTop: 0 }}
                   >Save</button>
             </div>
           </div>
