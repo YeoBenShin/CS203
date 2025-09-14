@@ -12,10 +12,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// export const metadata: Metadata = {
-//   title: "Tariffy",
-//   description: "One stop solution for your tariff tracking",
-// };
+export const metadata = {
+  title: "Tariffy",
+  description: "One stop solution for your tariff tracking",
+  icons: {
+    icon: "images/favicon.ico",
+  }
+};
 
 export default function RootLayout({ children }) {
   return (
