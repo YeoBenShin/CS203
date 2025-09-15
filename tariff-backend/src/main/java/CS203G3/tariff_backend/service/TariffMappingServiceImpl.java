@@ -4,26 +4,31 @@ import CS203G3.tariff_backend.model.TariffMapping;
 import CS203G3.tariff_backend.repository.TariffMappingRepository;
 import CS203G3.tariff_backend.exception.TariffMappingNotFoundException;
 
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TariffMappingServiceImpl implements TariffMappingService {
     @Autowired
     private final TariffMappingRepository tariffMappingRepository;
 
+    
     public TariffMappingServiceImpl(TariffMappingRepository tariffMappingRepository) {
         this.tariffMappingRepository = tariffMappingRepository;
     }
 
     @Override
+    @Transactional
     public TariffMapping createTariffMapping(TariffMapping tariffMapping) {
         return tariffMappingRepository.save(tariffMapping);        
     }
 
     @Override
+    @Transactional
     public void deleteTariffMapping(Long id) throws TariffMappingNotFoundException {
         if (!tariffMappingRepository.existsById(id)) {
             throw new TariffMappingNotFoundException(id);
@@ -43,6 +48,7 @@ public class TariffMappingServiceImpl implements TariffMappingService {
     }
 
     @Override
+    @Transactional
     public TariffMapping updateTariffMapping(Long id, TariffMapping tariffMapping)
             throws TariffMappingNotFoundException {
         if (!tariffMappingRepository.existsById(id)) {

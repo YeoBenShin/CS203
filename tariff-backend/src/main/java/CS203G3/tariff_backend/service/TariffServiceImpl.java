@@ -2,6 +2,7 @@ package CS203G3.tariff_backend.service;
 
 import CS203G3.tariff_backend.model.Tariff;
 import CS203G3.tariff_backend.repository.TariffRepository;
+import jakarta.transaction.Transactional;
 import CS203G3.tariff_backend.exception.TariffNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,11 +31,13 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
+    @Transactional
     public Tariff createTariff(Tariff tariff) {
         return tariffRepository.save(tariff);
     }
 
     @Override
+    @Transactional
     public Tariff updateTariff(Long id, Tariff tariff) throws TariffNotFoundException {
         // Check if tariff exists
         if (!tariffRepository.existsById(id)) {
@@ -46,6 +49,7 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
+    @Transactional
     public void deleteTariff(Long id) throws TariffNotFoundException {
         if (!tariffRepository.existsById(id)) {
             throw new TariffNotFoundException(id);
