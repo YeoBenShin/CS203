@@ -2,9 +2,11 @@ package CS203G3.tariff_backend.controller;
 
 import CS203G3.tariff_backend.model.User;
 import CS203G3.tariff_backend.repository.UserRepository;
-import CS203G3.tariff_backend.webhook.ClerkWebhookVerifier;
+// import CS203G3.tariff_backend.webhook.ClerkWebhookVerifier;
 
 import java.util.Map;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,11 +16,15 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 class UserController {
+    // private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+
     @Autowired
     private UserRepository userRepository;
 
@@ -46,6 +52,15 @@ class UserController {
     @GetMapping("/user")
     public @ResponseBody Iterable<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    @GetMapping("/user/{uuid}")
+    public @ResponseBody ResponseEntity<User> getUser(@PathVariable String uuid) {
+        User user = userRepository.findByUuid(uuid);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(user);
     }
 
     @GetMapping("/")

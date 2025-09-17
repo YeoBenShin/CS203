@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import React, { useState, useRef } from "react";
+import { UserButton } from "@clerk/nextjs";
+import { User } from "@clerk/nextjs/server";
 
 export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -32,7 +34,14 @@ export default function Navbar() {
           </div>
         </li>
         <li>
-          <Link href="#" className="text-black text-lg hover:text-blue-600">About Us</Link>
+          {/* <Link href="#" className="text-black text-lg hover:text-blue-600">About Us</Link> */}
+          <UserButton showName
+            appearance={{
+              elements: {
+                userButtonAvatarBox: "w-12 h-12", // bigger avatar
+                userButtonOuterIdentifier: "text-lg font-semibold", // bigger name
+              },
+            }} />
         </li>
       </ul>
     </nav>
