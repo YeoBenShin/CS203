@@ -4,6 +4,9 @@ package CS203G3.tariff_backend.controller;
 import CS203G3.tariff_backend.model.TariffMapping;
 import CS203G3.tariff_backend.service.TariffMappingService;
 import CS203G3.tariff_backend.exception.TariffMappingNotFoundException;
+import CS203G3.tariff_backend.dto.TariffMappingDto;
+import CS203G3.tariff_backend.dto.TariffMappingCreateDto;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,9 +33,9 @@ public class TariffMappingController {
      * GET /api/tariffmappings
      */
     @GetMapping
-    public ResponseEntity<List<TariffMapping>> getAllTariffMappings() {
-        List<TariffMapping> tariffMappings = tariffMappingService.getAllTariffMappings();
-        return ResponseEntity.ok(tariffMappings);
+    public ResponseEntity<List<TariffMappingDto>> getAllTariffMappings() {
+        List<TariffMappingDto> tariffMappingsDtos = tariffMappingService.getAllTariffMappings();
+        return ResponseEntity.ok(tariffMappingsDtos);
     }
 
     /**
@@ -40,10 +43,10 @@ public class TariffMappingController {
      * GET /api/tariffmappings/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<TariffMapping> getTariffMappingById(@PathVariable Long id) {
+    public ResponseEntity<TariffMappingDto> getTariffMappingById(@PathVariable Long id) {
         try {
-            TariffMapping tariffMapping = tariffMappingService.getTariffMappingById(id);
-            return ResponseEntity.ok(tariffMapping);
+            TariffMappingDto tariffMappingDto = tariffMappingService.getTariffMappingById(id);
+            return ResponseEntity.ok(tariffMappingDto);
         } catch (TariffMappingNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
@@ -54,8 +57,8 @@ public class TariffMappingController {
      * POST /api/tariffmappings
      */
     @PostMapping
-    public ResponseEntity<TariffMapping> createTariffMapping(@RequestBody TariffMapping tariffMapping) {
-        TariffMapping createdTariffMapping = tariffMappingService.createTariffMapping(tariffMapping);
+    public ResponseEntity<TariffMappingDto> createTariffMapping(@RequestBody TariffMappingCreateDto tariffMappingCreateDto) {
+        TariffMappingDto createdTariffMapping = tariffMappingService.createTariffMapping(tariffMappingCreateDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTariffMapping);
     }
 
@@ -64,9 +67,9 @@ public class TariffMappingController {
      * PUT /api/tariffmappings/{id}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<TariffMapping> updateTariffMapping(@PathVariable Long id, @RequestBody TariffMapping tariffMapping) {
+    public ResponseEntity<TariffMapping> updateTariffMapping(@PathVariable Long id, @RequestBody TariffMappingDto tariffMappingDto) {
         try {
-            TariffMapping updatedTariffMapping = tariffMappingService.updateTariffMapping(id, tariffMapping);
+            TariffMapping updatedTariffMapping = tariffMappingService.updateTariffMapping(id, tariffMappingDto);
             return ResponseEntity.ok(updatedTariffMapping);
         } catch (TariffMappingNotFoundException e) {
             return ResponseEntity.notFound().build();
