@@ -1,71 +1,63 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
+import Link from "next/link";
 
-export default function AdminPage() {
-  const [form, setForm] = useState({
-    tariffMappingID: "",
-    rate: "",
-    effectiveDate: "",
-    expiryDate: "",
-    reference: ""
-  });
-  const [message, setMessage] = useState("");
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage("");
-    try {
-      const response = await fetch("http://localhost:8080/tariff", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          tariffMappingID: form.tariffMappingID ? parseInt(form.tariffMappingID) : null,
-          rate: form.rate ? parseFloat(form.rate) : null,
-        })
-      });
-      if (response.ok) {
-        setMessage("Tariff added successfully!");
-        setForm({ tariffMappingID: "", rate: "", effectiveDate: "", expiryDate: "", reference: "" });
-      } else {
-        setMessage("Failed to add tariff.");
-      }
-    } catch (err) {
-      setMessage("Error: " + err.message);
-    }
-  };
-
+export default function AdminIndexPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-white to-blue-200 flex flex-col items-center justify-start p-8">
-      <h1 className="text-3xl font-bold mb-6 text-black">Admin: Add Tariff</h1>
-      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="tariffMappingID">Tariff Mapping ID</label>
-          <input name="tariffMappingID" type="number" min="1" value={form.tariffMappingID} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+      <h1 className="text-3xl font-bold mb-6 text-black">Admin Dashboard</h1>
+      
+      <div className="mb-4 w-full max-w-md flex justify-between">
+        <a href="/admin" className="text-blue-600 hover:text-blue-800 font-medium">Admin Home</a>
+        <a href="/admin/mapping" className="text-blue-600 hover:text-blue-800 font-medium">Create Mapping</a>
+        <a href="/admin/tariff" className="text-blue-600 hover:text-blue-800 font-medium">Add Tariff</a>
+        <a href="/admin/countries" className="text-blue-600 hover:text-blue-800 font-medium">Countries</a>
+        <a href="/admin/products" className="text-blue-600 hover:text-blue-800 font-medium">Products</a>
+      </div>
+      
+      <div className="bg-white shadow-md rounded p-8 mb-4 w-full max-w-md">
+        <h2 className="text-xl font-bold mb-4 text-center">Tariff Management</h2>
+        
+        <div className="flex flex-col space-y-4">
+          <Link href="/admin/countries" className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded text-center">
+            Manage Countries
+          </Link>
+          <p className="text-sm text-gray-600 mb-4">
+            First, ensure the countries you need are in the database.
+          </p>
+          
+          <Link href="/admin/products" className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded text-center">
+            Manage Products
+          </Link>
+          <p className="text-sm text-gray-600 mb-4">
+            Next, ensure the products you need are in the database.
+          </p>
+          
+          <Link href="/admin/mapping" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded text-center">
+            Create Tariff Mapping
+          </Link>
+          <p className="text-sm text-gray-600 mb-4">
+            Then, create a mapping between exporter country, importer country, and product.
+          </p>
+          
+          <Link href="/admin/tariff" className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded text-center">
+            Add Tariff Rate
+          </Link>
+          <p className="text-sm text-gray-600">
+            Finally, add tariff rates using the mapping ID from the previous step.
+          </p>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="rate">Rate</label>
-          <input name="rate" type="number" min="0" step="0.01" value={form.rate} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+        
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <h3 className="text-lg font-semibold mb-2">How It Works</h3>
+          <ol className="list-decimal list-inside space-y-2 text-gray-700">
+            <li>Create a tariff mapping between countries and product</li>
+            <li>Note the mapping ID that is generated</li>
+            <li>Use that mapping ID to create a tariff with specific rate</li>
+            <li>Tariffs can be queried through the calculator</li>
+          </ol>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="effectiveDate">Effective Date</label>
-          <input name="effectiveDate" type="date" value={form.effectiveDate} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="expiryDate">Expiry Date</label>
-          <input name="expiryDate" type="date" value={form.expiryDate} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="reference">Reference</label>
-          <input name="reference" type="text" value={form.reference} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-        </div>
-        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Add Tariff</button>
-        {message && <div className="mt-4 text-center text-black font-bold">{message}</div>}
-      </form>
+      </div>
     </main>
   );
 }
