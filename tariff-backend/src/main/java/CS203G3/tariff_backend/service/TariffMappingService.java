@@ -1,6 +1,8 @@
 package CS203G3.tariff_backend.service;
 
 import CS203G3.tariff_backend.model.TariffMapping;
+import CS203G3.tariff_backend.dto.TariffMappingDto;
+import CS203G3.tariff_backend.dto.TariffMappingCreateDto;
 import CS203G3.tariff_backend.exception.TariffMappingNotFoundException;
 
 import java.util.List;
@@ -15,7 +17,7 @@ public interface TariffMappingService {
      * Get all tariff mappings
      * @return List of all tariff mappings
      */
-    List<TariffMapping> getAllTariffMappings();
+    List<TariffMappingDto> getAllTariffMappings();
     
     /**
      * Get tariff mapping by ID
@@ -23,14 +25,14 @@ public interface TariffMappingService {
      * @return The tariff mapping
      * @throws TariffMappingNotFoundException if tariff mapping not found
      */
-    TariffMapping getTariffMappingById(Long id) throws TariffMappingNotFoundException;
+    TariffMappingDto getTariffMappingById(Long id) throws TariffMappingNotFoundException;
 
     /**
      * Create a new tariff mapping with business validation
-     * @param tariffMapping The tariff mapping to create
-     * @return The created tariff mapping
+     * @param tariffMappingCreateDto The tariff mapping to create with fields provided
+     * @return The created tariff mapping Dto to update in the future
      */
-    TariffMapping createTariffMapping(TariffMapping tariffMapping);
+    TariffMappingDto createTariffMapping(TariffMappingCreateDto tariffMappingCreateDto);
 
     /**
      * Update an existing tariff mapping
@@ -39,7 +41,7 @@ public interface TariffMappingService {
      * @return The updated tariff mapping
      * @throws TariffMappingNotFoundException if tariff mapping not found
      */
-    TariffMapping updateTariffMapping(Long id, TariffMapping tariffMapping) throws TariffMappingNotFoundException;
+    TariffMapping updateTariffMapping(Long id, TariffMappingDto tariffMappingDto) throws TariffMappingNotFoundException;
 
     /**
      * Delete a tariff mapping

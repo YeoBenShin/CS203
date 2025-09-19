@@ -4,8 +4,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+
+import java.util.List;
 
 @Entity
 @Table(name = "tariff_mapping")
@@ -16,22 +22,27 @@ public class TariffMapping {
     @Column(name = "tariff_mapping_id")
     private Long tariffMappingID;
 
-    @Column(name = "exporter_iso_code", length = 45)
-    private String exporter; // Just the isoCode like "SGP", "USA"
+    @ManyToOne
+    @JoinColumn(name = "Exporter")
+    private Country exporter;
 
-    @Column(name = "importer_iso_code", length = 45) 
-    private String importer; // Just the isoCode like "SGP", "USA"
+    @ManyToOne
+    @JoinColumn(name = "Importer")
+    private Country importer;
 
-    @Column(name = "hs_code")
-    private Integer productId; // Changed to Integer to match database INT
+    @ManyToOne
+    @JoinColumn(name = "HSCode")
+    private Product product;
+    @OneToMany(mappedBy = "tariffMapping", cascade = CascadeType.ALL)
+    private List<Tariff> tariffs;
 
     // Constructors
     public TariffMapping() {}
 
-    public TariffMapping(String exporter, String importer, Integer productId) {
+    public TariffMapping(Country exporter, Country importer, Product product) {
         this.exporter = exporter;
         this.importer = importer;
-        this.productId = productId;
+        this.product = product;
     }
 
     // Getters and Setters
@@ -43,37 +54,37 @@ public class TariffMapping {
         this.tariffMappingID = tariffMappingID;
     }
 
-    public String getExporter() {
+    public Country getExporter() {
         return exporter;
     }
 
-    public void setExporter(String exporter) {
+    public void setExporter(Country exporter) {
         this.exporter = exporter;
     }
 
-    public String getImporter() {
+    public Country getImporter() {
         return importer;
     }
 
-    public void setImporter(String importer) {
+    public void setImporter(Country importer) {
         this.importer = importer;
     }
 
-    public Integer getProductId() {
-        return productId;
+    public Product getProduct() {
+        return product;
     }
 
-    public void setProductId(Integer productId) {
-        this.productId = productId;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     @Override
     public String toString() {
         return "TariffMapping{" +
                 "tariffMappingID=" + tariffMappingID +
-                ", exporter='" + exporter + '\'' +
-                ", importer='" + importer + '\'' +
-                ", productId='" + productId + '\'' +
+                ", exporter='" + exporter.getIsoCode() + '\'' +
+                ", importer='" + importer.getIsoCode() + '\'' +
+                ", productId='" + product.getHsCode() + '\'' +
                 '}';
     }
 }

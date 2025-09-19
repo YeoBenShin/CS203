@@ -2,6 +2,8 @@ package CS203G3.tariff_backend.model;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "product")
 public class Product {
@@ -13,6 +15,9 @@ public class Product {
     @Column(name = "description", length = 255)
     private String description;
     
+    @OneToMany(mappedBy = "product")
+    private List<TariffMapping> tariffMappings;
+
     // Constructors
     public Product() {}
     
