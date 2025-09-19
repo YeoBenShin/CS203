@@ -1,51 +1,110 @@
 package CS203G3.tariff_backend.service;
 
-import CS203G3.tariff_backend.model.Tariff;
-import CS203G3.tariff_backend.repository.TariffRepository;
-import jakarta.transaction.Transactional;
-import CS203G3.tariff_backend.exception.TariffNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import CS203G3.tariff_backend.model.*;
+import CS203G3.tariff_backend.repository.*;
+import CS203G3.tariff_backend.dto.*;
+import CS203G3.tariff_backend.exception.*;
 
+import java.sql.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Implementation of TariffService with business logic
- * Uses exceptions for cleaner error handling
+ * Implementation of TariffService with DTO support
  */
 @Service
 public class TariffServiceImpl implements TariffService {
 
-    @Autowired
-    private TariffRepository tariffRepository;
+    private final TariffRepository tariffRepository;
+    private final TariffMappingRepository tariffMappingRepository;
 
-    @Override
-    public List<Tariff> getAllTariffs() {
-        return tariffRepository.findAll();
+    public TariffServiceImpl(TariffRepository tariffRepository, TariffMappingRepository tariffMappingRepository) {
+        this.tariffRepository = tariffRepository;
+        this.tariffMappingRepository = tariffMappingRepository;
+    }
+
+    private TariffDto convertToDto(Tariff tariff) {
+        TariffDto dto = new TariffDto();
+        dto.setTariffID(tariff.getTariffID());
+        dto.setTariffMappingID(tariff.getTariffMapping().getTariffMappingID());
+        dto.setRate(tariff.getRate());
+        dto.setEffectiveDate(tariff.getEffectiveDate());
+        dto.setExpiryDate(tariff.getExpiryDate());
+        dto.setReference(tariff.getReference());
+        
+        // Add mapping details for frontend display
+        TariffMapping mapping = tariff.getTariffMapping();
+        dto.setExporterCode(mapping.getExporter().getIsoCode());
+        dto.setExporterName(mapping.getExporter().getName());
+        dto.setImporterCode(mapping.getImporter().getIsoCode());
+        dto.setImporterName(mapping.getImporter().getName());
+        dto.setProductHSCode(mapping.getProduct().getHsCode());
+        dto.setProductDescription(mapping.getProduct().getDescription());
+        
+        return dto;
+    }
+
+    private Tariff convertToEntity(TariffCreateDto createDto) {
+        TariffMapping mapping = tariffMappingRepository.findById(createDto.getTariffMappingID())
+            .orElseThrow(() -> new TariffMappingNotFoundException(createDto.getTariffMappingID()));
+        
+        // Convert java.util.Date to java.sql.Date
+        Date effectiveDate = createDto.getEffectiveDate() != null ? 
+            new Date(createDto.getEffectiveDate().getTime()) : null;
+        Date expiryDate = createDto.getExpiryDate() != null ? 
+            new Date(createDto.getExpiryDate().getTime()) : null;
+            
+        return new Tariff(mapping, createDto.getRate(), effectiveDate, expiryDate, createDto.getReference());
     }
 
     @Override
-    public Tariff getTariffById(Long id) throws TariffNotFoundException {
-        return tariffRepository.findById(id)
+    public List<TariffDto> getAllTariffs() {
+        return tariffRepository.findAll().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public TariffDto getTariffById(Long id) {
+        Tariff tariff = tariffRepository.findById(id)
             .orElseThrow(() -> new TariffNotFoundException(id));
+        return convertToDto(tariff);
     }
 
     @Override
     @Transactional
-    public Tariff createTariff(Tariff tariff) {
-        return tariffRepository.save(tariff);
+    public TariffDto createTariff(TariffCreateDto createDto) {
+        Tariff entity = convertToEntity(createDto);
+        Tariff saved = tariffRepository.save(entity);
+        return convertToDto(saved);
     }
 
     @Override
     @Transactional
-    public Tariff updateTariff(Long id, Tariff tariff) throws TariffNotFoundException {
-        // Check if tariff exists
-        if (!tariffRepository.existsById(id)) {
-            throw new TariffNotFoundException(id);
-        }
-        // Set the ID to ensure we update the correct record
-        tariff.setTariffID(id);
-        return tariffRepository.save(tariff);
+    public TariffDto updateTariff(Long id, TariffCreateDto createDto) {
+        Tariff existing = tariffRepository.findById(id)
+            .orElseThrow(() -> new TariffNotFoundException(id));
+        
+        TariffMapping mapping = tariffMappingRepository.findById(createDto.getTariffMappingID())
+            .orElseThrow(() -> new TariffMappingNotFoundException(createDto.getTariffMappingID()));
+
+        // Convert dates
+        Date effectiveDate = createDto.getEffectiveDate() != null ? 
+            new Date(createDto.getEffectiveDate().getTime()) : null;
+        Date expiryDate = createDto.getExpiryDate() != null ? 
+            new Date(createDto.getExpiryDate().getTime()) : null;
+        
+        existing.setTariffMapping(mapping);
+        existing.setRate(createDto.getRate());
+        existing.setEffectiveDate(effectiveDate);
+        existing.setExpiryDate(expiryDate);
+        existing.setReference(createDto.getReference());
+        
+        Tariff updated = tariffRepository.save(existing);
+        return convertToDto(updated);
     }
 
     @Override
@@ -59,18 +118,10 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
-    public List<Tariff> getTariffsByMappingId(Long tariffMappingId) {
-        // This would require a custom query in repository
-        // For now, filter in service (not efficient for large datasets)
+    public List<TariffDto> getTariffsByMappingId(Long tariffMappingId) {
         return tariffRepository.findAll().stream()
-                .filter(tariff -> tariff.getTariffMappingID().equals(tariffMappingId))
-                .toList();
-    }
-
-    @Override
-    public double calculateTotalCost(double productCost, int quantity, double tariffRate) {
-        double totalProductCost = productCost * quantity;
-        double totalTariff = totalProductCost * tariffRate;
-        return totalProductCost + totalTariff;
+                .filter(tariff -> tariff.getTariffMapping().getTariffMappingID().equals(tariffMappingId))
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 }
