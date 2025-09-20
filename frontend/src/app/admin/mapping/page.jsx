@@ -16,7 +16,7 @@ export default function CreateTariffMappingPage() {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/countries");
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/countries`);
         const countries = await response.json();
         const options = countries.map(country => ({
           label: country.name,
@@ -34,7 +34,7 @@ export default function CreateTariffMappingPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/products");
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`);
         const products = await response.json();
         const options = products.map(product => ({
           label: `${product.hsCode}${product.description ? ` - ${product.description}` : ''}`,
@@ -71,7 +71,7 @@ export default function CreateTariffMappingPage() {
     e.preventDefault();
     setMessage("");
     try {
-      const response = await fetch("http://localhost:8080/api/tariffmappings", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/tariffmappings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -84,7 +84,9 @@ export default function CreateTariffMappingPage() {
         setMessage("Tariff mapping added successfully!");
         setForm({ exporter: null, importer: null, product: null });
       } else {
-        setMessage("Failed to add tariff mapping.");
+        // get error message from response body
+        const errorData = await response.json();
+        setMessage("Error " + errorData.status +  ": " + (errorData.message || "Failed to add tariff mapping."));
       }
     } catch (err) {
       setMessage("Error: " + err.message);
