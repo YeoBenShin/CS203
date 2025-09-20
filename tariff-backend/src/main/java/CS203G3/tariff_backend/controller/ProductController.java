@@ -9,7 +9,6 @@ import CS203G3.tariff_backend.model.Product;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {

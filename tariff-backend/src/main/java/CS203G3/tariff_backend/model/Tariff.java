@@ -7,8 +7,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Column;
+import jakarta.persistence.JoinColumn;
 
 @Entity
 @Table(name = "tariff")
@@ -19,8 +21,9 @@ public class Tariff {
     @Column(name = "tariff_id")
     private Long tariffID;
 
-    @Column(name = "tariff_mapping_id")
-    private Long tariffMappingID;
+    @ManyToOne
+    @JoinColumn(name = "tariff_mapping_id")
+    private TariffMapping tariffMapping;
 
     @Column(name = "rate", precision = 10, scale = 4)
     private BigDecimal rate;
@@ -37,8 +40,8 @@ public class Tariff {
     // Constructors
     public Tariff() {}
 
-    public Tariff(Long tariffMappingID, BigDecimal rate, Date effectiveDate, Date expiryDate, String reference) {
-        this.tariffMappingID = tariffMappingID;
+    public Tariff(TariffMapping tariffMapping, BigDecimal rate, Date effectiveDate, Date expiryDate, String reference) {
+        this.tariffMapping = tariffMapping;
         this.rate = rate;
         this.effectiveDate = effectiveDate;
         this.expiryDate = expiryDate;
@@ -54,12 +57,12 @@ public class Tariff {
         this.tariffID = tariffID;
     }
 
-    public Long getTariffMappingID() {
-        return tariffMappingID;
+    public TariffMapping getTariffMapping() {
+        return tariffMapping;
     }
 
-    public void setTariffMappingID(Long tariffMappingID) {
-        this.tariffMappingID = tariffMappingID;
+    public void setTariffMapping(TariffMapping tariffMapping) {
+        this.tariffMapping = tariffMapping;
     }
 
     public BigDecimal getRate() {
@@ -98,7 +101,7 @@ public class Tariff {
     public String toString() {
         return "Tariff{" +
                 "tariffID=" + tariffID +
-                ", tariffMappingID=" + tariffMappingID +
+                ", tariffMapping=" + tariffMapping +
                 ", rate=" + rate +
                 ", effectiveDate=" + effectiveDate +
                 ", expiryDate=" + expiryDate +
