@@ -27,7 +27,7 @@ public class TariffMapping {
     private Country exporter;
 
     @ManyToOne
-    @JoinColumn(name = "mporter")
+    @JoinColumn(name = "importer")
     private Country importer;
 
     @ManyToOne
