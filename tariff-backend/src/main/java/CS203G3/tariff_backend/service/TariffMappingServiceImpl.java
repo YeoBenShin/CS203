@@ -39,6 +39,11 @@ public class TariffMappingServiceImpl implements TariffMappingService {
 
     public TariffMapping convertToEntity(TariffMappingCreateDto dto) {
         TariffMapping tariffMapping = new TariffMapping();
+        // System.out.println("Product ID: " + dto.getProductId());
+        // System.out.println("Importer ID: " + dto.getImporter());
+        // System.out.println("Exporter ID: " + dto.getExporter());
+
+
         tariffMapping.setProduct(productRepository.findById(dto.getProductId()).orElseThrow(() -> new ProductNotFoundException(dto.getProductId())));
         tariffMapping.setImporter(countryRepository.findById(dto.getImporter()).orElseThrow(() -> new CountryNotFoundException(dto.getImporter())));
         tariffMapping.setExporter(countryRepository.findById(dto.getExporter()).orElseThrow(() -> new CountryNotFoundException(dto.getExporter())));

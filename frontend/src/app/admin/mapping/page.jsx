@@ -38,7 +38,7 @@ export default function CreateTariffMappingPage() {
         const products = await response.json();
         const options = products.map(product => ({
           label: `${product.hsCode}${product.description ? ` - ${product.description}` : ''}`,
-          value: product.hsCode.toString()
+          value: product.hsCode
         }));
         setProductOptions(options);
         console.log("Fetched products:", products);
@@ -71,13 +71,13 @@ export default function CreateTariffMappingPage() {
     e.preventDefault();
     setMessage("");
     try {
-      const response = await fetch("http://localhost:8080/tariffmapping", {
+      const response = await fetch("http://localhost:8080/api/tariffmappings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           exporter: form.exporter ? form.exporter.value : "",
           importer: form.importer ? form.importer.value : "",
-          product: form.product ? form.product.value : ""
+          productId: form.product ? Number(form.product.value) : null
         })
       });
       if (response.ok) {

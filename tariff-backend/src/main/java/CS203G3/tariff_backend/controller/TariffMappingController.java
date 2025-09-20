@@ -57,6 +57,7 @@ public class TariffMappingController {
      */
     @PostMapping
     public ResponseEntity<TariffMappingDto> createTariffMapping(@RequestBody TariffMappingCreateDto tariffMappingCreateDto) {
+        // System.out.println("Creating TariffMapping with DTO: " + tariffMappingCreateDto.getProductId());
         TariffMappingDto createdTariffMapping = tariffMappingService.createTariffMapping(tariffMappingCreateDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTariffMapping);
     }
