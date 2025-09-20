@@ -16,7 +16,6 @@ import java.util.List;
  * Focuses only on HTTP request/response handling
  * Business logic delegated to CountryService
  */
-@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/countries")
 public class CountryController {

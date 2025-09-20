@@ -19,8 +19,11 @@ export default function AdminPage() {
     e.preventDefault();
     setMessage("");
     try {
-      const response = await fetch("http://localhost:8080/tariff", {
+        const base_url = process.env.NEXT_PUBLIC_BASE_URL; // need to use NEXT_PUBLIC_ for client-side env vars
+        // regular process.env does not work in client-side code
+        const response = await fetch(`${base_url}/api/tariffs`, {
         method: "POST",
+        credentials: "include", // Include cookies for session management
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
