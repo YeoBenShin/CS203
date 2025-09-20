@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -66,6 +67,23 @@ public class TariffController {
         TariffDto updatedTariff = tariffService.updateTariff(id, createDto);
         return ResponseEntity.ok(updatedTariff);
     }
+
+    @PutMapping("/update-between-countries")
+    public ResponseEntity<List<TariffDto>> updateTariffsBetweenCountries(
+        @RequestParam String importerCode,
+        @RequestParam String exporterCode,
+        @RequestParam Integer productHsCode,
+        @RequestParam BigDecimal newRate) {
+    
+    List<TariffDto> updatedTariffs = tariffService.updateTariffsBetweenCountries(
+        importerCode, 
+        exporterCode, 
+        productHsCode, 
+        newRate
+    );
+    
+    return ResponseEntity.ok(updatedTariffs);
+}
 
     /**
      * Delete a tariff

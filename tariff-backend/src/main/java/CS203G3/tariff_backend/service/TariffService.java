@@ -3,7 +3,10 @@ package CS203G3.tariff_backend.service;
 import CS203G3.tariff_backend.dto.TariffDto;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
 
+import java.math.BigDecimal;
 import java.util.List;
+
+import org.hibernate.sql.Update;
 
 /**
  * Service interface for Tariff business logic
@@ -37,6 +40,21 @@ public interface TariffService {
      * @return The updated tariff DTO
      */
     TariffDto updateTariff(Long id, TariffCreateDto createDto);
+
+    /**
+     * Update tariff rates between two countries for a specific product
+     * @param importerCountryCode 
+     * @param exporterCountryCode 
+     * @param productHsCode 
+     * @param newRate 
+     * @return 
+     */
+    List<TariffDto> updateTariffsBetweenCountries(
+        String importerCountryCode, 
+        String exporterCountryCode, 
+        Integer productHsCode, 
+        BigDecimal newRate
+    );
     
     /**
      * Delete a tariff

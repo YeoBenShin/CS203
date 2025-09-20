@@ -5,7 +5,9 @@ import CS203G3.tariff_backend.repository.*;
 import CS203G3.tariff_backend.dto.*;
 import CS203G3.tariff_backend.exception.*;
 
+import java.math.BigDecimal;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -106,6 +108,52 @@ public class TariffServiceImpl implements TariffService {
         Tariff updated = tariffRepository.save(existing);
         return convertToDto(updated);
     }
+
+    @Override
+@Transactional
+public List<TariffDto> updateTariffsBetweenCountries(String importerCountryCode, 
+                                                     String exporterCountryCode, 
+                                                     Integer productHsCode, 
+                                                     BigDecimal newRate) {
+    
+    // Find all tariff mappings that match the criteria
+    List<TariffMapping> mappings = tariffMappingRepository.findByImporterCountryCodeAndExporterCountryCodeAndProductHsCode(
+            importerCountryCode, 
+            exporterCountryCode, 
+            productHsCode
+        );
+    
+    if (mappings.isEmpty()) {
+        throw new ResourceNotFoundException(
+            "No tariff mappings found for importer: " + importerCountryCode + 
+            ", exporter: " + exporterCountryCode + 
+            ", product: " + productHsCode
+        );
+    }
+    
+    List<Tariff> updatedTariffs = new ArrayList<>();
+    
+    // Update all tariffs associated with these mappings
+    for (TariffMapping mapping : mappings) {
+        List<Tariff> tariffs = tariffRepository.findByTariffMapping(mapping);
+        
+        for (Tariff tariff : tariffs) {
+            // Update the rate
+            tariff.setRate(newRate);
+            
+            // Update additional fields if needed
+            // tariff.setLastUpdated(LocalDateTime.now());
+            
+            // Save the updated tariff
+            updatedTariffs.add(tariffRepository.save(tariff));
+        }
+    }
+    
+    // Convert entities to DTOs
+    return updatedTariffs.stream()
+        .map(this::convertToDto)
+        .collect(Collectors.toList());
+}
 
     @Override
     @Transactional
