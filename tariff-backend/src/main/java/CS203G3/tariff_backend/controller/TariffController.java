@@ -17,7 +17,7 @@ import java.util.List;
  * Uses DTOs for better frontend integration
  */
 @RestController
-@RequestMapping("/api/tariffs") 
+@RequestMapping("/api/tariffs")
 public class TariffController {
 
     private final TariffService tariffService;

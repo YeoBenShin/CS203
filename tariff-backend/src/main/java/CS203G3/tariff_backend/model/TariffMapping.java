@@ -23,15 +23,15 @@ public class TariffMapping {
     private Long tariffMappingID;
 
     @ManyToOne
-    @JoinColumn(name = "Exporter")
+    @JoinColumn(name = "exporter")
     private Country exporter;
 
     @ManyToOne
-    @JoinColumn(name = "Importer")
+    @JoinColumn(name = "mporter")
     private Country importer;
 
     @ManyToOne
-    @JoinColumn(name = "HSCode")
+    @JoinColumn(name = "hs_code")
     private Product product;
     @OneToMany(mappedBy = "tariffMapping", cascade = CascadeType.ALL)
     private List<Tariff> tariffs;
