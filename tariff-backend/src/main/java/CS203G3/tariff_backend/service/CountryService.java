@@ -3,7 +3,6 @@ package CS203G3.tariff_backend.service;
 import java.util.List;
 
 import CS203G3.tariff_backend.model.Country;
-import CS203G3.tariff_backend.exception.CountryNotFoundException;
 
 
 public interface CountryService {
@@ -17,9 +16,8 @@ public interface CountryService {
      * Get country by ID
      * @param id The country ID
      * @return The country
-     * @throws CountryNotFoundException if country not found
      */
-    Country getCountryById(String id) throws CountryNotFoundException;
+    Country getCountryById(String id);
 
     /**
      * Create a new country with business validation
@@ -33,14 +31,12 @@ public interface CountryService {
      * @param id The country ID
      * @param country The country data to update
      * @return The updated country
-     * @throws CountryNotFoundException if country not found
      */
-    Country updateCountry(String id, Country country) throws CountryNotFoundException;
+    Country updateCountry(String id, Country country);
 
     /**
      * Delete a country
      * @param id The country ID to delete
-     * @throws CountryNotFoundException if country not found
      */
-    void deleteCountry(String id) throws CountryNotFoundException;
+    void deleteCountry(String id);
 }

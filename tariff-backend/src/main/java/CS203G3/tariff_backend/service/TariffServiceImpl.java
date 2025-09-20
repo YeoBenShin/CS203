@@ -49,7 +49,7 @@ public class TariffServiceImpl implements TariffService {
 
     private Tariff convertToEntity(TariffCreateDto createDto) {
         TariffMapping mapping = tariffMappingRepository.findById(createDto.getTariffMappingID())
-            .orElseThrow(() -> new TariffMappingNotFoundException(createDto.getTariffMappingID()));
+            .orElseThrow(() -> new ResourceNotFoundException("TariffMapping", createDto.getTariffMappingID()));
         
         // Convert java.util.Date to java.sql.Date
         Date effectiveDate = createDto.getEffectiveDate() != null ? 
@@ -70,7 +70,7 @@ public class TariffServiceImpl implements TariffService {
     @Override
     public TariffDto getTariffById(Long id) {
         Tariff tariff = tariffRepository.findById(id)
-            .orElseThrow(() -> new TariffNotFoundException(id));
+            .orElseThrow(() -> new ResourceNotFoundException("Tariff", id));
         return convertToDto(tariff);
     }
 
@@ -86,10 +86,10 @@ public class TariffServiceImpl implements TariffService {
     @Transactional
     public TariffDto updateTariff(Long id, TariffCreateDto createDto) {
         Tariff existing = tariffRepository.findById(id)
-            .orElseThrow(() -> new TariffNotFoundException(id));
+            .orElseThrow(() -> new ResourceNotFoundException("Tariff", id));
         
         TariffMapping mapping = tariffMappingRepository.findById(createDto.getTariffMappingID())
-            .orElseThrow(() -> new TariffMappingNotFoundException(createDto.getTariffMappingID()));
+            .orElseThrow(() -> new ResourceNotFoundException("TariffMapping", createDto.getTariffMappingID()));
 
         // Convert dates
         Date effectiveDate = createDto.getEffectiveDate() != null ? 
@@ -109,9 +109,9 @@ public class TariffServiceImpl implements TariffService {
 
     @Override
     @Transactional
-    public void deleteTariff(Long id) throws TariffNotFoundException {
+    public void deleteTariff(Long id) {
         if (!tariffRepository.existsById(id)) {
-            throw new TariffNotFoundException(id);
+            throw new ResourceNotFoundException("Tariff", id);
         }
         
         tariffRepository.deleteById(id);

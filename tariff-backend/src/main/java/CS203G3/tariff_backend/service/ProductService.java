@@ -3,7 +3,6 @@ package CS203G3.tariff_backend.service;
 import java.util.List;
 
 import CS203G3.tariff_backend.model.Product;
-import CS203G3.tariff_backend.exception.ProductNotFoundException;
 
 public interface ProductService {
     /**
@@ -17,7 +16,7 @@ public interface ProductService {
      * @param hsCode The product HS code
      * @return The product
      */
-    Product getProductByHsCode(Integer hsCode) throws ProductNotFoundException;
+    Product getProductByHsCode(Integer hsCode);
 
     /**
      * Create a new product with business validation
@@ -32,11 +31,11 @@ public interface ProductService {
      * @param product The product data to update
      * @return The updated product
      */
-    Product updateProduct(Integer hsCode, Product product) throws ProductNotFoundException;
+    Product updateProduct(Integer hsCode, Product product);
 
     /**
-     * Delete a country
+     * Delete a product
      * @param hsCode The product HS code to delete
      */
-    void deleteProduct(Integer hsCode) throws ProductNotFoundException;
+    void deleteProduct(Integer hsCode);
 }

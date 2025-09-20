@@ -3,7 +3,6 @@ package CS203G3.tariff_backend.controller;
 
 import CS203G3.tariff_backend.model.TariffMapping;
 import CS203G3.tariff_backend.service.TariffMappingService;
-import CS203G3.tariff_backend.exception.TariffMappingNotFoundException;
 import CS203G3.tariff_backend.dto.TariffMappingDto;
 import CS203G3.tariff_backend.dto.TariffMappingCreateDto;
 
@@ -43,12 +42,8 @@ public class TariffMappingController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<TariffMappingDto> getTariffMappingById(@PathVariable Long id) {
-        try {
-            TariffMappingDto tariffMappingDto = tariffMappingService.getTariffMappingById(id);
-            return ResponseEntity.ok(tariffMappingDto);
-        } catch (TariffMappingNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        TariffMappingDto tariffMappingDto = tariffMappingService.getTariffMappingById(id);
+        return ResponseEntity.ok(tariffMappingDto);
     }
 
     /**
@@ -68,12 +63,8 @@ public class TariffMappingController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<TariffMapping> updateTariffMapping(@PathVariable Long id, @RequestBody TariffMappingDto tariffMappingDto) {
-        try {
-            TariffMapping updatedTariffMapping = tariffMappingService.updateTariffMapping(id, tariffMappingDto);
-            return ResponseEntity.ok(updatedTariffMapping);
-        } catch (TariffMappingNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } 
+        TariffMapping updatedTariffMapping = tariffMappingService.updateTariffMapping(id, tariffMappingDto);
+        return ResponseEntity.ok(updatedTariffMapping);
     }
 
     /**
@@ -82,12 +73,8 @@ public class TariffMappingController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTariffMapping(@PathVariable Long id) {
-        try {
-            tariffMappingService.deleteTariffMapping(id);
-            return ResponseEntity.noContent().build();
-        } catch (TariffMappingNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        tariffMappingService.deleteTariffMapping(id);
+        return ResponseEntity.noContent().build();
     }
 }
 

@@ -3,7 +3,6 @@ package CS203G3.tariff_backend.service;
 import CS203G3.tariff_backend.model.TariffMapping;
 import CS203G3.tariff_backend.dto.TariffMappingDto;
 import CS203G3.tariff_backend.dto.TariffMappingCreateDto;
-import CS203G3.tariff_backend.exception.TariffMappingNotFoundException;
 
 import java.util.List;
 
@@ -23,9 +22,8 @@ public interface TariffMappingService {
      * Get tariff mapping by ID
      * @param id The tariff mapping ID
      * @return The tariff mapping
-     * @throws TariffMappingNotFoundException if tariff mapping not found
      */
-    TariffMappingDto getTariffMappingById(Long id) throws TariffMappingNotFoundException;
+    TariffMappingDto getTariffMappingById(Long id);
 
     /**
      * Create a new tariff mapping with business validation
@@ -39,15 +37,13 @@ public interface TariffMappingService {
      * @param id The tariff mapping ID to update
      * @param tariffMapping The updated tariff mapping data
      * @return The updated tariff mapping
-     * @throws TariffMappingNotFoundException if tariff mapping not found
      */
-    TariffMapping updateTariffMapping(Long id, TariffMappingDto tariffMappingDto) throws TariffMappingNotFoundException;
+    TariffMapping updateTariffMapping(Long id, TariffMappingDto tariffMappingDto);
 
     /**
      * Delete a tariff mapping
      * @param id The tariff mapping ID to delete
-     * @throws TariffMappingNotFoundException if tariff mapping not found
      */
-    void deleteTariffMapping(Long id) throws TariffMappingNotFoundException;
+    void deleteTariffMapping(Long id);
 
 }
