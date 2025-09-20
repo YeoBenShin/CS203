@@ -1,17 +1,56 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Select from "react-select";
-import countryList from "react-select-country-list";
+//import countryList from "react-select-country-list";
 
 export default function CreateTariffMappingPage() {
   const [form, setForm] = useState({
     exporter: null,
     importer: null,
-    product: "",
-    description: ""
+    product: null,
   });
   const [message, setMessage] = useState("");
-  const countryOptions = useMemo(() => countryList().getData(), []);
+  const [countryOptions, setCountryOptions] = useState([]);
+  const [productOptions, setProductOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/countries");
+        const countries = await response.json();
+        const options = countries.map(country => ({
+          label: country.name,
+          value: country.isoCode
+        }));
+        setCountryOptions(options);
+      } catch (error) {
+        console.error("Failed to fetch countries:", error);
+      }
+    };
+    
+    fetchCountries();
+  }, []);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/products");
+        const products = await response.json();
+        const options = products.map(product => ({
+          label: `${product.hsCode}${product.description ? ` - ${product.description}` : ''}`,
+          value: product.hsCode
+        }));
+        setProductOptions(options);
+        console.log("Fetched products:", products);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  //const countryOptions = useMemo(() => countryList().getData(), []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -23,24 +62,27 @@ export default function CreateTariffMappingPage() {
   const handleImporterChange = (option) => {
     setForm({ ...form, importer: option });
   };
+  const handleProductChange = (option) => {
+    setForm({ ...form, product: option });
+  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
     try {
-      const response = await fetch("http://localhost:8080/tariff-mapping", {
+      const response = await fetch("http://localhost:8080/api/tariffmappings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           exporter: form.exporter ? form.exporter.value : "",
           importer: form.importer ? form.importer.value : "",
-          product: form.product,
-          description: form.description
+          productId: form.product ? Number(form.product.value) : null
         })
       });
       if (response.ok) {
         setMessage("Tariff mapping added successfully!");
-        setForm({ exporter: null, importer: null, product: "", description: "" });
+        setForm({ exporter: null, importer: null, product: null });
       } else {
         setMessage("Failed to add tariff mapping.");
       }
@@ -59,7 +101,7 @@ export default function CreateTariffMappingPage() {
             options={countryOptions}
             value={form.exporter}
             onChange={handleExporterChange}
-            className="text-black"
+            className="text-blue"
             placeholder="Select exporter country"
             isClearable
           />
@@ -75,14 +117,19 @@ export default function CreateTariffMappingPage() {
             isClearable
           />
         </div>
+
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="product">Product</label>
-          <input name="product" type="text" value={form.product} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+          <label className="block text-gray-700 text-sm font-bold mb-2">Product</label>
+          <Select
+            options={productOptions}
+            value={form.product}
+            onChange={handleProductChange}
+            className="text-black"
+            placeholder="Select Product HSCode"
+            isClearable
+          />
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">Description</label>
-          <input name="description" type="text" value={form.description} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-        </div>
+        
         <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Add Tariff Mapping</button>
         {message && <div className="mt-4 text-center text-black font-bold">{message}</div>}
       </form>
