@@ -20,7 +20,6 @@ import java.util.List;
  * Focuses only on HTTP request/response handling
  * Business logic delegated to TariffService
  */
-@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/tariffmappings") // Better URL structure
 public class TariffMappingController {

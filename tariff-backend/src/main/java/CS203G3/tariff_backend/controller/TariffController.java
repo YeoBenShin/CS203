@@ -16,9 +16,8 @@ import java.util.List;
  * REST Controller for Tariff API endpoints
  * Uses DTOs for better frontend integration
  */
-@CrossOrigin(origins = "http://localhost:3000")
 @RestController
-@RequestMapping("/api/tariffs") 
+@RequestMapping("/api/tariffs")
 public class TariffController {
 
     private final TariffService tariffService;
