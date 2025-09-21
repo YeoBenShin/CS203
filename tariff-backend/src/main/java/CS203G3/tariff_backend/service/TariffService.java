@@ -17,6 +17,11 @@ public interface TariffService {
     List<TariffDto> getAllTariffs();
     
     /**
+     * Get tariffs by page number
+     * @return List of tariffs within specified page(batch) number
+     */
+    List<TariffDto> getTariffsByPage(int page, int pageSize);
+    /**
      * Get tariff by ID
      * @param id The tariff ID
      * @return The tariff DTO
