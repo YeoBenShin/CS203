@@ -11,6 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 /**
  * REST Controller for Tariff API endpoints
@@ -36,6 +39,14 @@ public class TariffController {
         List<TariffDto> tariffs = tariffService.getAllTariffs();
         return ResponseEntity.ok(tariffs);
     }
+
+    @GetMapping("/batch")
+    public ResponseEntity<List<TariffDto>> getTariffByPage(@RequestParam(defaultValue = "1") int page) {
+        int pageSize = 10;
+        List<TariffDto> tariffs = tariffService.getTariffsByPage(page, pageSize);
+        return ResponseEntity.ok(tariffs);
+    }
+    
 
     /**
      * Get tariff by ID

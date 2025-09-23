@@ -29,7 +29,7 @@ public class TariffMappingServiceImpl implements TariffMappingService {
     public TariffMappingDto convertToDto(TariffMapping tariffMapping) {
         TariffMappingDto dto = new TariffMappingDto();
         dto.setTariffMappingID(tariffMapping.getTariffMappingID());
-        dto.setProductId(tariffMapping.getProduct().getHsCode());
+        dto.setHSCode(tariffMapping.getProduct().getHsCode());
         dto.setImporter(tariffMapping.getImporter().getIsoCode());
         dto.setExporter(tariffMapping.getExporter().getIsoCode());
         return dto;
@@ -37,10 +37,10 @@ public class TariffMappingServiceImpl implements TariffMappingService {
 
     public TariffMapping convertToEntity(TariffMappingCreateDto dto) {
         TariffMapping tariffMapping = new TariffMapping();
-        // System.out.println("Product ID: " + dto.getProductId());
+        // System.out.println("Product ID: " + dto.getHSCode());
         // System.out.println("Importer ID: " + dto.getImporter());
         // System.out.println("Exporter ID: " + dto.getExporter());
-        tariffMapping.setProduct(productRepository.findById(dto.getProductId()).orElseThrow(() -> new ResourceNotFoundException("Product", dto.getProductId().toString())));
+        tariffMapping.setProduct(productRepository.findById(dto.getHSCode()).orElseThrow(() -> new ResourceNotFoundException("Product", dto.getHSCode().toString())));
         tariffMapping.setImporter(countryRepository.findById(dto.getImporter()).orElseThrow(() -> new ResourceNotFoundException("Country", dto.getImporter())));
         tariffMapping.setExporter(countryRepository.findById(dto.getExporter()).orElseThrow(() -> new ResourceNotFoundException("Country", dto.getExporter())));
         return tariffMapping;
@@ -51,14 +51,14 @@ public class TariffMappingServiceImpl implements TariffMappingService {
     public TariffMappingDto createTariffMapping(TariffMappingCreateDto tariffMappingCreateDto) {
         // check that if tariffmapping exists, dont create tariffmapping
         TariffMapping existing = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(
-            tariffMappingCreateDto.getProductId(),
+            tariffMappingCreateDto.getHSCode(),
             tariffMappingCreateDto.getImporter(),
             tariffMappingCreateDto.getExporter()
         );
 
         if (existing != null) {
             throw new TariffMappingAlreadyExistsException(
-                tariffMappingCreateDto.getProductId(),
+                tariffMappingCreateDto.getHSCode(),
                 tariffMappingCreateDto.getImporter(),
                 tariffMappingCreateDto.getExporter()
             );
@@ -105,8 +105,8 @@ public class TariffMappingServiceImpl implements TariffMappingService {
         TariffMapping tariffMapping = tariffMappingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("TariffMapping", id.toString()));
 
-        tariffMapping.setProduct(productRepository.findById(tariffMappingDto.getProductId())
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + tariffMappingDto.getProductId())));
+        tariffMapping.setProduct(productRepository.findById(tariffMappingDto.getHSCode())
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + tariffMappingDto.getHSCode())));
         
         tariffMapping.setImporter(countryRepository.findById(tariffMappingDto.getImporter())
                 .orElseThrow(() -> new IllegalArgumentException("Importer country not found: " + tariffMappingDto.getImporter())));
