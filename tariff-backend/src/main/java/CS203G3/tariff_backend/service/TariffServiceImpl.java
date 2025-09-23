@@ -11,9 +11,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 
 /**
  * Implementation of TariffService with DTO support
@@ -23,10 +20,12 @@ public class TariffServiceImpl implements TariffService {
 
     private final TariffRepository tariffRepository;
     private final TariffMappingRepository tariffMappingRepository;
+    private final TariffMappingService tariffMappingService;
 
-    public TariffServiceImpl(TariffRepository tariffRepository, TariffMappingRepository tariffMappingRepository) {
+    public TariffServiceImpl(TariffRepository tariffRepository, TariffMappingRepository tariffMappingRepository, TariffMappingService tariffMappingService) {
         this.tariffRepository = tariffRepository;
         this.tariffMappingRepository = tariffMappingRepository;
+        this.tariffMappingService = tariffMappingService;
     }
 
     private TariffDto convertToDto(Tariff tariff) {
@@ -51,8 +50,24 @@ public class TariffServiceImpl implements TariffService {
     }
 
     private Tariff convertToEntity(TariffCreateDto createDto) {
-        TariffMapping mapping = tariffMappingRepository.findById(createDto.getTariffMappingID())
-            .orElseThrow(() -> new ResourceNotFoundException("TariffMapping", createDto.getTariffMappingID()));
+        // Find existing mapping or create a new one
+        TariffMapping mapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(
+            createDto.getHSCode(), 
+            createDto.getImporter(), 
+            createDto.getExporter()
+        );
+        
+        // If mapping doesn't exist, create it using the service
+        if (mapping == null) {
+            TariffMappingCreateDto mappingDto = new TariffMappingCreateDto();
+            mappingDto.setHSCode(createDto.getHSCode());
+            mappingDto.setImporter(createDto.getImporter());
+            mappingDto.setExporter(createDto.getExporter());
+            
+            TariffMappingDto createdMappingDto = tariffMappingService.createTariffMapping(mappingDto);
+            mapping = tariffMappingRepository.findById(createdMappingDto.getTariffMappingID())
+                .orElseThrow(() -> new InvalidOperationException("Failed to create tariff mapping"));
+        }
         
         // Convert java.util.Date to java.sql.Date
         Date effectiveDate = createDto.getEffectiveDate() != null ? 
@@ -71,20 +86,19 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
-    public List<TariffDto> getTariffsByPage(int page, int pageSize) {
-        Page<Tariff> tariffPage = tariffRepository.findAll(
-            PageRequest.of(page-1, pageSize, Sort.by("TariffID").ascending())
-        );
-        return tariffPage.getContent().stream()
-            .map(this::convertToDto)
-            .collect(Collectors.toList());
-    }
-
-    @Override
     public TariffDto getTariffById(Long id) {
         Tariff tariff = tariffRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Tariff", id));
         return convertToDto(tariff);
+    }
+
+    @Override
+    public List<TariffDto> getTariffsByPage(int page, int pageSize) {
+        return tariffRepository.findAll().stream()
+                .skip((long) page * pageSize)
+                .limit(pageSize)
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -100,9 +114,16 @@ public class TariffServiceImpl implements TariffService {
     public TariffDto updateTariff(Long id, TariffCreateDto createDto) {
         Tariff existing = tariffRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Tariff", id));
+
+        TariffMapping mapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(
+            createDto.getHSCode(),
+            createDto.getImporter(),
+            createDto.getExporter());
         
-        TariffMapping mapping = tariffMappingRepository.findById(createDto.getTariffMappingID())
-            .orElseThrow(() -> new ResourceNotFoundException("TariffMapping", createDto.getTariffMappingID()));
+        if (mapping == null) {
+            throw new ResourceNotFoundException("TariffMapping", String.format("HSCode: %d, Importer: %s, Exporter: %s", 
+                createDto.getHSCode(), createDto.getImporter(), createDto.getExporter()));
+        }
 
         // Convert dates
         Date effectiveDate = createDto.getEffectiveDate() != null ? 

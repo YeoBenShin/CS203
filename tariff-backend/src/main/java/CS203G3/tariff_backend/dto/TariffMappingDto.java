@@ -5,7 +5,8 @@ public class TariffMappingDto {
     private String exporter;
     private String importer;
     private Integer HSCode;
-    
+    private String productDescription;
+
     public Long getTariffMappingID() {
         return tariffMappingID;
     }
@@ -29,6 +30,14 @@ public class TariffMappingDto {
     }
     public void setHSCode(Integer HSCode) {
         this.HSCode = HSCode;
+    }
+
+    public String getProductDescription() {
+        return productDescription;
+    }
+
+    public void setProductDescription(String productDescription) {
+        this.productDescription = productDescription;
     }
 
     

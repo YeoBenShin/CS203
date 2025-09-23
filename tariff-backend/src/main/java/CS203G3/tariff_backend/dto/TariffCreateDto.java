@@ -10,9 +10,16 @@ import jakarta.validation.constraints.Size;
 
 
 public class TariffCreateDto {
-    @NotNull(message = "TariffMappingID is required")
-    private Long tariffMappingID;
     
+    @NotNull(message = "Exporter is required")
+    private String exporter;
+
+    @NotNull(message = "Importer is required")
+    private String importer;
+
+    @NotNull(message = "HS Code is required")
+    private Integer HSCode;
+
     @NotNull(message = "Rate is required")
     private BigDecimal rate;
 
@@ -29,13 +36,6 @@ public class TariffCreateDto {
     // Constructors
     public TariffCreateDto() {}
     
-    // Getters and Setters
-    public Long getTariffMappingID() {
-        return tariffMappingID;
-    }
-    public void setTariffMappingID(Long tariffMappingID) {
-        this.tariffMappingID = tariffMappingID;
-    }
     public BigDecimal getRate() {
         return rate;
     }
@@ -59,5 +59,23 @@ public class TariffCreateDto {
     }
     public void setReference(String reference) {
         this.reference = reference;
+    }
+    public String getExporter() {
+        return exporter;
+    }
+    public void setExporter(String exporter) {
+        this.exporter = exporter;
+    }
+    public String getImporter() {
+        return importer;
+    }
+    public void setImporter(String importer) {
+        this.importer = importer;
+    }
+    public Integer getHSCode() {
+        return HSCode;
+    }
+    public void setHSCode(Integer HSCode) {
+        this.HSCode = HSCode;
     }
 }
