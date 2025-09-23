@@ -32,6 +32,7 @@ public class TariffMappingServiceImpl implements TariffMappingService {
         dto.setHSCode(tariffMapping.getProduct().getHsCode());
         dto.setImporter(tariffMapping.getImporter().getIsoCode());
         dto.setExporter(tariffMapping.getExporter().getIsoCode());
+        dto.setProductDescription(tariffMapping.getProduct().getDescription());
         return dto;
     }
 
