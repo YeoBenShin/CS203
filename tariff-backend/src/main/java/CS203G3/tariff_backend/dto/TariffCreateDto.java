@@ -3,6 +3,8 @@ package CS203G3.tariff_backend.dto;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
@@ -18,6 +20,7 @@ public class TariffCreateDto {
     private String importer;
 
     @NotNull(message = "HS Code is required")
+    @JsonProperty("HSCode")
     private Integer HSCode;
 
     @NotNull(message = "Rate is required")
