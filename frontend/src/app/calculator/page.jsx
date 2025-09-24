@@ -650,11 +650,11 @@ export default function CalculatorPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-semibold text-gray-700">Product:</span>
-                    <p className="text-black">{selectedProductDesc ? selectedProductDesc.label : 'N/A'}</p>
+                    <p className="text-black">{selectedProductDesc ? selectedProductDesc : 'N/A'}</p>
                   </div>
                   <div>
                     <span className="font-semibold text-gray-700">HS Code:</span>
-                    <p className="text-black">{selectedHsCode ? selectedHsCode.value : 'N/A'}</p>
+                    <p className="text-black">{selectedHsCode ? selectedHsCode : 'N/A'}</p>
                   </div>
                   <div>
                     <span className="font-semibold text-gray-700">Trade Partners:</span>
