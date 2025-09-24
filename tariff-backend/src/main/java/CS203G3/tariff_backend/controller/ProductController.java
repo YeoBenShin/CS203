@@ -9,6 +9,7 @@ import CS203G3.tariff_backend.model.Product;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
@@ -32,8 +33,8 @@ public class ProductController {
 
 
     /**
-     * Get product by ID
-     * GET /api/products/{id}
+     * Get product by HS Code
+     * GET /api/products/{hsCode}
      */
     @GetMapping("/{hsCode}")
     public ResponseEntity<Product> getProductByHsCode(@PathVariable Integer hsCode) {
@@ -57,7 +58,7 @@ public class ProductController {
 
     /**
      * Update an existing product
-     * PUT /api/products/{id}
+     * PUT /api/products/{hsCode}
      */
     @PutMapping("/{hsCode}")
     public ResponseEntity<Product> updateProduct(@PathVariable Integer hsCode, @RequestBody Product product) {
@@ -70,7 +71,7 @@ public class ProductController {
 
     /**
      * Delete a product
-     * DELETE /api/products/{id}
+     * DELETE /api/products/{hsCode}
      */
     @DeleteMapping("/{hsCode}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Integer hsCode) {

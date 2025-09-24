@@ -27,10 +27,12 @@ export default function Navbar() {
         >
           <button className="text-black text-lg hover:text-blue-600 focus:outline-none">Admin Page</button>
           <div
-            className={`absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg z-50 transition-opacity duration-200 ${dropdownOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+            className={`absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded shadow-lg z-50 transition-opacity duration-200 ${dropdownOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
           >
             <Link href="/admin" className="block px-4 py-2 text-black hover:bg-blue-100">Create Tariff</Link>
-            <Link href="/admin/mapping" className="block px-4 py-2 text-black hover:bg-blue-100">Create Tariff Mapping</Link>
+            <Link href="/admin/product" className="block px-4 py-2 text-black hover:bg-blue-100">Add Product</Link>
+            <Link href="/admin/view-tariffs" className="block px-4 py-2 text-black hover:bg-blue-100">View All Tariffs</Link>
+            <Link href="/admin/view-mappings" className="block px-4 py-2 text-black hover:bg-blue-100">View All Mappings</Link>
           </div>
         </li>
         <li>

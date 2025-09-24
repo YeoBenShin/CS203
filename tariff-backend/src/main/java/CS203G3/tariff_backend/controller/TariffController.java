@@ -64,6 +64,15 @@ public class TariffController {
      */
     @PostMapping
     public ResponseEntity<TariffDto> createTariff(@RequestBody TariffCreateDto createDto) {
+        System.out.println("Received TariffCreateDto:");
+        System.out.println("Exporter: " + createDto.getExporter());
+        System.out.println("Importer: " + createDto.getImporter()); 
+        System.out.println("HSCode: " + createDto.getHSCode());
+        System.out.println("Rate: " + createDto.getRate());
+        System.out.println("EffectiveDate: " + createDto.getEffectiveDate());
+        System.out.println("ExpiryDate: " + createDto.getExpiryDate());
+        System.out.println("Reference: " + createDto.getReference());
+        
         TariffDto createdTariff = tariffService.createTariff(createDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTariff);
     }
