@@ -185,15 +185,11 @@ import React, { useState, useEffect } from "react";
 export default function CalculatorPage() {
   // Product search states
   const [hsCodeOptions, setHsCodeOptions] = useState([]);
-  //const [productDescOptions, setProductDescOptions] = useState([]);
   const [filteredHsCodeOptions, setFilteredHsCodeOptions] = useState([]);
-  // const [filteredProductDescOptions, setFilteredProductDescOptions] = useState([]);
   const [selectedHsCode, setSelectedHsCode] = useState(null);
   const [selectedProductDesc, setSelectedProductDesc] = useState(null);
   const [hsCodeInput, setHsCodeInput] = useState('');
-  // const [productDescInput, setProductDescInput] = useState('');
   const [showHsCodeDropdown, setShowHsCodeDropdown] = useState(false);
-  // const [showProductDescDropdown, setShowProductDescDropdown] = useState(false);
 
   // Country and trade direction states
   const [countryOptions, setCountryOptions] = useState([]);
@@ -214,7 +210,6 @@ export default function CalculatorPage() {
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
-  // Mock data - replace with actual API calls to your backend
   useEffect(() => {
     // Fetch HS codes from backend
     const fetchHsCodes = async () => {
@@ -222,9 +217,8 @@ export default function CalculatorPage() {
         // Replace with actual API call
         const response = await fetch(`${baseUrl}/api/products`);
         const data = await response.json();
+        // console.log(data);
 
-        console.log(data);
-        
         // const mockHsCodes = [
         //   { value: '010121', label: '010121 - Pure-bred breeding horses' },
         //   { value: '010129', label: '010129 - Other live horses' },
@@ -260,7 +254,7 @@ export default function CalculatorPage() {
 
         const countries = data.filter(country => country.isoCode !== 'USA').map(country => ({
           value: country.isoCode,
-          label: country.name
+          label: country.isoCode + " - " + country.name
         }));
         setCountryOptions(countries);
         setFilteredCountryOptions(countries);
@@ -353,50 +347,64 @@ export default function CalculatorPage() {
 
     try {
       // Replace with actual API call
-      // const response = await fetch(`${baseUrl}/api/tariff/calculate`, {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(data)
-      // });
+      const response = await fetch(`${baseUrl}/api/calculations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(result);
+        setTariffBreakdown(result.tariffs);
+        // {totalCost: 10, totalTariffRate: 0, totalTariffCost: 0, tariffs: []}
+        setCalcResult({
+          originalCost: parseFloat(shippingCost),
+          totalCost: result.totalCost,
+          totalTariffRate: (result.totalTariffRate * 100).toFixed(2), // Convert to percentage
+          totalTariffCost: result.totalTariffCost,
+        })
+
+      }
 
       // Mock response for demo
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+      // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
 
-      const mockTariffBreakdown = [
-        {
-          id: 1,
-          tariffType: 'Ad Valorem Duty',
-          rate: '15%',
-          appliedAmount: parseFloat(shippingCost) * 0.15,
-          reference: 'USMCA Trade Agreement Article 4.2'
-        },
-        {
-          id: 2,
-          tariffType: 'Anti-Dumping Duty',
-          rate: '8.5%',
-          appliedAmount: parseFloat(shippingCost) * 0.085,
-          reference: null
-        },
-        {
-          id: 3,
-          tariffType: 'Processing Fee',
-          rate: '$25 flat',
-          appliedAmount: 25,
-          reference: 'CBP Processing Regulation 19.6'
-        }
-      ];
+      // const mockTariffBreakdown = [
+      //   {
+      //     id: 1,
+      //     tariffType: 'Ad Valorem Duty',
+      //     rate: '15%',
+      //     appliedAmount: parseFloat(shippingCost) * 0.15,
+      //     reference: 'USMCA Trade Agreement Article 4.2'
+      //   },
+      //   {
+      //     id: 2,
+      //     tariffType: 'Anti-Dumping Duty',
+      //     rate: '8.5%',
+      //     appliedAmount: parseFloat(shippingCost) * 0.085,
+      //     reference: null
+      //   },
+      //   {
+      //     id: 3,
+      //     tariffType: 'Processing Fee',
+      //     rate: '$25 flat',
+      //     appliedAmount: 25,
+      //     reference: 'CBP Processing Regulation 19.6'
+      //   }
+      // ];
 
-      const totalTariffCost = mockTariffBreakdown.reduce((sum, tariff) => sum + tariff.appliedAmount, 0);
-      const totalCost = parseFloat(shippingCost) + totalTariffCost;
-      const totalTariffRate = ((totalTariffCost / parseFloat(shippingCost)) * 100).toFixed(2);
+      // const totalTariffCost = mockTariffBreakdown.reduce((sum, tariff) => sum + tariff.appliedAmount, 0);
+      // const totalCost = parseFloat(shippingCost) + totalTariffCost;
+      // const totalTariffRate = ((totalTariffCost / parseFloat(shippingCost)) * 100).toFixed(2);
 
-      setTariffBreakdown(mockTariffBreakdown);
-      setCalcResult({
-        originalCost: parseFloat(shippingCost),
-        totalTariffCost: totalTariffCost,
-        totalCost: totalCost,
-        totalTariffRate: totalTariffRate
-      });
+      // setTariffBreakdown(mockTariffBreakdown);
+      // setCalcResult({
+      //   originalCost: parseFloat(shippingCost),
+      //   totalTariffCost: totalTariffCost,
+      //   totalCost: totalCost,
+      //   totalTariffRate: totalTariffRate
+      // });
 
     } catch (error) {
       alert("Error calculating tariff: " + error.message);
@@ -414,9 +422,9 @@ export default function CalculatorPage() {
 
     try {
       const saveData = {
-        hsCode: selectedHsCode.value,
-        productDescription: selectedProductDesc.label,
-        country: selectedCountry.label,
+        hsCode: selectedHsCode,
+        productDescription: selectedProductDesc,
+        country: selectedCountry,
         tradeDirection: tradeDirection,
         shippingCost: parseFloat(shippingCost),
         tradeDate: tradeDate,
@@ -652,8 +660,8 @@ export default function CalculatorPage() {
                     <span className="font-semibold text-gray-700">Trade Partners:</span>
                     <p className="text-black">
                       {tradeDirection === 'import'
-                        ? `${selectedCountry ? selectedCountry.label : 'N/A'} → USA`
-                        : `USA → ${selectedCountry ? selectedCountry.label : 'N/A'}`
+                        ? `${selectedCountry ? selectedCountry : 'N/A'} → USA`
+                        : `USA → ${selectedCountry ? selectedCountry : 'N/A'}`
                       }
                     </p>
                   </div>
@@ -690,17 +698,17 @@ export default function CalculatorPage() {
               <div className="bg-white rounded-lg p-4">
                 <h3 className="text-lg font-bold text-black mb-4">Individual Tariff Details</h3>
                 <div className="space-y-3">
-                  {tariffBreakdown.map((tariff) => (
+                  {tariffBreakdown.map((tariff, index) => (
                     <div
-                      key={tariff.id}
+                      key={tariff.tariffID}
                       className="flex justify-between items-center p-3 border border-gray-300 rounded hover:bg-gray-50 cursor-help relative group"
                       title={tariff.reference || "not-updated"}
                     >
                       <div>
-                        <span className="font-semibold text-black">{tariff.tariffType}</span>
+                        <span className="font-semibold text-black">Tariff {index + 1}</span>
                         <span className="text-gray-600 ml-2">({tariff.rate})</span>
                       </div>
-                      <span className="font-bold text-black">${tariff.appliedAmount.toFixed(2)}</span>
+                      <span className="font-bold text-black">${tariff.amountApplied.toFixed(2)}</span>
 
                       {/* Tooltip */}
                       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">

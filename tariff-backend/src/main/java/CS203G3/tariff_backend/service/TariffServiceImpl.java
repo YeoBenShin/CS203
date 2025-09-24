@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 
@@ -21,8 +22,14 @@ import org.springframework.data.domain.Sort;
 @Service
 public class TariffServiceImpl implements TariffService {
 
-    private final TariffRepository tariffRepository;
-    private final TariffMappingRepository tariffMappingRepository;
+    @Autowired
+    private TariffRepository tariffRepository;
+
+    @Autowired
+    private TariffMappingRepository tariffMappingRepository;
+
+    public TariffServiceImpl() {
+    }   
 
     public TariffServiceImpl(TariffRepository tariffRepository, TariffMappingRepository tariffMappingRepository) {
         this.tariffRepository = tariffRepository;
@@ -85,6 +92,17 @@ public class TariffServiceImpl implements TariffService {
         Tariff tariff = tariffRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Tariff", id));
         return convertToDto(tariff);
+    }
+
+    @Override
+    public List<Tariff> getTariffRatesByCountries(String country, String tradeDirection, Integer hsCode, Date tradeDate) {
+        String importer = tradeDirection.equals("import") ? country : "USA";
+        String exporter = tradeDirection.equals("export") ? country : "USA";
+        TariffMapping tariffMapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(hsCode, importer, exporter);
+        if (tariffMapping == null) {
+            throw new ResourceNotFoundException("TariffMapping with HSCode " + hsCode + ", Importer " + importer + ", Exporter " + exporter + " and TradeDate " + tradeDate);
+        }
+        return tariffRepository.findTariffRatesByTariffMappingAndEffectiveDate(tariffMapping, tradeDate);
     }
 
     @Override

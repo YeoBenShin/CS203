@@ -1,58 +1,66 @@
 package CS203G3.tariff_backend.dto;
 
+import CS203G3.tariff_backend.dto.TariffForCalDisplayDto;
+
+import java.math.BigDecimal;
+import java.util.List;
+
 /**
  * DTO for calculation result
  * Output for tariff cost calculations
  */
 public class CalculationResult {
-    private double totalCost;
-    private double baseCost;
-    private double tariffAmount;
+    private BigDecimal totalCost;
+    private BigDecimal totalTariffRate;
+    private BigDecimal totalTariffCost;
+    private List<TariffForCalDisplayDto> tariffs;
+
 
     // Constructors
     public CalculationResult() {}
 
-    public CalculationResult(double totalCost) {
+    public CalculationResult(BigDecimal totalCost, BigDecimal totalTariffRate, BigDecimal totalTariffCost, List<TariffForCalDisplayDto> tariffs) {
+        this.totalCost = totalCost;
+        this.totalTariffRate = totalTariffRate;
+        this.totalTariffCost = totalTariffCost;
+        this.tariffs = tariffs;
+    }
+
+    public BigDecimal getTotalCost() {
+        return totalCost;
+    }
+
+    public void setTotalCost(BigDecimal totalCost) {
         this.totalCost = totalCost;
     }
 
-    public CalculationResult(double totalCost, double baseCost, double tariffAmount) {
-        this.totalCost = totalCost;
-        this.baseCost = baseCost;
-        this.tariffAmount = tariffAmount;
+    public BigDecimal getTotalTariffRate() {
+        return totalTariffRate;
     }
 
-    // Getters and Setters
-    public double getTotalCost() { 
-        return totalCost; 
-    }
-    
-    public void setTotalCost(double totalCost) { 
-        this.totalCost = totalCost; 
+    public void setTotalTariffRate(BigDecimal totalTariffRate) {
+        this.totalTariffRate = totalTariffRate;
     }
 
-    public double getBaseCost() {
-        return baseCost;
+    public BigDecimal getTotalTariffCost() {
+        return totalTariffCost;
     }
 
-    public void setBaseCost(double baseCost) {
-        this.baseCost = baseCost;
+    public void setTotalTariffCost(BigDecimal totalTariffCost) {
+        this.totalTariffCost = totalTariffCost;
     }
 
-    public double getTariffAmount() {
-        return tariffAmount;
+    public List<TariffForCalDisplayDto> getTariffs() {
+        return tariffs;
     }
 
-    public void setTariffAmount(double tariffAmount) {
-        this.tariffAmount = tariffAmount;
+    public void setTariffs(List<TariffForCalDisplayDto> tariffs) {
+        this.tariffs = tariffs;
     }
 
     @Override
     public String toString() {
-        return "CalculationResult{" +
-                "totalCost=" + totalCost +
-                ", baseCost=" + baseCost +
-                ", tariffAmount=" + tariffAmount +
-                '}';
+        return "CalculationResult [totalCost=" + totalCost + ", totalTariffRate=" + totalTariffRate
+                + ", totalTariffCost=" + totalTariffCost + ", tariffs=" + tariffs + "]";
     }
 }
