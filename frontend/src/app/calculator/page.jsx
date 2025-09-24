@@ -361,7 +361,7 @@ export default function CalculatorPage() {
         setCalcResult({
           originalCost: parseFloat(shippingCost),
           totalCost: result.totalCost,
-          totalTariffRate: (result.totalTariffRate * 100).toFixed(2), // Convert to percentage
+          totalTariffRate: result.totalTariffRate.toFixed(2),
           totalTariffCost: result.totalTariffCost,
         })
 
@@ -573,7 +573,7 @@ export default function CalculatorPage() {
                       onChange={handleTradeDirectionChange}
                       className="accent-blue-500"           // Tailwind colour for the radio
                     />
-                    Import to USA
+                    Import From USA
                   </label>
 
                   <label className="flex items-center gap-2">
@@ -585,7 +585,7 @@ export default function CalculatorPage() {
                       onChange={handleTradeDirectionChange}
                       className="accent-blue-500"
                     />
-                    Export from USA
+                    Export To USA
                   </label>
                 </div>
               </div>

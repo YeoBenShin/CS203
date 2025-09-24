@@ -57,7 +57,7 @@ public class TariffForCalDisplayDto {
     }
 
     public BigDecimal getAmountApplied() {
-        return amountApplied;
+        return amountApplied.divide(BigDecimal.valueOf(100));
     }
 
     public void setAmountApplied(BigDecimal amountApplied) {

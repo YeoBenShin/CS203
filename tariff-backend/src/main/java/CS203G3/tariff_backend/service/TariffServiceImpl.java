@@ -99,10 +99,11 @@ public class TariffServiceImpl implements TariffService {
         String importer = tradeDirection.equals("import") ? country : "USA";
         String exporter = tradeDirection.equals("export") ? country : "USA";
         TariffMapping tariffMapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(hsCode, importer, exporter);
+        // System.out.println("tariff mapping: " + tariffMapping);
         if (tariffMapping == null) {
             throw new ResourceNotFoundException("TariffMapping with HSCode " + hsCode + ", Importer " + importer + ", Exporter " + exporter + " and TradeDate " + tradeDate);
         }
-        return tariffRepository.findTariffRatesByTariffMappingAndEffectiveDate(tariffMapping, tradeDate);
+        return tariffRepository.findValidTariffs(tariffMapping, tradeDate);
     }
 
     @Override
