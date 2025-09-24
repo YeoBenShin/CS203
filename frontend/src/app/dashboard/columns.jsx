@@ -2,10 +2,6 @@
 
 export const columns = [
   {
-    accessorKey: "tariffID",
-    header: "id",
-  },
-  {
     accessorKey: "hscode",
     header: "HS Code",
   },
