@@ -15,12 +15,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * REST Controller for Tariff API endpoints
+ * REST Controller for Tariff Mapping API endpoints
  * Focuses only on HTTP request/response handling
- * Business logic delegated to TariffService
+ * Business logic delegated to TariffMappingService
  */
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
-@RequestMapping("/api/tariffmappings") // Better URL structure
+@RequestMapping("/api/tariff-mappings") // Better URL structure
 public class TariffMappingController {
 
     @Autowired

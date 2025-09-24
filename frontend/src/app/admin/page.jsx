@@ -21,7 +21,7 @@ export default function AdminPage() {
     useEffect(() => {
       const fetchCountries = async () => {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/countries`);
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/countries`);
           const countries = await response.json();
           const options = countries.map(country => ({
             label: country.name,
@@ -39,7 +39,7 @@ export default function AdminPage() {
     useEffect(() => {
       const fetchProducts = async () => {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products`);
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/products`);
           const products = await response.json();
           const options = products.map(product => ({
             label: `${product.hsCode}${product.description ? ` - ${product.description}` : ''}`,
@@ -109,7 +109,7 @@ export default function AdminPage() {
         
         console.log("Sending request data:", requestData);
         
-        const base_url = process.env.NEXT_PUBLIC_BASE_URL;
+        const base_url = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
         const response = await fetch(`${base_url}/api/tariffs`, {
         method: "POST",
         credentials: "include",
