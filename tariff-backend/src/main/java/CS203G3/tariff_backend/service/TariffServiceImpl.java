@@ -146,19 +146,17 @@ public class TariffServiceImpl implements TariffService {
             throw new NegativeTariffRateException("Tariff rate cannot be negative: " + createDto.getRate());
         }
         
-        // Rule 3: Rate cannot exceed 100% (assuming percentage-based rates)
-        if (createDto.getRate() != null && createDto.getRate().compareTo(new BigDecimal("100")) > 0) {
-            throw new InvalidTariffRateException("Tariff rate cannot exceed 100%: " + createDto.getRate() + "%");
-        }
+        // Rule 3: Rate validation removed - allowing any positive rate
+        // (No upper limit on tariff rates as they can vary widely in real-world scenarios)
         
-        // Rule 4: Effective date cannot be in the past (optional - depends on business needs)
-        if (createDto.getEffectiveDate() != null) {
-            LocalDate effectiveDate = new java.sql.Date(createDto.getEffectiveDate().getTime()).toLocalDate();
-            LocalDate today = LocalDate.now();
-            if (effectiveDate.isBefore(today)) {
-                throw new PastEffectiveDateException("Effective date cannot be in the past: " + effectiveDate);
-            }
-        }
+        // // Rule 4: Effective date cannot be in the past (optional - depends on business needs)
+        // if (createDto.getEffectiveDate() != null) {
+        //     LocalDate effectiveDate = new java.sql.Date(createDto.getEffectiveDate().getTime()).toLocalDate();
+        //     LocalDate today = LocalDate.now();
+        //     if (effectiveDate.isBefore(today)) {
+        //         throw new PastEffectiveDateException("Effective date cannot be in the past: " + effectiveDate);
+        //     }
+        // }
         
         // Rule 5: Expiry date must be after effective date
         if (createDto.getEffectiveDate() != null && createDto.getExpiryDate() != null) {

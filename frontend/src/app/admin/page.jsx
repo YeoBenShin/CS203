@@ -105,19 +105,9 @@ export default function AdminPage() {
       if (rate < 0) {
         validationErrors.push("Tariff rate cannot be negative");
       }
-      if (rate > 100) {
-        validationErrors.push("Tariff rate cannot exceed 100%");
-      }
     }
     if (!form.effectiveDate) {
       validationErrors.push("Please enter an effective date");
-    } else {
-      const effectiveDate = new Date(form.effectiveDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (effectiveDate < today) {
-        validationErrors.push("Effective date cannot be in the past");
-      }
     }
 
     // Check if exporter and importer are the same
@@ -171,7 +161,7 @@ export default function AdminPage() {
     const errorMessages = {
       'SAME_COUNTRY': 'Please select different countries for exporter and importer.',
       'NEGATIVE_TARIFF_RATE': 'Tariff rate must be a positive number.',
-      'INVALID_TARIFF_RATE': 'Tariff rate must be between 0% and 100%.',
+      'INVALID_TARIFF_RATE': 'Please enter a valid positive tariff rate.',
       'PAST_EFFECTIVE_DATE': 'Please select an effective date that is today or in the future.',
       'EXPIRY_BEFORE_EFFECTIVE': 'Expiry date must be after the effective date.',
       'OVERLAPPING_TARIFF_PERIOD': 'A tariff already exists for this period. Please choose different dates.',
@@ -203,7 +193,7 @@ export default function AdminPage() {
           exporter: form.exporter.value,
           importer: form.importer.value,
           HSCode: Number(form.product.value),
-          rate: parseFloat(form.rate),
+          rate: parseFloat(form.rate) / 100, // Convert percentage to decimal
           effectiveDate: new Date(form.effectiveDate).toISOString(),
           expiryDate: form.expiryDate ? new Date(form.expiryDate).toISOString() : null,
           reference: form.reference || null
@@ -306,13 +296,13 @@ export default function AdminPage() {
             name="rate" 
             type="number" 
             min="0" 
-            max="100"
-            step="0.01" 
+            step="0.01"
             value={form.rate} 
             onChange={handleChange} 
-            placeholder="Enter tariff rate (0-100%)" 
+            placeholder="Enter percentage (e.g., 1 for 1%, 25 for 25%)" 
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
           />
+          <p className="text-xs text-gray-600 mt-1">Enter as percentage: 1 for 1%, 5 for 5%, 25 for 25%</p>
         </div>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="effectiveDate">
@@ -323,7 +313,6 @@ export default function AdminPage() {
             type="date" 
             value={form.effectiveDate} 
             onChange={handleChange} 
-            min={new Date().toISOString().split('T')[0]}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
           />
         </div>
