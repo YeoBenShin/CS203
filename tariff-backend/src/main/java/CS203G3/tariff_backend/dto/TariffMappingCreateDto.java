@@ -7,8 +7,8 @@ public class TariffMappingCreateDto {
     private String exporter;
     @NotNull(message = "Importer is required")
     private String importer;
-    @NotNull(message = "ProductId is required")
-    private Integer productId;
+    @NotNull(message = "HS Code is required")
+    private Integer HSCode;
     
     public String getExporter() {
         return exporter;
@@ -22,10 +22,10 @@ public class TariffMappingCreateDto {
     public void setImporter(String importer) {
         this.importer = importer;
     }
-    public Integer getProductId() {
-        return productId;
+    public Integer getHSCode() {
+        return HSCode;
     }
-    public void setProductId(Integer productId) {
-        this.productId = productId;
+    public void setHSCode(Integer HSCode) {
+        this.HSCode = HSCode;
     }
 }

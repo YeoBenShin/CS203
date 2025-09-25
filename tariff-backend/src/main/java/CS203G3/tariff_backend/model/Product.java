@@ -10,7 +10,7 @@ public class Product {
     
     @Id
     @Column(name = "hs_code")
-    private Integer hsCode; // Changed to Integer to match database INT
+    private Integer hsCode;
     
     @Column(name = "description", length = 255)
     private String description;

@@ -2,8 +2,10 @@ package CS203G3.tariff_backend.service;
 
 import CS203G3.tariff_backend.dto.TariffDto;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
+import CS203G3.tariff_backend.model.Tariff;
 
 import java.util.List;
+import java.sql.Date;
 
 /**
  * Service interface for Tariff business logic
@@ -17,11 +19,18 @@ public interface TariffService {
     List<TariffDto> getAllTariffs();
     
     /**
+     * Get tariffs by page number
+     * @return List of tariffs within specified page(batch) number
+     */
+    List<TariffDto> getTariffsByPage(int page, int pageSize);
+    /**
      * Get tariff by ID
      * @param id The tariff ID
      * @return The tariff DTO
      */
     TariffDto getTariffById(Long id);
+
+    List<Tariff> getTariffRatesByCountries(String country, String tradeDirection, Integer hsCode, Date tradeDate);
     
     /**
      * Create a new tariff

@@ -22,9 +22,9 @@ public class TariffDto {
     private String exporterName;
     private String importerCode;
     private String importerName;
-    private Integer productHSCode;
+    private Integer HSCode;
     private String productDescription;
-    
+
     // Constructors
     public TariffDto() {}
 
@@ -79,23 +79,23 @@ public class TariffDto {
     public void setExporterName(String exporterName) {
         this.exporterName = exporterName;
     }
-    public String getImporterCode() {
-        return importerCode;
-    }
-    public void setImporterCode(String importerCode) {
-        this.importerCode = importerCode;
-    }
     public String getImporterName() {
         return importerName;
     }
     public void setImporterName(String importerName) {
         this.importerName = importerName;
     }
-    public Integer getProductHSCode() {
-        return productHSCode;
+    public String getImporterCode() {
+        return importerCode;
     }
-    public void setProductHSCode(Integer productHSCode) {
-        this.productHSCode = productHSCode;
+    public void setImporterCode(String importerCode) {
+        this.importerCode = importerCode;
+    }
+    public Integer getHSCode() {
+        return HSCode;
+    }
+    public void setHSCode(Integer HSCode) {
+        this.HSCode = HSCode;
     }
     public String getProductDescription() {
         return productDescription;

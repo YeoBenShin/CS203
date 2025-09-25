@@ -1,54 +1,80 @@
 package CS203G3.tariff_backend.dto;
 
+import java.math.BigDecimal;
+import java.sql.Date;
+
 /**
  * DTO for calculation request
  * Input for tariff cost calculations
  */
 public class CalculationRequest {
-    private double prodCost;
-    private int quantity;
-    private double rate;
+    private int hsCode;
+    private String country;
+    private String tradeDirection;
+    private BigDecimal shippingCost;
+    private Date tradeDate;
 
     // Constructors
     public CalculationRequest() {}
 
-    public CalculationRequest(double prodCost, int quantity, double rate) {
-        this.prodCost = prodCost;
-        this.quantity = quantity;
-        this.rate = rate;
+    public CalculationRequest(BigDecimal shippingCost, int hsCode, String country, String tradeDirection, Date tradeDate) {
+        this.shippingCost = shippingCost;
+        this.hsCode = hsCode;
+        this.country = country;
+        this.tradeDirection = tradeDirection;
+        this.tradeDate = tradeDate;
     }
 
     // Getters and Setters
-    public double getProdCost() { 
-        return prodCost; 
+    public BigDecimal getShippingCost() {
+        return shippingCost; 
     }
     
-    public void setProdCost(double prodCost) { 
-        this.prodCost = prodCost; 
+    public void setShippingCost(BigDecimal shippingCost) { 
+        this.shippingCost = shippingCost; 
     }
     
-    public int getQuantity() { 
-        return quantity; 
+    public int gethsCode() { 
+        return hsCode; 
     }
     
-    public void setQuantity(int quantity) { 
-        this.quantity = quantity; 
+    public void sethsCode(int hsCode) { 
+        this.hsCode = hsCode; 
     }
     
-    public double getRate() { 
-        return rate; 
+
+    public String getCountry() {
+        return country;
     }
-    
-    public void setRate(double rate) { 
-        this.rate = rate; 
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getTradeDirection() {
+        return tradeDirection;
+    }
+
+    public void setTradeDirection(String tradeDirection) {
+        this.tradeDirection = tradeDirection;
+    }
+
+    public Date getTradeDate() {
+        return tradeDate;
+    }
+
+    public void setTradeDate(Date tradeDate) {
+        this.tradeDate = tradeDate;
     }
 
     @Override
     public String toString() {
         return "CalculationRequest{" +
-                "prodCost=" + prodCost +
-                ", quantity=" + quantity +
-                ", rate=" + rate +
+                "shippingCost=" + shippingCost +
+                ", hsCode=" + hsCode +
+                ", country='" + country + '\'' +
+                ", tradeDirection='" + tradeDirection + '\'' +
+                ", tradeDate=" + tradeDate +
                 '}';
     }
 }

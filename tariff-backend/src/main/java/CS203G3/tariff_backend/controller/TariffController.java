@@ -11,6 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 /**
  * REST Controller for Tariff API endpoints
@@ -37,6 +40,14 @@ public class TariffController {
         return ResponseEntity.ok(tariffs);
     }
 
+    @GetMapping("/batch")
+    public ResponseEntity<List<TariffDto>> getTariffByPage(@RequestParam(defaultValue = "1") int page) {
+        int pageSize = 10;
+        List<TariffDto> tariffs = tariffService.getTariffsByPage(page, pageSize);
+        return ResponseEntity.ok(tariffs);
+    }
+    
+
     /**
      * Get tariff by ID
      * GET /api/tariffs/{id}
@@ -53,6 +64,15 @@ public class TariffController {
      */
     @PostMapping
     public ResponseEntity<TariffDto> createTariff(@RequestBody TariffCreateDto createDto) {
+        System.out.println("Received TariffCreateDto:");
+        System.out.println("Exporter: " + createDto.getExporter());
+        System.out.println("Importer: " + createDto.getImporter()); 
+        System.out.println("HSCode: " + createDto.getHSCode());
+        System.out.println("Rate: " + createDto.getRate());
+        System.out.println("EffectiveDate: " + createDto.getEffectiveDate());
+        System.out.println("ExpiryDate: " + createDto.getExpiryDate());
+        System.out.println("Reference: " + createDto.getReference());
+        
         TariffDto createdTariff = tariffService.createTariff(createDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTariff);
     }

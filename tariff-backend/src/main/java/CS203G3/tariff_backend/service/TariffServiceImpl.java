@@ -11,6 +11,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 
 /**
  * Implementation of TariffService with DTO support
@@ -20,10 +24,12 @@ public class TariffServiceImpl implements TariffService {
 
     private final TariffRepository tariffRepository;
     private final TariffMappingRepository tariffMappingRepository;
+    private final TariffMappingService tariffMappingService;
 
-    public TariffServiceImpl(TariffRepository tariffRepository, TariffMappingRepository tariffMappingRepository) {
+    public TariffServiceImpl(TariffRepository tariffRepository, TariffMappingRepository tariffMappingRepository, TariffMappingService tariffMappingService) {
         this.tariffRepository = tariffRepository;
         this.tariffMappingRepository = tariffMappingRepository;
+        this.tariffMappingService = tariffMappingService;
     }
 
     private TariffDto convertToDto(Tariff tariff) {
@@ -41,15 +47,31 @@ public class TariffServiceImpl implements TariffService {
         dto.setExporterName(mapping.getExporter().getName());
         dto.setImporterCode(mapping.getImporter().getIsoCode());
         dto.setImporterName(mapping.getImporter().getName());
-        dto.setProductHSCode(mapping.getProduct().getHsCode());
+        dto.setHSCode(mapping.getProduct().getHsCode());
         dto.setProductDescription(mapping.getProduct().getDescription());
         
         return dto;
     }
 
     private Tariff convertToEntity(TariffCreateDto createDto) {
-        TariffMapping mapping = tariffMappingRepository.findById(createDto.getTariffMappingID())
-            .orElseThrow(() -> new TariffMappingNotFoundException(createDto.getTariffMappingID()));
+        // Find existing mapping or create a new one
+        TariffMapping mapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(
+            createDto.getHSCode(), 
+            createDto.getImporter(), 
+            createDto.getExporter()
+        );
+        
+        // If mapping doesn't exist, create it using the service
+        if (mapping == null) {
+            TariffMappingCreateDto mappingDto = new TariffMappingCreateDto();
+            mappingDto.setHSCode(createDto.getHSCode());
+            mappingDto.setImporter(createDto.getImporter());
+            mappingDto.setExporter(createDto.getExporter());
+            
+            TariffMappingDto createdMappingDto = tariffMappingService.createTariffMapping(mappingDto);
+            mapping = tariffMappingRepository.findById(createdMappingDto.getTariffMappingID())
+                .orElseThrow(() -> new InvalidOperationException("Failed to create tariff mapping"));
+        }
         
         // Convert java.util.Date to java.sql.Date
         Date effectiveDate = createDto.getEffectiveDate() != null ? 
@@ -70,8 +92,29 @@ public class TariffServiceImpl implements TariffService {
     @Override
     public TariffDto getTariffById(Long id) {
         Tariff tariff = tariffRepository.findById(id)
-            .orElseThrow(() -> new TariffNotFoundException(id));
+            .orElseThrow(() -> new ResourceNotFoundException("Tariff", id));
         return convertToDto(tariff);
+    }
+
+    @Override
+    public List<Tariff> getTariffRatesByCountries(String country, String tradeDirection, Integer hsCode, Date tradeDate) {
+        String importer = tradeDirection.equals("import") ? country : "USA";
+        String exporter = tradeDirection.equals("export") ? country : "USA";
+        TariffMapping tariffMapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(hsCode, importer, exporter);
+        
+        if (tariffMapping == null) {
+            throw new ResourceNotFoundException("TariffMapping", String.format("HSCode: %d, Importer: %s, Exporter: %s", hsCode, importer, exporter));
+        }
+        return tariffRepository.findValidTariffs(tariffMapping, tradeDate);
+    }
+
+    @Override
+    public List<TariffDto> getTariffsByPage(int page, int pageSize) {
+        return tariffRepository.findAll().stream()
+                .skip((long) page * pageSize)
+                .limit(pageSize)
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -86,10 +129,17 @@ public class TariffServiceImpl implements TariffService {
     @Transactional
     public TariffDto updateTariff(Long id, TariffCreateDto createDto) {
         Tariff existing = tariffRepository.findById(id)
-            .orElseThrow(() -> new TariffNotFoundException(id));
+            .orElseThrow(() -> new ResourceNotFoundException("Tariff", id));
+
+        TariffMapping mapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(
+            createDto.getHSCode(),
+            createDto.getImporter(),
+            createDto.getExporter());
         
-        TariffMapping mapping = tariffMappingRepository.findById(createDto.getTariffMappingID())
-            .orElseThrow(() -> new TariffMappingNotFoundException(createDto.getTariffMappingID()));
+        if (mapping == null) {
+            throw new ResourceNotFoundException("TariffMapping", String.format("HSCode: %d, Importer: %s, Exporter: %s", 
+                createDto.getHSCode(), createDto.getImporter(), createDto.getExporter()));
+        }
 
         // Convert dates
         Date effectiveDate = createDto.getEffectiveDate() != null ? 
@@ -109,9 +159,9 @@ public class TariffServiceImpl implements TariffService {
 
     @Override
     @Transactional
-    public void deleteTariff(Long id) throws TariffNotFoundException {
+    public void deleteTariff(Long id) {
         if (!tariffRepository.existsById(id)) {
-            throw new TariffNotFoundException(id);
+            throw new ResourceNotFoundException("Tariff", id);
         }
         
         tariffRepository.deleteById(id);

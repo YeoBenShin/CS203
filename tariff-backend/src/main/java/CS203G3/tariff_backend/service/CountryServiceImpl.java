@@ -2,7 +2,7 @@ package CS203G3.tariff_backend.service;
 
 import CS203G3.tariff_backend.model.Country;
 import CS203G3.tariff_backend.repository.CountryRepository;
-import CS203G3.tariff_backend.exception.CountryNotFoundException;
+import CS203G3.tariff_backend.exception.ResourceNotFoundException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +25,9 @@ public class CountryServiceImpl implements CountryService {
     }
 
     @Override
-    public void deleteCountry(String id) throws CountryNotFoundException {
+    public void deleteCountry(String id) {
         if (!countryRepository.existsById(id)) {
-            throw new CountryNotFoundException(id);
+            throw new ResourceNotFoundException("Country", id);
         }
         countryRepository.deleteById(id);
     }
@@ -39,18 +39,18 @@ public class CountryServiceImpl implements CountryService {
     }
 
     @Override
-    public Country getCountryById(String id) throws CountryNotFoundException {
-        return countryRepository.findById(id).orElseThrow(() -> new CountryNotFoundException(id));
+    public Country getCountryById(String id) {
+        return countryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Country", id));
     }
 
     @Override
-    public Country updateCountry(String id, Country country) throws CountryNotFoundException {
+    public Country updateCountry(String id, Country country) {
         return countryRepository.findById(id)
             .map(existingCountry -> {
                 existingCountry.setName(country.getName());
                 existingCountry.setRegion(country.getRegion());
                 return countryRepository.save(existingCountry);
             })
-            .orElseThrow(() -> new CountryNotFoundException(id));
+            .orElseThrow(() -> new ResourceNotFoundException("Country", id));
     }
 }
