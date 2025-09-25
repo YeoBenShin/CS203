@@ -131,7 +131,7 @@ export default function ViewTariffsPage() {
                         {tariff.tariffMappingID}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {tariff.rate}%
+                        {(parseFloat(tariff.rate) * 100).toFixed(2)}%
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(tariff.effectiveDate)}

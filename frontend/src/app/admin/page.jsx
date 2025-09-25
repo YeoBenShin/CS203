@@ -176,8 +176,9 @@ export default function AdminPage() {
         </div>
         
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="rate">Rate</label>
-          <input name="rate" type="number" min="0" step="0.01" value={form.rate} onChange={handleChange} placeholder="Enter a percentage for tariff" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="rate">Rate (as decimal)</label>
+          <input name="rate" type="number" min="0" step="0.01" value={form.rate} onChange={handleChange} placeholder="Enter decimal rate (e.g., 0.01 for 1%)" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+          <p className="text-xs text-gray-600 mt-1">Enter as decimal: 0.01 for 1%, 0.05 for 5%, 0.25 for 25%</p>
         </div>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="effectiveDate">Effective Date</label>
