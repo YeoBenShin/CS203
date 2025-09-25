@@ -22,11 +22,24 @@ public class Tariff {
     private Long tariffID;
 
     @ManyToOne
-    @JoinColumn(name = "tariff_mapping_id")
-    private TariffMapping tariffMapping;
+    @JoinColumn(name = "hs_code", referencedColumnName = "hs_code")
+    private Product product;
 
-    @Column(name = "rate", precision = 10, scale = 4)
-    private BigDecimal rate;
+    @Column(name = "name")
+    private String tariffName;
+
+    @ManyToOne
+    @JoinColumn(name = "exporter", referencedColumnName = "isoCode")
+    private Country exporter;
+
+    @Column(name = "tariff_val_1")
+    private BigDecimal tariffVal1;
+
+    @Column(name = "tariff_val_2")
+    private BigDecimal tariffVal2;
+
+    @Column(name = "ad_valorem_rate", precision = 10, scale = 4)
+    private BigDecimal adValoremRate;
 
     @Column(name = "effective_date")
     private Date effectiveDate;
@@ -40,9 +53,15 @@ public class Tariff {
     // Constructors
     public Tariff() {}
 
-    public Tariff(TariffMapping tariffMapping, BigDecimal rate, Date effectiveDate, Date expiryDate, String reference) {
-        this.tariffMapping = tariffMapping;
-        this.rate = rate;
+    public Tariff(Long tariffID, Product product, String tariffName, Country exporter, BigDecimal tariffVal1,
+            BigDecimal tariffVal2, BigDecimal adValoremRate, Date effectiveDate, Date expiryDate, String reference) {
+        this.tariffID = tariffID;
+        this.product = product;
+        this.tariffName = tariffName;
+        this.exporter = exporter;
+        this.tariffVal1 = tariffVal1;
+        this.tariffVal2 = tariffVal2;
+        this.adValoremRate = adValoremRate;
         this.effectiveDate = effectiveDate;
         this.expiryDate = expiryDate;
         this.reference = reference;
@@ -55,22 +74,6 @@ public class Tariff {
 
     public void setTariffID(Long tariffID) {
         this.tariffID = tariffID;
-    }
-
-    public TariffMapping getTariffMapping() {
-        return tariffMapping;
-    }
-
-    public void setTariffMapping(TariffMapping tariffMapping) {
-        this.tariffMapping = tariffMapping;
-    }
-
-    public BigDecimal getRate() {
-        return rate;
-    }
-
-    public void setRate(BigDecimal rate) {
-        this.rate = rate;
     }
 
     public Date getEffectiveDate() {
@@ -89,6 +92,54 @@ public class Tariff {
         this.expiryDate = expiryDate;
     }
 
+    public Product gethSCode() {
+        return product;
+    }
+
+    public void sethSCode(Product product) {
+        this.product = product;
+    }
+
+    public String getTariffName() {
+        return tariffName;
+    }
+
+    public void setTariffName(String tariffName) {
+        this.tariffName = tariffName;
+    }
+
+    public Country getExporter() {
+        return exporter;
+    }
+
+    public void setExporter(Country exporter) {
+        this.exporter = exporter;
+    }
+
+    public BigDecimal getTariffVal1() {
+        return tariffVal1;
+    }
+
+    public void setTariffVal1(BigDecimal tariffVal1) {
+        this.tariffVal1 = tariffVal1;
+    }
+
+    public BigDecimal getTariffVal2() {
+        return tariffVal2;
+    }
+
+    public void setTariffVal2(BigDecimal tariffVal2) {
+        this.tariffVal2 = tariffVal2;
+    }
+
+    public BigDecimal getAdValoremRate() {
+        return adValoremRate;
+    }
+
+    public void setAdValoremRate(BigDecimal adValoremRate) {
+        this.adValoremRate = adValoremRate;
+    }
+
     public String getReference() {
         return reference;
     }
@@ -99,13 +150,10 @@ public class Tariff {
 
     @Override
     public String toString() {
-        return "Tariff{" +
-                "tariffID=" + tariffID +
-                ", tariffMapping=" + tariffMapping +
-                ", rate=" + rate +
-                ", effectiveDate=" + effectiveDate +
-                ", expiryDate=" + expiryDate +
-                ", reference='" + reference + '\'' +
-                '}';
+        return "Tariff [tariffID=" + tariffID + ", product=" + product + ", tariffName=" + tariffName + ", exporter="
+                + exporter + ", tariffVal1=" + tariffVal1 + ", tariffVal2=" + tariffVal2 + ", adValoremRate="
+                + adValoremRate + ", effectiveDate=" + effectiveDate + ", expiryDate=" + expiryDate + ", reference="
+                + reference + "]";
     }
+
 }

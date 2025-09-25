@@ -19,10 +19,7 @@ public class Country {
     private String region;
 
     @OneToMany(mappedBy = "exporter", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TariffMapping> exportedTariffMappings;
-
-    @OneToMany(mappedBy = "importer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TariffMapping> importedTariffMappings;
+    private List<Tariff> tariffs;
 
     // Constructors
     public Country() {}
