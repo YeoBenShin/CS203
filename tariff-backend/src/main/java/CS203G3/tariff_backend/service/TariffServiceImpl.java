@@ -5,19 +5,15 @@ import CS203G3.tariff_backend.repository.*;
 import CS203G3.tariff_backend.dto.*;
 import CS203G3.tariff_backend.exception.*;
 import CS203G3.tariff_backend.exception.tariff.*;
+import CS203G3.tariff_backend.exception.ResourceNotFoundException;
 
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 
 /**
  * Implementation of TariffService with DTO support
@@ -106,7 +102,7 @@ public class TariffServiceImpl implements TariffService {
         TariffMapping tariffMapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(hsCode, importer, exporter);
         
         if (tariffMapping == null) {
-            throw new ResourceNotFoundException("TariffMapping", String.format("HSCode: %d, Importer: %s, Exporter: %s", hsCode, importer, exporter));
+            throw new ResourceNotFoundException(String.format("No tariff was found. HSCode: %d, Importer: %s, Exporter: %s", hsCode, importer, exporter));
         }
         return tariffRepository.findValidTariffs(tariffMapping, tradeDate);
     }
