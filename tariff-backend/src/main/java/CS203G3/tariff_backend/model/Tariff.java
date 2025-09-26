@@ -29,7 +29,7 @@ public class Tariff {
     private String tariffName;
 
     @ManyToOne
-    @JoinColumn(name = "exporter", referencedColumnName = "isoCode")
+    @JoinColumn(name = "exporter", referencedColumnName = "iso_code")
     private Country exporter;
 
     @Column(name = "effective_date")

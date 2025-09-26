@@ -28,4 +28,44 @@ public class TariffRate {
 
     @Column(name = "tariff_rate")
     private BigDecimal tariffRate;
+
+    public TariffRate() {
+    }
+
+    public TariffRate(BigDecimal tariffRate) {
+        this.tariffRate = tariffRate;
+    }
+
+    public Long getTariffRateID() {
+        return TariffRateID;
+    }
+
+    public void setTariffRateID(Long tariffRateID) {
+        TariffRateID = tariffRateID;
+    }
+
+    public Tariff getTariff() {
+        return tariff;
+    }
+
+    public void setTariff(Tariff tariff) {
+        this.tariff = tariff;
+    }
+
+    public MetricType getMetricType() {
+        return metricType;
+    }
+
+    public void setMetricType(MetricType metricType) {
+        this.metricType = metricType;
+    }
+
+    public BigDecimal getTariffRate() {
+        return tariffRate;
+    }
+
+    public void setTariffRate(BigDecimal tariffRate) {
+        this.tariffRate = tariffRate;
+    }
+    
 }
