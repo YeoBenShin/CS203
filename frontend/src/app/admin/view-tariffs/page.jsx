@@ -38,7 +38,7 @@ export default function ViewTariffsPage() {
       });
 
       if (response.ok) {
-        setTariffs(tariffs.filter(tariff => tariff.id !== id));
+        setTariffs(tariffs.filter(tariff => tariff.tariffID !== id));
         setDeleteMessage("Tariff deleted successfully!");
         setTimeout(() => setDeleteMessage(""), 3000);
       } else {
@@ -99,10 +99,10 @@ export default function ViewTariffsPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ID
+                      Exporting Country
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Mapping ID
+                      Destination Country
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Rate (%)
@@ -123,12 +123,12 @@ export default function ViewTariffsPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {tariffs.map((tariff) => (
-                    <tr key={tariff.id}>
+                    <tr key={tariff.tariffID}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {tariff.id}
+                        {tariff.exporterName}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {tariff.tariffMappingID}
+                        {tariff.importerName}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {(parseFloat(tariff.rate) * 100).toFixed(2)}%
@@ -144,7 +144,7 @@ export default function ViewTariffsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
-                          onClick={() => handleDelete(tariff.id)}
+                          onClick={() => handleDelete(tariff.tariffID)}
                           className="text-red-600 hover:text-red-900"
                         >
                           Delete
