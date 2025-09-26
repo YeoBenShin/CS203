@@ -5,7 +5,6 @@ import java.util.*;
 
 
 @Entity
-@Table(name = "country")
 public class Country {
     
     @Id
