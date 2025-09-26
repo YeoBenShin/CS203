@@ -25,7 +25,7 @@ public class TariffForCalDisplayDto {
     }
 
     public BigDecimal getRate() {
-        return rate;
+        return rate.multiply(BigDecimal.valueOf(100));
     }
 
     public void setRate(BigDecimal rate) {
@@ -57,7 +57,7 @@ public class TariffForCalDisplayDto {
     }
 
     public BigDecimal getAmountApplied() {
-        return amountApplied.divide(BigDecimal.valueOf(100));
+        return amountApplied;
     }
 
     public void setAmountApplied(BigDecimal amountApplied) {

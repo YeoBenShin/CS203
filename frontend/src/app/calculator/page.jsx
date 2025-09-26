@@ -544,7 +544,7 @@ export default function CalculatorPage() {
                     >
                       <div>
                         <span className="font-semibold text-black">Tariff {index + 1}</span>
-                        <span className="text-gray-600 ml-2">({tariff.rate})</span>
+                        <span className="text-gray-600 ml-2">({tariff.rate.toFixed(2)}%)</span>
                       </div>
                       <span className="font-bold text-black">${tariff.amountApplied.toFixed(2)}</span>
 

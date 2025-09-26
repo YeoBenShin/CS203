@@ -29,14 +29,4 @@ public class CalculationController {
         CalculationResult result = calculationService.calculateTariff(input);
         return ResponseEntity.ok(result);
     }
-
-    /**
-     * Convert decimal rate to percentage
-     * GET /api/calculations/decimal-to-percentage?decimal=0.15
-     */
-    @GetMapping("/decimal-to-percentage")
-    public ResponseEntity<Double> decimalToPercentage(@RequestParam double decimal) {
-        double percentage = calculationService.decimalToPercentage(decimal);
-        return ResponseEntity.ok(percentage);
-    }
 }
