@@ -2,6 +2,7 @@ package CS203G3.tariff_backend.dto;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * DTO for Tariff responses - includes all tariff data plus mapping details for frontend
@@ -22,6 +23,7 @@ public class TariffDto {
     private String exporterName;
     private String importerCode;
     private String importerName;
+    @JsonProperty("HSCode")
     private Integer HSCode;
     private String productDescription;
 

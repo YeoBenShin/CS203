@@ -32,7 +32,6 @@ export default function Navbar() {
             <Link href="/admin" className="block px-4 py-2 text-black hover:bg-blue-100">Create Tariff</Link>
             <Link href="/admin/product" className="block px-4 py-2 text-black hover:bg-blue-100">Add Product</Link>
             <Link href="/admin/view-tariffs" className="block px-4 py-2 text-black hover:bg-blue-100">View All Tariffs</Link>
-            <Link href="/admin/view-mappings" className="block px-4 py-2 text-black hover:bg-blue-100">View All Mappings</Link>
           </div>
         </li>
         <li>
