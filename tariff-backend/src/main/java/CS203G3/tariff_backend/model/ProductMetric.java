@@ -12,17 +12,17 @@ public class ProductMetric {
     @JoinColumn(name = "hs_code", referencedColumnName = "hs_code")
     private Product product;
 
-    @ManyToOne
-    @JoinColumn(name = "metric_id", referencedColumnName = "metric_id")
-    private MetricType metricType;
+    @Enumerated(EnumType.STRING)
+    @Column
+    private UnitOfCalculation unitOfCalculation;
 
     public ProductMetric() {
     }
 
-    public ProductMetric(Long productMetricID, Product product, MetricType metricType) {
+    public ProductMetric(Long productMetricID, Product product, UnitOfCalculation unitOfCalculation) {
         this.productMetricID = productMetricID;
         this.product = product;
-        this.metricType = metricType;
+        this.unitOfCalculation = unitOfCalculation;
     }
 
     public Long getProductMetricID() {
@@ -41,12 +41,11 @@ public class ProductMetric {
         this.product = product;
     }
 
-    public MetricType getMetricType() {
-        return metricType;
+    public UnitOfCalculation getUnitOfCalculation() {
+        return unitOfCalculation;
     }
 
-    public void setMetricType(MetricType metricType) {
-        this.metricType = metricType;
+    public void setUnitOfCalculation(UnitOfCalculation unitOfCalculation) {
+        this.unitOfCalculation = unitOfCalculation;
     }
-    
 }

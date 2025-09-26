@@ -1,7 +1,6 @@
 package CS203G3.tariff_backend.model;
 
 import java.sql.Date;
-import java.math.BigDecimal;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

@@ -8,7 +8,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.JoinColumn;
 
 @Entity
@@ -22,9 +21,9 @@ public class TariffRate {
     @JoinColumn(name = "tariff_id", referencedColumnName = "tariff_id")
     private Tariff tariff;
 
-    @OneToOne
-    @JoinColumn(name = "metric_id", referencedColumnName = "metric_id")
-    private MetricType metricType;
+    @ManyToOne
+    @JoinColumn(referencedColumnName = "unit_of_calculation")
+    private UnitOfCalculation unitOfCalculation;
 
     @Column(name = "tariff_rate")
     private BigDecimal tariffRate;
@@ -52,20 +51,20 @@ public class TariffRate {
         this.tariff = tariff;
     }
 
-    public MetricType getMetricType() {
-        return metricType;
-    }
-
-    public void setMetricType(MetricType metricType) {
-        this.metricType = metricType;
-    }
-
     public BigDecimal getTariffRate() {
         return tariffRate;
     }
 
     public void setTariffRate(BigDecimal tariffRate) {
         this.tariffRate = tariffRate;
+    }
+
+    public UnitOfCalculation getUnitOfCalculation() {
+        return unitOfCalculation;
+    }
+
+    public void setUnitOfCalculation(UnitOfCalculation unitOfCalculation) {
+        this.unitOfCalculation = unitOfCalculation;
     }
     
 }
