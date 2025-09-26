@@ -9,14 +9,15 @@ public class MetricType {
     @Column(name = "metric_id")
     private Long metricID;
 
+    @Enumerated(EnumType.STRING)
     @Column
-    private String unitOfCalculation;
+    private UnitOfCalculation unitOfCalculation;
 
     // Constructors
     public MetricType() {
     }
 
-    public MetricType(Long metricID, String unitOfCalculation) {
+    public MetricType(Long metricID, UnitOfCalculation unitOfCalculation) {
         this.metricID = metricID;
         this.unitOfCalculation = unitOfCalculation;
     }
@@ -30,11 +31,11 @@ public class MetricType {
         this.metricID = metricID;
     }
 
-    public String getUnitOfCalculation() {
+    public UnitOfCalculation getUnitOfCalculation() {
         return unitOfCalculation;
     }
 
-    public void setUnitOfCalculation(String unitOfCalculation) {
+    public void setUnitOfCalculation(UnitOfCalculation unitOfCalculation) {
         this.unitOfCalculation = unitOfCalculation;
     }
 }
