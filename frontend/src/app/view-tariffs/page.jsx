@@ -1,7 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ViewTariffsPage() {
+  const router = useRouter();
   const [tariffs, setTariffs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -258,60 +260,61 @@ export default function ViewTariffsPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {tariffs.map((tariff, index) => (
                     <React.Fragment key={tariff.tariffID}>
-                      <tr 
+                      <tr
                         className="hover:bg-gray-50 cursor-pointer"
                         onClick={() => handleShowDetails(tariff)}
                       >
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                        {tariff.exporterName}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-500">
-                        {tariff.importerName}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-500">
-                        {tariff.HSCode}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-500" title={tariff.productDescription || "N/A"}>
-                        {tariff.productDescription ? (tariff.productDescription.length > 40 ? tariff.productDescription.substring(0, 40) + "..." : tariff.productDescription) : "N/A"}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 font-medium">
-                        {(parseFloat(tariff.rate) * 100).toFixed(2)}%
-                      </td>
-                      <td className="px-4 py-4 text-sm font-medium relative" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => toggleMenu(tariff.tariffID)}
-                          className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100"
-                        >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                          </svg>
-                        </button>
-                        {activeMenu === tariff.tariffID && (
-                          <div className={`absolute right-0 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-50 ${
-                            getMenuPosition(index, tariffs.length) === 'below' 
-                              ? 'top-full mt-1' 
-                              : 'bottom-full mb-1'
-                          }`}>
-                            <button
-                              onClick={() => handleEdit(tariff)}
-                              className="block w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 rounded-t-md"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => {
-                                setActiveMenu(null);
-                                handleDelete(tariff.tariffID);
-                              }}
-                              className="block w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 rounded-b-md"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  </React.Fragment>
+                        <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                          {tariff.exporterName}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-500">
+                          {tariff.importerName}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-500">
+                          {tariff.HSCode}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-500" title={tariff.productDescription || "N/A"}>
+                          {tariff.productDescription ? (tariff.productDescription.length > 40 ? tariff.productDescription.substring(0, 40) + "..." : tariff.productDescription) : "N/A"}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-900 font-medium">
+                          {(parseFloat(tariff.rate) * 100).toFixed(2)}%
+                        </td>
+                        <td className="px-4 py-4 text-sm font-medium relative" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => toggleMenu(tariff.tariffID)}
+                            className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100"
+                          >
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                            </svg>
+                          </button>
+                          {activeMenu === tariff.tariffID && (
+                            <div className={`absolute right-0 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-50 ${getMenuPosition(index, tariffs.length) === 'below'
+                                ? 'top-full mt-1'
+                                : 'bottom-full mb-1'
+                              }`}>
+                              <button
+                                onClick={() => {
+                                  router.push(`/edit-tariff/${tariff.tariffID}`);
+                                }}
+                                className="block w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 rounded-t-md"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setActiveMenu(null);
+                                  handleDelete(tariff.tariffID);
+                                }}
+                                className="block w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 rounded-b-md"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -370,7 +373,7 @@ export default function ViewTariffsPage() {
                   <h3 className="text-lg font-medium text-gray-900">Delete Tariff</h3>
                 </div>
               </div>
-              
+
               <div className="mb-6">
                 <p className="text-sm text-gray-500 mb-3">
                   Are you sure you want to delete this tariff? This action cannot be undone.
@@ -384,7 +387,7 @@ export default function ViewTariffsPage() {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={cancelDelete}
@@ -419,58 +422,57 @@ export default function ViewTariffsPage() {
                   </svg>
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Exporting Country</label>
                     <p className="text-sm text-gray-900">{selectedTariff.exporterName}</p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Destination Country</label>
                     <p className="text-sm text-gray-900">{selectedTariff.importerName}</p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">HS Code</label>
                     <p className="text-sm text-gray-900">{selectedTariff.HSCode}</p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Tariff Rate</label>
                     <p className="text-sm text-gray-900">{(parseFloat(selectedTariff.rate) * 100).toFixed(2)}%</p>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Effective Date</label>
                     <p className="text-sm text-gray-900">{formatDate(selectedTariff.effectiveDate)}</p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
                     <p className="text-sm text-gray-900">{formatDate(selectedTariff.expiryDate)}</p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Reference</label>
                     <p className="text-sm text-gray-900 break-all">{selectedTariff.reference || "N/A"}</p>
                   </div>
                 </div>
-                
+
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Product Description</label>
                   <p className="text-sm text-gray-900">{selectedTariff.productDescription || "N/A"}</p>
                 </div>
               </div>
-              
+
               <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
                 <button
                   onClick={() => {
-                    handleEdit(selectedTariff);
-                    closeDetailsPopup();
+                    router.push(`/edit-tariff/${selectedTariff.tariffID}`);
                   }}
                   className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                 >

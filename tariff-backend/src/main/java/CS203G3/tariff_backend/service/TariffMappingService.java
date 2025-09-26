@@ -1,10 +1,9 @@
 package CS203G3.tariff_backend.service;
 
-import CS203G3.tariff_backend.model.TariffMapping;
-import CS203G3.tariff_backend.dto.TariffMappingDto;
-import CS203G3.tariff_backend.dto.TariffMappingCreateDto;
-
 import java.util.List;
+
+import CS203G3.tariff_backend.dto.TariffMappingCreateDto;
+import CS203G3.tariff_backend.dto.TariffMappingDto;
 
 /**
  * Service interface for Tariff business logic
@@ -38,7 +37,7 @@ public interface TariffMappingService {
      * @param tariffMapping The updated tariff mapping data
      * @return The updated tariff mapping
      */
-    TariffMapping updateTariffMapping(Long id, TariffMappingDto tariffMappingDto);
+    TariffMappingDto updateTariffMapping(Long id, TariffMappingDto tariffMappingDto);
 
     /**
      * Delete a tariff mapping

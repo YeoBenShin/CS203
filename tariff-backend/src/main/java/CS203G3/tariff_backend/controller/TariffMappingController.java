@@ -63,10 +63,13 @@ public class TariffMappingController {
      * PUT /api/tariffmappings/{id}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<TariffMapping> updateTariffMapping(@PathVariable Long id, @RequestBody TariffMappingDto tariffMappingDto) {
-        TariffMapping updatedTariffMapping = tariffMappingService.updateTariffMapping(id, tariffMappingDto);
+    public ResponseEntity<TariffMappingDto> updateTariffMapping(@PathVariable Long id, @RequestBody TariffMappingDto tariffMappingDto) {
+        TariffMappingDto updatedTariffMapping = tariffMappingService.updateTariffMapping(id, tariffMappingDto);
         return ResponseEntity.ok(updatedTariffMapping);
     }
+    
+
+
 
     /**
      * Delete a tariff

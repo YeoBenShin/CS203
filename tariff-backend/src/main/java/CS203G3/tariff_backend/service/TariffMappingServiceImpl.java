@@ -1,16 +1,19 @@
 package CS203G3.tariff_backend.service;
 
-import CS203G3.tariff_backend.model.*;
-import CS203G3.tariff_backend.repository.*;
-import CS203G3.tariff_backend.dto.*;
-import CS203G3.tariff_backend.exception.ResourceNotFoundException;
-import CS203G3.tariff_backend.exception.TariffMappingAlreadyExistsException;
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import CS203G3.tariff_backend.dto.TariffMappingCreateDto;
+import CS203G3.tariff_backend.dto.TariffMappingDto;
+import CS203G3.tariff_backend.exception.ResourceNotFoundException;
+import CS203G3.tariff_backend.exception.TariffMappingAlreadyExistsException;
+import CS203G3.tariff_backend.model.TariffMapping;
+import CS203G3.tariff_backend.repository.CountryRepository;
+import CS203G3.tariff_backend.repository.ProductRepository;
+import CS203G3.tariff_backend.repository.TariffMappingRepository;
 
 @Service
 public class TariffMappingServiceImpl implements TariffMappingService {
@@ -95,10 +98,9 @@ public class TariffMappingServiceImpl implements TariffMappingService {
 
         return convertToDto(entity);
     }
-
     @Override
     @Transactional
-    public TariffMapping updateTariffMapping(Long id, TariffMappingDto tariffMappingDto) {
+    public TariffMappingDto updateTariffMapping(Long id, TariffMappingDto tariffMappingDto) {
         if (!tariffMappingRepository.existsById(id)) {
             throw new ResourceNotFoundException("TariffMapping", id.toString());
         }
@@ -106,6 +108,7 @@ public class TariffMappingServiceImpl implements TariffMappingService {
         TariffMapping tariffMapping = tariffMappingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("TariffMapping", id.toString()));
 
+        // Update entity fields from DTO
         tariffMapping.setProduct(productRepository.findById(tariffMappingDto.getHSCode())
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + tariffMappingDto.getHSCode())));
         
@@ -115,8 +118,11 @@ public class TariffMappingServiceImpl implements TariffMappingService {
         tariffMapping.setExporter(countryRepository.findById(tariffMappingDto.getExporter())
                 .orElseThrow(() -> new IllegalArgumentException("Exporter country not found: " + tariffMappingDto.getExporter())));
 
-        tariffMapping.setTariffMappingID(id);
-        return tariffMappingRepository.save(tariffMapping);
+        // Save the entity (not the DTO)
+        TariffMapping savedMapping = tariffMappingRepository.save(tariffMapping);
+        
+        // Convert the saved entity back to DTO and return it
+        return convertToDto(savedMapping);
     }
   
 }

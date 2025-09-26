@@ -198,33 +198,68 @@ public class TariffServiceImpl implements TariffService {
     @Override
     @Transactional
     public TariffDto updateTariff(Long id, TariffCreateDto createDto) {
+        // Find the existing tariff
         Tariff existing = tariffRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Tariff", id));
-
-        TariffMapping mapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(
-            createDto.getHSCode(),
-            createDto.getImporter(),
-            createDto.getExporter());
+            .orElseThrow(() -> new ResourceNotFoundException("Tariff", id.toString()));
         
-        if (mapping == null) {
-            throw new ResourceNotFoundException("TariffMapping", String.format("HSCode: %d, Importer: %s, Exporter: %s", 
-                createDto.getHSCode(), createDto.getImporter(), createDto.getExporter()));
+        // Important: Preserve the existing tariff mapping relationship
+        // This ensures tariff_mapping_id never changes during updates
+        TariffMapping existingMapping = existing.getTariffMapping();
+        
+        // Only update the rate, dates and reference
+        if (createDto.getRate() != null) {
+            existing.setRate(createDto.getRate());
         }
-
-        // Convert dates
-        Date effectiveDate = createDto.getEffectiveDate() != null ? 
-            new Date(createDto.getEffectiveDate().getTime()) : null;
-        Date expiryDate = createDto.getExpiryDate() != null ? 
-            new Date(createDto.getExpiryDate().getTime()) : null;
         
-        existing.setTariffMapping(mapping);
-        existing.setRate(createDto.getRate());
-        existing.setEffectiveDate(effectiveDate);
-        existing.setExpiryDate(expiryDate);
+        if (createDto.getEffectiveDate() != null) {
+            existing.setEffectiveDate(createDto.getEffectiveDate());
+        }
+        
+        if (createDto.getExpiryDate() != null) {
+            existing.setExpiryDate(createDto.getExpiryDate());
+        }
+        
+        // Reference can be null or updated
         existing.setReference(createDto.getReference());
         
+        // Validate tariff business rules (dates, rates, etc.)
+        validateTariffUpdateRules(existing);
+        
+        // Save and return
         Tariff updated = tariffRepository.save(existing);
         return convertToDto(updated);
+    }
+
+    /**
+     * Validates business rules for tariff updates
+     */
+    private void validateTariffUpdateRules(Tariff tariff) {
+        // Rule 1: Rate cannot be negative
+        if (tariff.getRate().compareTo(BigDecimal.ZERO) < 0) {
+            throw new NegativeTariffRateException("Tariff rate cannot be negative: " + tariff.getRate());
+        }
+        
+        // Rule 2: Expiry date must be after effective date
+        if (tariff.getEffectiveDate() != null && tariff.getExpiryDate() != null 
+                && tariff.getExpiryDate().before(tariff.getEffectiveDate())) {
+            throw new ExpiryBeforeEffectiveException("Expiry date must be after effective date");
+        }
+        
+        // Rule 3: Check for overlapping tariffs (excluding this tariff)
+        List<Tariff> overlappingTariffs = tariffRepository
+            .findOverlappingTariffsExcludingCurrent(
+                tariff.getTariffMapping(),
+                tariff.getTariffID(),
+                tariff.getEffectiveDate(),
+                tariff.getExpiryDate()
+            );
+        
+        if (!overlappingTariffs.isEmpty()) {
+            throw new OverlappingTariffPeriodException(
+                String.format("Overlapping tariff period found when updating tariff %d", 
+                    tariff.getTariffID())
+            );
+        }
     }
 
     @Override
