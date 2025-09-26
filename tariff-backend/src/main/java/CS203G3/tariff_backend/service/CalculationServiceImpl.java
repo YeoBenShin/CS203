@@ -57,13 +57,4 @@ public class CalculationServiceImpl {
         BigDecimal totalCost = input.getShippingCost().add(totalTariffCost).setScale(2, RoundingMode.HALF_UP);
         return new CalculationResult(totalCost, totalTariffRate, totalTariffCost, tariffDtos);
     }
-
-    /**
-     * Convert decimal rate to percentage
-     * @param decimal Rate as decimal (e.g., 0.15)
-     * @return Rate as percentage (e.g., 15.0)
-     */
-    public double decimalToPercentage(double decimal) {
-        return decimal * 100.0;
-    }
 }

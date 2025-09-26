@@ -4,17 +4,16 @@ import CS203G3.tariff_backend.model.*;
 import CS203G3.tariff_backend.repository.*;
 import CS203G3.tariff_backend.dto.*;
 import CS203G3.tariff_backend.exception.*;
+import CS203G3.tariff_backend.exception.tariff.*;
+import CS203G3.tariff_backend.exception.ResourceNotFoundException;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 
 /**
  * Implementation of TariffService with DTO support
@@ -103,7 +102,7 @@ public class TariffServiceImpl implements TariffService {
         TariffMapping tariffMapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(hsCode, importer, exporter);
         
         if (tariffMapping == null) {
-            throw new ResourceNotFoundException("TariffMapping", String.format("HSCode: %d, Importer: %s, Exporter: %s", hsCode, importer, exporter));
+            throw new ResourceNotFoundException(String.format("No tariff was found. HSCode: %d, Importer: %s, Exporter: %s", hsCode, importer, exporter));
         }
         return tariffRepository.findValidTariffs(tariffMapping, tradeDate);
     }
@@ -120,9 +119,80 @@ public class TariffServiceImpl implements TariffService {
     @Override
     @Transactional
     public TariffDto createTariff(TariffCreateDto createDto) {
+        // Validate business rules
+        validateTariffBusinessRules(createDto);
+        
         Tariff entity = convertToEntity(createDto);
         Tariff saved = tariffRepository.save(entity);
         return convertToDto(saved);
+    }
+    
+    /**
+     * Validates business rules for tariff creation
+     */
+    private void validateTariffBusinessRules(TariffCreateDto createDto) {
+        // Rule 1: Exporter and importer cannot be the same
+        if (createDto.getExporter() != null && createDto.getImporter() != null && 
+            createDto.getExporter().equals(createDto.getImporter())) {
+            throw new SameCountryException(createDto.getExporter());
+        }
+        
+        // Rule 2: Rate cannot be negative
+        if (createDto.getRate() != null && createDto.getRate().compareTo(BigDecimal.ZERO) < 0) {
+            throw new NegativeTariffRateException("Tariff rate cannot be negative: " + createDto.getRate());
+        }
+        
+        // Rule 3: Rate validation removed - allowing any positive rate
+        // (No upper limit on tariff rates as they can vary widely in real-world scenarios)
+        
+        // // Rule 4: Effective date cannot be in the past (optional - depends on business needs)
+        // if (createDto.getEffectiveDate() != null) {
+        //     LocalDate effectiveDate = new java.sql.Date(createDto.getEffectiveDate().getTime()).toLocalDate();
+        //     LocalDate today = LocalDate.now();
+        //     if (effectiveDate.isBefore(today)) {
+        //         throw new PastEffectiveDateException("Effective date cannot be in the past: " + effectiveDate);
+        //     }
+        // }
+        
+        // Rule 5: Expiry date must be after effective date
+        if (createDto.getEffectiveDate() != null && createDto.getExpiryDate() != null) {
+            if (createDto.getExpiryDate().before(createDto.getEffectiveDate())) {
+                throw new ExpiryBeforeEffectiveException("Expiry date must be after effective date");
+            }
+        }
+        
+        // Rule 6: Check for overlapping tariff periods (same mapping, overlapping dates)
+        validateNoOverlappingTariffs(createDto);
+    }
+    
+    /**
+     * Validates that no overlapping tariffs exist for the same tariff mapping
+     */
+    private void validateNoOverlappingTariffs(TariffCreateDto createDto) {
+        // Find existing tariff mapping
+        TariffMapping existingMapping = tariffMappingRepository
+            .findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(
+                createDto.getHSCode(), 
+                createDto.getImporter(), 
+                createDto.getExporter()
+            );
+        
+        if (existingMapping != null) {
+            // Check for overlapping tariffs
+            List<Tariff> overlappingTariffs = tariffRepository
+                .findOverlappingTariffs(
+                    existingMapping,
+                    new Date(createDto.getEffectiveDate().getTime()),
+                    createDto.getExpiryDate() != null ? new Date(createDto.getExpiryDate().getTime()) : null
+                );
+            
+            if (!overlappingTariffs.isEmpty()) {
+                throw new OverlappingTariffPeriodException(
+                    String.format("Overlapping tariff period found for %s -> %s, HSCode: %d", 
+                        createDto.getExporter(), createDto.getImporter(), createDto.getHSCode())
+                );
+            }
+        }
     }
 
     @Override
