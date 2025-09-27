@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useUser } from '@clerk/nextjs';
 
 export default function ViewTariffsPage() {
   const router = useRouter();
@@ -10,7 +10,7 @@ export default function ViewTariffsPage() {
   const [deleteMessage, setDeleteMessage] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const [activeMenu, setActiveMenu] = useState(null);
+  // const [activeMenu, setActiveMenu] = useState(null);
   const [editError, setEditError] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -19,20 +19,23 @@ export default function ViewTariffsPage() {
   const [showDetailsPopup, setShowDetailsPopup] = useState(false);
   const [selectedTariff, setSelectedTariff] = useState(null);
 
+  const { user } = useUser();
+  const role = user?.publicMetadata?.role || "user"; 
+
   useEffect(() => {
     fetchTariffs();
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setActiveMenu(null);
-    };
+  // useEffect(() => {
+  //   const handleClickOutside = () => {
+  //     setActiveMenu(null);
+  //   };
 
-    if (activeMenu) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [activeMenu]);
+  //   if (activeMenu) {
+  //     document.addEventListener('click', handleClickOutside);
+  //     return () => document.removeEventListener('click', handleClickOutside);
+  //   }
+  // }, [activeMenu]);
 
   // Cleanup effect to restore scrolling when component unmounts
   useEffect(() => {
@@ -46,6 +49,7 @@ export default function ViewTariffsPage() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs`);
       if (response.ok) {
         const data = await response.json();
+        console.log("Fetched tariffs:", data);
         setTariffs(data);
       } else {
         setError("Failed to fetch tariffs");
@@ -64,7 +68,10 @@ export default function ViewTariffsPage() {
   };
 
   const confirmDelete = async () => {
-    if (!tariffToDelete) return;
+    if (!tariffToDelete) {
+      setError("No tariff selected for deletion");
+      return;    
+    }
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs/${tariffToDelete.tariffID}`, {
@@ -112,7 +119,7 @@ export default function ViewTariffsPage() {
       expiryDate: formatDateForInput(tariff.expiryDate),
       reference: tariff.reference || ""
     });
-    setActiveMenu(null);
+    // setActiveMenu(null);
     setEditError(""); // Clear any previous edit errors
   };
 
@@ -143,7 +150,7 @@ export default function ViewTariffsPage() {
 
       if (response.ok) {
         const updatedTariff = await response.json();
-        setTariffs(tariffs.map(t => t.tariffID === tariffId ? updatedTariff : t));
+        setTariffs(tariffs.map(t => t.tariffID === tariffId ? updatedTariff : t)); // show the updated tariff
         setEditingId(null);
         setEditForm({});
         setEditError(""); // Clear edit error on success
@@ -161,15 +168,9 @@ export default function ViewTariffsPage() {
     setEditForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const toggleMenu = (tariffId) => {
-    setActiveMenu(activeMenu === tariffId ? null : tariffId);
-  };
-
-  const getMenuPosition = (index, totalCount) => {
-    // Show menu below for first half of items, above for second half
-    const isTopHalf = index < totalCount / 2;
-    return isTopHalf ? 'below' : 'above';
-  };
+  // const toggleMenu = (tariffId) => {
+  //   setActiveMenu(activeMenu === tariffId ? null : tariffId);
+  // };
 
   const showSuccessPopupMessage = (message) => {
     setSuccessMessage(message);
@@ -210,9 +211,8 @@ export default function ViewTariffsPage() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-extrabold text-gray-900">All Tariffs</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Manage and view all tariff entries in the system
-          </p>
+          <p className="mt-2 text-sm text-gray-600"> View all tariff entries in the system</p>
+          <p className="mt-1 text-sm text-gray-600"> Click on a tariff to view more details</p>
         </div>
 
         {deleteMessage && deleteMessage.includes("Error") && (
@@ -252,69 +252,64 @@ export default function ViewTariffsPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">
                       Rate (%)
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">
+                    {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">
                       Actions
-                    </th>
+                    </th> */}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {tariffs.map((tariff, index) => (
+                  {tariffs.map((tariff) => (
                     <React.Fragment key={tariff.tariffID}>
-                      <tr
-                        className="hover:bg-gray-50 cursor-pointer"
+                      <tr 
+                        className="hover:bg-gray-100 cursor-pointer"
                         onClick={() => handleShowDetails(tariff)}
                       >
-                        <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                          {tariff.exporterName}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500">
-                          {tariff.importerName}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500">
-                          {tariff.HSCode}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500" title={tariff.productDescription || "N/A"}>
-                          {tariff.productDescription ? (tariff.productDescription.length > 40 ? tariff.productDescription.substring(0, 40) + "..." : tariff.productDescription) : "N/A"}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-900 font-medium">
-                          {(parseFloat(tariff.rate) * 100).toFixed(2)}%
-                        </td>
-                        <td className="px-4 py-4 text-sm font-medium relative" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => toggleMenu(tariff.tariffID)}
-                            className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100"
-                          >
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                            </svg>
-                          </button>
-                          {activeMenu === tariff.tariffID && (
-                            <div className={`absolute right-0 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-50 ${getMenuPosition(index, tariffs.length) === 'below'
-                                ? 'top-full mt-1'
-                                : 'bottom-full mb-1'
-                              }`}>
-                              <button
-                                onClick={() => {
-                                  router.push(`/edit-tariff/${tariff.tariffID}`);
-                                }}
-                                className="block w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 rounded-t-md"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setActiveMenu(null);
-                                  handleDelete(tariff.tariffID);
-                                }}
-                                className="block w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 rounded-b-md"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    </React.Fragment>
+                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                        {tariff.exporterName}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">
+                        {tariff.importerName}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">
+                        {tariff.HSCode}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500" title={tariff.productDescription || "N/A"}>
+                        {tariff.productDescription ? (tariff.productDescription.length > 40 ? tariff.productDescription.substring(0, 40) + "..." : tariff.productDescription) : "N/A"}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900 font-medium">
+                        {(parseFloat(tariff.rate) * 100).toFixed(2)}%
+                      </td>
+                      {/* <td className="px-4 py-4 text-sm font-medium relative" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => toggleMenu(tariff.tariffID)}
+                          className="text-gray-600 hover:text-red-500 p-1 rounded cursor-pointer"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 3a1.5 1.5 0 110-3 1.5 1.5 0 010 3zM10 11a1.5 1.5 0 110-3 1.5 1.5 0 010 3zM10 19a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/>
+                          </svg>
+                        </button>
+                        {activeMenu === tariff.tariffID && (
+                          <div className={`absolute right-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-2`}>
+                            <button
+                              onClick={() => handleEdit(tariff)}
+                              className="block w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 rounded-t-md"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                setActiveMenu(null);
+                                handleDelete(tariff.tariffID);
+                              }}
+                              className="block w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 rounded-b-md"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </td> */}
+                    </tr>
+                  </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -325,7 +320,7 @@ export default function ViewTariffsPage() {
         <div className="mt-8 text-center">
           <button
             onClick={fetchTariffs}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
           >
             Refresh
           </button>
@@ -409,7 +404,7 @@ export default function ViewTariffsPage() {
         {/* Tariff Details Popup */}
         {showDetailsPopup && selectedTariff && (
           <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={closeDetailsPopup}></div>
+            <div className="fixed inset-0 bg-white/80 backdrop-blur-sm" onClick={closeDetailsPopup}></div>
             <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 max-w-2xl w-full mx-4 animate-fade-in relative">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-medium text-gray-900">Tariff Details</h3>
@@ -468,8 +463,8 @@ export default function ViewTariffsPage() {
                   <p className="text-sm text-gray-900">{selectedTariff.productDescription || "N/A"}</p>
                 </div>
               </div>
-
-              <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+              
+              {role === 'admin' && <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
                 <button
                   onClick={() => {
                     router.push(`/edit-tariff/${selectedTariff.tariffID}`);
@@ -487,7 +482,7 @@ export default function ViewTariffsPage() {
                 >
                   Delete Tariff
                 </button>
-              </div>
+              </div>}
             </div>
           </div>
         )}
