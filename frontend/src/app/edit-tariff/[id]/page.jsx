@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ErrorDisplay, SuccessDisplay, LoadingSpinner } from "../../../components/MessageComponents";
+import { ErrorDisplay, SuccessDisplay, LoadingSpinner } from "../../components/MessageComponents";
 
 export default function EditTariffPage({ params }) {
     const router = useRouter();
