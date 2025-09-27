@@ -53,7 +53,7 @@ export default function AddProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-white to-blue-200 flex flex-col items-center justify-start p-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -63,8 +63,8 @@ export default function AddProductPage() {
             Enter product details to add to the system
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+        <form className="mt-8 space-y-6 bg-white p-6 rounded-md shadow-md" onSubmit={handleSubmit}>
+          <div className="rounded-md -space-y-px">
             <div>
               <label htmlFor="hsCode" className="block text-sm font-medium text-gray-700 mb-1">
                 HS Code
