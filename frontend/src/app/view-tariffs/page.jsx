@@ -5,20 +5,33 @@ import { useRouter } from "next/navigation";
 
 export default function ViewTariffsPage() {
   const router = useRouter();
+
+  // loading tariffs
   const [tariffs, setTariffs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [deleteMessage, setDeleteMessage] = useState("");
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
-  const [editError, setEditError] = useState("");
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showDeletePopup, setShowDeletePopup] = useState(false);
-  const [tariffToDelete, setTariffToDelete] = useState(null);
+  const [fetchingError, setFetchingError] = useState("");
+
+  // clicking on a tariff to view details
   const [showDetailsPopup, setShowDetailsPopup] = useState(false);
   const [selectedTariff, setSelectedTariff] = useState(null);
 
+  // deleting a tariff
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [tariffToDelete, setTariffToDelete] = useState(null);
+  const [deleteMessage, setDeleteMessage] = useState("");
+
+  // editing a tariff
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [editError, setEditError] = useState("");
+  const [showEditPopup, setShowEditPopup] = useState(false);
+
+  // success popup
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  
+
+  // user role
   const { user } = useUser();
   const role = user?.publicMetadata?.role || "user"; 
 
@@ -41,24 +54,37 @@ export default function ViewTariffsPage() {
         console.log("Fetched tariffs:", data);
         setTariffs(data);
       } else {
-        setError("Failed to fetch tariffs");
+        setFetchingError("Failed to fetch tariffs");
       }
     } catch (error) {
-      setError(`Error: ${error.message}`);
+      setFetchingError(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = (id) => {
-    const tariff = tariffs.find(t => t.tariffID === id);
-    setTariffToDelete(tariff);
+  const handleShowDetails = (tariff) => {
+    setSelectedTariff(tariff);
+    setShowDetailsPopup(true);
+    // Prevent scrolling on the body when popup is open
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeDetailsPopup = () => {
+    setShowDetailsPopup(false);
+    setSelectedTariff(null);
+    // Restore scrolling when popup is closed
+    document.body.style.overflow = 'unset';
+  };
+
+  const handleDelete = () => {
     setShowDeletePopup(true);
+    setTariffToDelete(selectedTariff);
   };
 
   const confirmDelete = async () => {
     if (!tariffToDelete) {
-      setError("No tariff selected for deletion");
+      setDeleteMessage("No tariff selected for deletion");
       return;    
     }
 
@@ -70,18 +96,17 @@ export default function ViewTariffsPage() {
       if (response.ok) {
         setTariffs(tariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID));
         showSuccessPopupMessage("Tariff deleted successfully!");
-        setShowDeletePopup(false);
-        setTariffToDelete(null);
+        
       } else {
         const errorData = await response.json();
         setDeleteMessage(`Error: ${errorData.message || "Failed to delete tariff"}`);
         setShowDeletePopup(false);
-        setTariffToDelete(null);
       }
     } catch (error) {
       setDeleteMessage(`Error: ${error.message}`);
-      setShowDeletePopup(false);
-      setTariffToDelete(null);
+    } finally {
+        setShowDeletePopup(false);
+        setTariffToDelete(null);
     }
   };
 
@@ -162,21 +187,7 @@ export default function ViewTariffsPage() {
     setTimeout(() => {
       setShowSuccessPopup(false);
       setSuccessMessage("");
-    }, 3000);
-  };
-
-  const handleShowDetails = (tariff) => {
-    setSelectedTariff(tariff);
-    setShowDetailsPopup(true);
-    // Prevent scrolling on the body when popup is open
-    document.body.style.overflow = 'hidden';
-  };
-
-  const closeDetailsPopup = () => {
-    setShowDetailsPopup(false);
-    setSelectedTariff(null);
-    // Restore scrolling when popup is closed
-    document.body.style.overflow = 'unset';
+    }, 5000);
   };
 
   if (loading) {
@@ -205,9 +216,9 @@ export default function ViewTariffsPage() {
           </div>
         )}
 
-        {error && (
+        {fetchingError && (
           <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-            {error}
+            {fetchingError}
           </div>
         )}
 
@@ -308,6 +319,61 @@ export default function ViewTariffsPage() {
 
         {/* Delete Confirmation Popup */}
         {showDeletePopup && tariffToDelete && (
+          <div className="fixed inset-0 flex items-center justify-center z-50  bg-white/80 backdrop-blur-sm" onClick={cancelDelete}>
+            <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 max-w-md w-full mx-4 animate-fade-in">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-lg font-medium text-gray-900">Delete Tariff</h3>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-sm text-gray-500 mb-3">
+                  Are you sure you want to delete this tariff? 
+                  <br /> This action cannot be undone.
+                </p>
+                <div className="bg-gray-50 p-3 rounded-md">
+                  <p className="text-sm font-medium text-gray-900">
+                    {tariffToDelete.exporterName} → {tariffToDelete.importerName}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Rate: {(parseFloat(tariffToDelete.rate) * 100).toFixed(2)}%
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Product: {tariffToDelete.productDescription} ({tariffToDelete.HSCode})
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Expiry Date: {formatDate(tariffToDelete.expiryDate)}
+                  </p>
+                  
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={cancelDelete}
+                  className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                >
+                  Delete Tariff
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+         {/* Edit Confirmation Popup */}
+        { showEditPopup && tariffToDelete && (
           <div className="fixed inset-0 flex items-center justify-center z-50  bg-white/80 backdrop-blur-sm">
             <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 max-w-md w-full mx-4 animate-fade-in">
               <div className="flex items-center mb-4">
@@ -435,7 +501,7 @@ export default function ViewTariffsPage() {
                 </button>
                 <button
                   onClick={() => {
-                    handleDelete(selectedTariff.tariffID);
+                    handleDelete();
                     closeDetailsPopup();
                   }}
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"

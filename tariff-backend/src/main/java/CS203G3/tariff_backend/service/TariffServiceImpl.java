@@ -204,23 +204,25 @@ public class TariffServiceImpl implements TariffService {
         
         // Important: Preserve the existing tariff mapping relationship
         // This ensures tariff_mapping_id never changes during updates
-        TariffMapping existingMapping = existing.getTariffMapping();
-        
+        Tariff updatedTariff = convertToEntity(createDto);
+
         // Only update the rate, dates and reference
-        if (createDto.getRate() != null) {
-            existing.setRate(createDto.getRate());
+        if (updatedTariff.getRate() != null) {
+            existing.setRate(updatedTariff.getRate());
         }
         
-        if (createDto.getEffectiveDate() != null) {
-            existing.setEffectiveDate(createDto.getEffectiveDate());
+        if (updatedTariff.getEffectiveDate() != null) {
+            existing.setEffectiveDate(updatedTariff.getEffectiveDate());
         }
         
-        if (createDto.getExpiryDate() != null) {
-            existing.setExpiryDate(createDto.getExpiryDate());
+        if (updatedTariff.getExpiryDate() != null) {
+            existing.setExpiryDate(updatedTariff.getExpiryDate());
         }
         
         // Reference can be null or updated
-        existing.setReference(createDto.getReference());
+        if (!updatedTariff.getReference().equals(existing.getReference())) {
+            existing.setReference(updatedTariff.getReference());
+        }
         
         // Validate tariff business rules (dates, rates, etc.)
         validateTariffUpdateRules(existing);

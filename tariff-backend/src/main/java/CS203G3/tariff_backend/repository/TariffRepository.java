@@ -45,4 +45,21 @@ public interface TariffRepository extends JpaRepository<Tariff, Long> {
         @Param("newExpiryDate") Date newExpiryDate
     );
 
+    @Query("""
+                SELECT t FROM Tariff t
+                WHERE t.tariffMapping = :tariffMapping
+                  AND (
+                    (:newEffectiveDate <= t.effectiveDate AND (:newExpiryDate IS NULL OR :newExpiryDate >= t.effectiveDate))
+                    OR
+                    (:newEffectiveDate >= t.effectiveDate AND (:newEffectiveDate <= t.expiryDate OR t.expiryDate IS NULL))
+                  )
+                  AND t.tariffID <> :currentTariffID
+            """)
+    List<Tariff> findOverlappingTariffsExcludingCurrent(
+        @Param("tariffMapping") TariffMapping tariffMapping,
+        @Param("currentTariffID") Long tariffID,
+        @Param("newEffectiveDate") Date newEffectiveDate,
+        @Param("newExpiryDate") Date newExpiryDate
+    );
+
 }
