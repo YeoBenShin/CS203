@@ -1,10 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useUser } from '@clerk/nextjs';
-import { useRouter } from "next/navigation";
 
 export default function ViewTariffsPage() {
-  const router = useRouter();
 
   // loading tariffs
   const [tariffs, setTariffs] = useState([]);
@@ -21,26 +19,29 @@ export default function ViewTariffsPage() {
   const [deleteMessage, setDeleteMessage] = useState("");
 
   // editing a tariff
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
-  const [editError, setEditError] = useState("");
   const [showEditPopup, setShowEditPopup] = useState(false);
+  const [tariffToEdit, setTariffToEdit] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editErrors, setEditErrors] = useState([]);
+  const [editForm, setEditForm] = useState({
+    rate: "",
+    effectiveDate: "",
+    expiryDate: "",
+    reference: ""
+  });
 
   // success popup
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  
+
 
   // user role
   const { user } = useUser();
-  const role = user?.publicMetadata?.role || "user"; 
+  const role = user?.publicMetadata?.role || "user";
 
   useEffect(() => {
     fetchTariffs();
-  }, []);
-
-  // Cleanup effect to restore scrolling when component unmounts
-  useEffect(() => {
+    // Cleanup effect to restore scrolling when component unmounts
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -65,6 +66,7 @@ export default function ViewTariffsPage() {
 
   const handleShowDetails = (tariff) => {
     setSelectedTariff(tariff);
+    setTariffToEdit(tariff);
     setShowDetailsPopup(true);
     // Prevent scrolling on the body when popup is open
     document.body.style.overflow = 'hidden';
@@ -78,14 +80,15 @@ export default function ViewTariffsPage() {
   };
 
   const handleDelete = () => {
-    setShowDeletePopup(true);
     setTariffToDelete(selectedTariff);
+    setShowDeletePopup(true);
+    document.body.style.overflow = 'hidden';
   };
 
   const confirmDelete = async () => {
     if (!tariffToDelete) {
       setDeleteMessage("No tariff selected for deletion");
-      return;    
+      return;
     }
 
     try {
@@ -96,23 +99,22 @@ export default function ViewTariffsPage() {
       if (response.ok) {
         setTariffs(tariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID));
         showSuccessPopupMessage("Tariff deleted successfully!");
-        
+
       } else {
         const errorData = await response.json();
         setDeleteMessage(`Error: ${errorData.message || "Failed to delete tariff"}`);
-        setShowDeletePopup(false);
       }
     } catch (error) {
       setDeleteMessage(`Error: ${error.message}`);
     } finally {
-        setShowDeletePopup(false);
-        setTariffToDelete(null);
+      cancelDelete();
     }
   };
 
   const cancelDelete = () => {
     setShowDeletePopup(false);
     setTariffToDelete(null);
+    document.body.style.overflow = 'unset';
   };
 
   const formatDate = (dateString) => {
@@ -125,37 +127,92 @@ export default function ViewTariffsPage() {
     return new Date(dateString).toISOString().split('T')[0];
   };
 
-  const handleEdit = (tariff) => {
-    setEditingId(tariff.tariffID);
+  const openEditPopup = () => {
     setEditForm({
-      rate: (parseFloat(tariff.rate) * 100).toFixed(2), // Convert to percentage for display
-      effectiveDate: formatDateForInput(tariff.effectiveDate),
-      expiryDate: formatDateForInput(tariff.expiryDate),
-      reference: tariff.reference || ""
+      rate: (parseFloat(tariffToEdit.rate) * 100).toFixed(2), // Convert from decimal to percentage
+      effectiveDate: formatDateForInput(tariffToEdit.effectiveDate),
+      expiryDate: formatDateForInput(tariffToEdit.expiryDate),
+      reference: tariffToEdit.reference || ""
     });
-    setEditError(""); // Clear any previous edit errors
+    setEditErrors([]);
+    setShowEditPopup(true);
+    document.body.style.overflow = 'hidden';
   };
 
   const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditForm({});
-    setEditError(""); // Clear edit errors when canceling
+    setShowEditPopup(false);
+    setTariffToEdit(null);
+    setEditForm({
+      rate: "",
+      effectiveDate: "",
+      expiryDate: "",
+      reference: ""
+    });
+    setEditErrors([]); // Clear edit errors when canceling
+    setIsUpdating(false);
+    document.body.style.overflow = 'unset';
   };
 
-  const handleSaveEdit = async (tariffId) => {
+  const handleEditFormChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+    // Clear errors when user starts typing
+    if (editErrors.length > 0) {
+      setEditErrors([]);
+    }
+  };
+
+  const validateEditForm = () => {
+    const validationErrors = [];
+    if (!/^\d+(\.\d{1,2})?$/.test(editForm.rate)) {
+      validationErrors.push("Tariff rate cannot be negative");
+    }
+
+    // Check date logic
+    if (editForm.effectiveDate && editForm.expiryDate) {
+      const effectiveDate = new Date(editForm.effectiveDate);
+      const expiryDate = new Date(editForm.expiryDate);
+      if (expiryDate <= effectiveDate) {
+        validationErrors.push("Expiry date must be after the effective date");
+      }
+    } else if (editForm.effectiveDate && tariffToEdit.expiryDate) { // past data must have expiry, else don't even need to compare
+      const effectiveDate = new Date(editForm.effectiveDate);
+      if (!tariffToEdit.expiryDate) {
+        const currentExpiryDate = new Date(tariffToEdit.expiryDate);
+        if (effectiveDate >= currentExpiryDate) {
+          validationErrors.push("Effective date must be before the expiry date");
+        }
+      }
+    }
+    return validationErrors;
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setEditErrors([]);
+    setIsUpdating(true);
+
     try {
-      const tariff = tariffs.find(t => t.tariffID === tariffId);
+      const validationErrors = validateEditForm();
+      if (validationErrors.length > 0) {
+        setEditErrors(validationErrors);
+        return;
+      }
+      if (!tariffToEdit) {
+        setEditErrors(["Tariff data not available"]);
+        return;
+      }
+
       const requestData = {
-        exporter: tariff.exporterCode,
-        importer: tariff.importerCode,
-        HSCode: tariff.HSCode, // Now correctly using HSCode property name
+        exporter: tariffToEdit.exporterCode,
+        importer: tariffToEdit.importerCode,
+        HSCode: tariffToEdit.HSCode,
         rate: parseFloat(editForm.rate) / 100, // Convert percentage back to decimal
         effectiveDate: new Date(editForm.effectiveDate).toISOString(),
         expiryDate: editForm.expiryDate ? new Date(editForm.expiryDate).toISOString() : null,
         reference: editForm.reference || null
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs/${tariffId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs/${tariffToEdit.tariffID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestData)
@@ -163,22 +220,18 @@ export default function ViewTariffsPage() {
 
       if (response.ok) {
         const updatedTariff = await response.json();
-        setTariffs(tariffs.map(t => t.tariffID === tariffId ? updatedTariff : t)); // show the updated tariff
-        setEditingId(null);
-        setEditForm({});
-        setEditError(""); // Clear edit error on success
+        setTariffs(tariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff)); // show the updated tariff
+        handleCancelEdit();
         showSuccessPopupMessage("Tariff updated successfully!");
       } else {
         const errorData = await response.json();
-        setEditError(`Error: ${errorData.message || "Failed to update tariff"}`);
+        setEditErrors([`Error: ${errorData.message || "Failed to update tariff"}`]);
       }
     } catch (error) {
-      setEditError(`Error: ${error.message}`);
+      setEditErrors([`Error: ${error.message}`]);
+    } finally {
+      setIsUpdating(false);
     }
-  };
-
-  const handleEditFormChange = (field, value) => {
-    setEditForm(prev => ({ ...prev, [field]: value }));
   };
 
   const showSuccessPopupMessage = (message) => {
@@ -252,27 +305,27 @@ export default function ViewTariffsPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {tariffs.map((tariff) => (
                     <React.Fragment key={tariff.tariffID}>
-                      <tr 
+                      <tr
                         className="hover:bg-gray-100 cursor-pointer"
                         onClick={() => handleShowDetails(tariff)}
                       >
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                        {tariff.exporterName}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-500">
-                        {tariff.importerName}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-500">
-                        {tariff.HSCode}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-500" title={tariff.productDescription || "N/A"}>
-                        {tariff.productDescription ? (tariff.productDescription.length > 40 ? tariff.productDescription.substring(0, 40) + "..." : tariff.productDescription) : "N/A"}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 font-medium">
-                        {(parseFloat(tariff.rate) * 100).toFixed(2)}%
-                      </td>
-                    </tr>
-                  </React.Fragment>
+                        <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                          {tariff.exporterName}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-500">
+                          {tariff.importerName}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-500">
+                          {tariff.HSCode}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-500" title={tariff.productDescription || "N/A"}>
+                          {tariff.productDescription ? (tariff.productDescription.length > 40 ? tariff.productDescription.substring(0, 40) + "..." : tariff.productDescription) : "N/A"}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-900 font-medium">
+                          {(parseFloat(tariff.rate) * 100).toFixed(2)}%
+                        </td>
+                      </tr>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -319,8 +372,9 @@ export default function ViewTariffsPage() {
 
         {/* Delete Confirmation Popup */}
         {showDeletePopup && tariffToDelete && (
-          <div className="fixed inset-0 flex items-center justify-center z-50  bg-white/80 backdrop-blur-sm" onClick={cancelDelete}>
-            <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 max-w-md w-full mx-4 animate-fade-in">
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-white/50 backdrop-blur-sm" onClick={cancelDelete}></div>
+            <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 max-w-md w-full mx-4 animate-fade-in relative">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0">
                   <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -334,7 +388,7 @@ export default function ViewTariffsPage() {
 
               <div className="mb-6">
                 <p className="text-sm text-gray-500 mb-3">
-                  Are you sure you want to delete this tariff? 
+                  Are you sure you want to delete this tariff?
                   <br /> This action cannot be undone.
                 </p>
                 <div className="bg-gray-50 p-3 rounded-md">
@@ -350,7 +404,7 @@ export default function ViewTariffsPage() {
                   <p className="text-sm text-gray-600">
                     Expiry Date: {formatDate(tariffToDelete.expiryDate)}
                   </p>
-                  
+
                 </div>
               </div>
 
@@ -372,57 +426,119 @@ export default function ViewTariffsPage() {
           </div>
         )}
 
-         {/* Edit Confirmation Popup */}
-        { showEditPopup && tariffToDelete && (
-          <div className="fixed inset-0 flex items-center justify-center z-50  bg-white/80 backdrop-blur-sm">
-            <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 max-w-md w-full mx-4 animate-fade-in">
-              <div className="flex items-center mb-4">
-                <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-medium text-gray-900">Delete Tariff</h3>
+        {/* Edit Confirmation Popup */}
+        {showEditPopup && tariffToEdit && (
+          <div className="fixed inset-0 flex items-center justify-center z-50" >
+            <div className="fixed inset-0 bg-white/50 backdrop-blur-sm" onClick={handleCancelEdit}></div>
+            <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md animate-fade-in relative">
+              <div className="mb-6 bg-blue-50 p-4 rounded-md">
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">Tariff Information</h2>
+                <div className="grid grid-cols-1 gap-2 text-sm">
+                  <div>
+                    <p className="font-medium text-gray-600">Exporter: {tariffToEdit.exporterName}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-600">Importer: {tariffToEdit.importerName}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-600">Rate: {(parseFloat(tariffToEdit.rate) * 100).toFixed(2)}%</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-600">Product: {tariffToEdit.productDescription || "N/A"} ({tariffToEdit.HSCode})</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-600">Effective Date: {formatDate(tariffToEdit.effectiveDate)}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-600">Expiry Date: {formatDate(tariffToEdit.expiryDate)}</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="mb-6">
-                <p className="text-sm text-gray-500 mb-3">
-                  Are you sure you want to delete this tariff? 
-                  <br /> This action cannot be undone.
-                </p>
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <p className="text-sm font-medium text-gray-900">
-                    {tariffToDelete.exporterName} → {tariffToDelete.importerName}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Rate: {(parseFloat(tariffToDelete.rate) * 100).toFixed(2)}%
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Product: {tariffToDelete.productDescription} ({tariffToDelete.HSCode})
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Expiry Date: {formatDate(tariffToDelete.expiryDate)}
-                  </p>
+              <form onSubmit={handleEditSubmit}>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="rate">
+                    Rate (%)
+                  </label>
+                  <input
+                    name="rate"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editForm.rate}
+                    onChange={handleEditFormChange}
+                    className="cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="effectiveDate">
+                    Effective Date
+                  </label>
+                  <input
+                    name="effectiveDate"
+                    type="date"
+                    value={editForm.effectiveDate}
+                    onChange={handleEditFormChange}
+                    className={`cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${editForm.effectiveDate ? " text-gray-700" : "text-white"}`}
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="expiryDate">
+                    Expiry Date
+                  </label>
+                  <input
+                    name="expiryDate"
+                    type="date"
+                    value={editForm.expiryDate}
+                    onChange={handleEditFormChange}
+                    className={`cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${editForm.expiryDate ? " text-gray-700" : "text-white"}`}
+                  />
+                </div>
+
+                <div className="mb-2">
+                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="reference">
+                    Reference
+                  </label>
+                  <input
+                    name="reference"
+                    type="text"
+                    value={editForm.reference}
+                    onChange={handleEditFormChange}
+                    placeholder="Source URL"
+                    className="cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  />
+                </div>
+                {editErrors.length > 0 && (
+                    <div className="mb-2 text-sm text-red-600">
+                      {editErrors.map((error, index) => (
+                        <p key={index}>{error}</p>
+                      ))}
+                    </div>
+                  )}
+
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer"
+                  >
+                    Cancel
+                  </button>
                   
+                  <button
+                    type="submit"
+                    disabled={isUpdating}
+                    className={`flex items-center justify-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isUpdating
+                      ? 'bg-gray-400 cursor-not-allowed text-white'
+                      : 'bg-blue-500 hover:bg-blue-700 text-white cursor-pointer'
+                      }`}
+                  >
+                    {isUpdating ? 'Updating...' : 'Update Tariff'}
+                  </button>
                 </div>
-              </div>
-
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={cancelDelete}
-                  className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-                >
-                  Delete Tariff
-                </button>
-              </div>
+              </form>
             </div>
           </div>
         )}
@@ -430,7 +546,7 @@ export default function ViewTariffsPage() {
         {/* Tariff Details Popup */}
         {showDetailsPopup && selectedTariff && (
           <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="fixed inset-0 bg-white/80 backdrop-blur-sm" onClick={closeDetailsPopup}></div>
+            <div className="fixed inset-0 bg-white/50 backdrop-blur-sm" onClick={closeDetailsPopup}></div>
             <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 max-w-2xl w-full mx-4 animate-fade-in relative">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-medium text-gray-900">Tariff Details</h3>
@@ -489,22 +605,23 @@ export default function ViewTariffsPage() {
                   <p className="text-sm text-gray-900">{selectedTariff.productDescription || "N/A"}</p>
                 </div>
               </div>
-              
+
               {role === 'admin' && <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
                 <button
                   onClick={() => {
-                    router.push(`/edit-tariff/${selectedTariff.tariffID}`);
+                    closeDetailsPopup();
+                    openEditPopup();
                   }}
-                  className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors cursor-pointer"
                 >
-                  Edit Tariff
+                  Update Tariff
                 </button>
                 <button
                   onClick={() => {
-                    handleDelete();
                     closeDetailsPopup();
+                    handleDelete();
                   }}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors cursor-pointer"
                 >
                   Delete Tariff
                 </button>

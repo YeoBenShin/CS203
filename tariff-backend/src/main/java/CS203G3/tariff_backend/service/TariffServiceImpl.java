@@ -220,7 +220,8 @@ public class TariffServiceImpl implements TariffService {
         }
         
         // Reference can be null or updated
-        if (!updatedTariff.getReference().equals(existing.getReference())) {
+        if (updatedTariff.getReference() == null && existing.getReference() == null) {
+        } else {
             existing.setReference(updatedTariff.getReference());
         }
         
@@ -245,22 +246,6 @@ public class TariffServiceImpl implements TariffService {
         if (tariff.getEffectiveDate() != null && tariff.getExpiryDate() != null 
                 && tariff.getExpiryDate().before(tariff.getEffectiveDate())) {
             throw new ExpiryBeforeEffectiveException("Expiry date must be after effective date");
-        }
-        
-        // Rule 3: Check for overlapping tariffs (excluding this tariff)
-        List<Tariff> overlappingTariffs = tariffRepository
-            .findOverlappingTariffsExcludingCurrent(
-                tariff.getTariffMapping(),
-                tariff.getTariffID(),
-                tariff.getEffectiveDate(),
-                tariff.getExpiryDate()
-            );
-        
-        if (!overlappingTariffs.isEmpty()) {
-            throw new OverlappingTariffPeriodException(
-                String.format("Overlapping tariff period found when updating tariff %d", 
-                    tariff.getTariffID())
-            );
         }
     }
 
