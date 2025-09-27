@@ -6,5 +6,35 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TariffRepository extends JpaRepository<Tariff, Long> {
-    
+
+    // Custom query methods can be added here
+    // For example:
+    // List<Tariff> findByTariffMappingID(Long tariffMappingID);
+    // List<Tariff> findByEffectiveDateBetween(Date start, Date end);
+
+    @Query("""
+                SELECT t FROM Tariff t
+                WHERE t.tariffMapping = :tariffMapping
+                  AND :effectiveDate >= t.effectiveDate
+                  AND (:effectiveDate <= t.expiryDate OR t.expiryDate IS NULL)
+            """)
+    List<Tariff> findValidTariffs(TariffMapping tariffMapping, Date effectiveDate);
+
+    /**
+     * Find overlapping tariffs for the same tariff mapping within the given date range
+     */
+    @Query("""
+                SELECT t FROM Tariff t
+                WHERE t.tariffMapping = :tariffMapping
+                  AND (
+                    (:newEffectiveDate <= t.effectiveDate AND (:newExpiryDate IS NULL OR :newExpiryDate >= t.effectiveDate))
+                    OR
+                    (:newEffectiveDate >= t.effectiveDate AND (:newEffectiveDate <= t.expiryDate OR t.expiryDate IS NULL))
+                  )
+            """)
+    List<Tariff> findOverlappingTariffs(
+        @Param("tariffMapping") TariffMapping tariffMapping,
+        @Param("newEffectiveDate") Date newEffectiveDate,
+        @Param("newExpiryDate") Date newExpiryDate
+    );
 }
