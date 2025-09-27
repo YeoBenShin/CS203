@@ -13,7 +13,7 @@ public class ProductMetric {
     private Product product;
 
     @Enumerated(EnumType.STRING)
-    @Column
+    @Column(name = "unit_of_calculation")
     private UnitOfCalculation unitOfCalculation;
 
     public ProductMetric() {

@@ -22,8 +22,8 @@ public class TariffRate {
     private Tariff tariff;
 
     @ManyToOne
-    @JoinColumn(referencedColumnName = "unit_of_calculation")
-    private UnitOfCalculation unitOfCalculation;
+    @JoinColumn(name = "unit_of_calculation", referencedColumnName = "unit_of_calculation")
+    private ProductMetric productMetric;
 
     @Column(name = "tariff_rate")
     private BigDecimal tariffRate;
@@ -59,12 +59,11 @@ public class TariffRate {
         this.tariffRate = tariffRate;
     }
 
-    public UnitOfCalculation getUnitOfCalculation() {
-        return unitOfCalculation;
+    public ProductMetric getProductMetric() {
+        return productMetric;
     }
 
-    public void setUnitOfCalculation(UnitOfCalculation unitOfCalculation) {
-        this.unitOfCalculation = unitOfCalculation;
+    public void setProductMetric(ProductMetric productMetric) {
+        this.productMetric = productMetric;
     }
-    
 }
