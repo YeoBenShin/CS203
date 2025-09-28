@@ -13,15 +13,15 @@ import jakarta.validation.constraints.Size;
 
 public class TariffCreateDto {
     
+    @NotNull(message = "Name is required")
+    private String name;
+
     @NotNull(message = "Exporter is required")
     private String exporter;
 
-    @NotNull(message = "Importer is required")
-    private String importer;
-
     @NotNull(message = "HS Code is required")
-    @JsonProperty("HSCode")
-    private Integer HSCode;
+    @JsonProperty("hSCode")
+    private Integer hSCode;
 
     @NotNull(message = "Rate is required")
     private BigDecimal rate;
@@ -38,47 +38,52 @@ public class TariffCreateDto {
     
     // Constructors
     public TariffCreateDto() {}
-    
-    public BigDecimal getRate() {
-        return rate;
+
+    public String getName() {
+        return name;
     }
-    public void setRate(BigDecimal rate) {
-        this.rate = rate;
+
+    public void setName(String name) {
+        this.name = name;
     }
-    public Date getEffectiveDate() {
-        return effectiveDate;
-    }
-    public void setEffectiveDate(Date effectiveDate) {
-        this.effectiveDate = effectiveDate;
-    }
-    public Date getExpiryDate() {
-        return expiryDate;
-    }
-    public void setExpiryDate(Date expiryDate) {
-        this.expiryDate = expiryDate;
-    }
-    public String getReference() {
-        return reference;
-    }
-    public void setReference(String reference) {
-        this.reference = reference;
-    }
+
     public String getExporter() {
         return exporter;
     }
+
     public void setExporter(String exporter) {
         this.exporter = exporter;
     }
-    public String getImporter() {
-        return importer;
+
+    public Integer gethSCode() {
+        return hSCode;
     }
-    public void setImporter(String importer) {
-        this.importer = importer;
+
+    public void sethSCode(Integer hSCode) {
+        this.hSCode = hSCode;
     }
-    public Integer getHSCode() {
-        return HSCode;
+    
+    public Date getEffectiveDate() {
+        return effectiveDate;
     }
-    public void setHSCode(Integer HSCode) {
-        this.HSCode = HSCode;
+
+    public void setEffectiveDate(Date effectiveDate) {
+        this.effectiveDate = effectiveDate;
+    }
+
+    public Date getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(Date expiryDate) {
+        this.expiryDate = expiryDate;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public void setReference(String reference) {
+        this.reference = reference;
     }
 }

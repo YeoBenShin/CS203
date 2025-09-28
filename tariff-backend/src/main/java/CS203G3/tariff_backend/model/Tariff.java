@@ -78,11 +78,11 @@ public class Tariff {
         this.expiryDate = expiryDate;
     }
 
-    public Product gethSCode() {
+    public Product getProduct() {
         return product;
     }
 
-    public void sethSCode(Product product) {
+    public void setProduct(Product product) {
         this.product = product;
     }
 
