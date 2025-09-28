@@ -16,7 +16,6 @@ export default function CalculatorPage() {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [countryInput, setCountryInput] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [tradeDirection, setTradeDirection] = useState(''); // 'import' or 'export'
 
   // Other form states
   const [shippingCost, setShippingCost] = useState('');
@@ -144,7 +143,6 @@ export default function CalculatorPage() {
   // Handle form inputs
   const handleShippingCost = (e) => setShippingCost(e.target.value);
   const handleTradeDate = (e) => setTradeDate(e.target.value);
-  const handleTradeDirectionChange = (e) => setTradeDirection(e.target.value);
 
   // Tariff calculation function
   const handleCalculate = async () => {
@@ -155,10 +153,6 @@ export default function CalculatorPage() {
     }
     if (!selectedCountry) {
       setErrorMessage("Please select a valid Country");
-      return;
-    }
-    if (!tradeDirection) {
-      setErrorMessage("Please select a valid Trade Direction");
       return;
     }
     if (!shippingCost || !/^\d+(\.\d{1,2})?$/.test(shippingCost)) {
@@ -174,7 +168,6 @@ export default function CalculatorPage() {
     const data = {
       hsCode: selectedHsCode,
       country: selectedCountry,
-      tradeDirection: tradeDirection,
       shippingCost: parseFloat(shippingCost),
       tradeDate: tradeDate
     };
@@ -261,7 +254,6 @@ export default function CalculatorPage() {
         hsCode: selectedHsCode,
         productDescription: selectedProductDesc,
         country: selectedCountry,
-        tradeDirection: tradeDirection,
         shippingCost: parseFloat(shippingCost),
         tradeDate: tradeDate,
         tariffBreakdown: tariffBreakdown,
@@ -398,34 +390,6 @@ export default function CalculatorPage() {
                 </div>
               </div>
               <div>
-                <label className="font-bold mb-2 text-black block">Trade Direction:</label>
-                <div className="flex flex-col gap-2">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="tradeDirection"                 // same name => mutually exclusive
-                      value="import"
-                      checked={tradeDirection === "import"}
-                      onChange={handleTradeDirectionChange}
-                      className="accent-blue-500"           // Tailwind colour for the radio
-                    />
-                    Import From USA
-                  </label>
-
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="tradeDirection"
-                      value="export"
-                      checked={tradeDirection === "export"}
-                      onChange={handleTradeDirectionChange}
-                      className="accent-blue-500"
-                    />
-                    Export To USA
-                  </label>
-                </div>
-              </div>
-              <div>
                 <label className="font-bold mb-2 text-black block">Date of Trade:</label>
                 <input
                   type="date"
@@ -497,10 +461,7 @@ export default function CalculatorPage() {
                   <div>
                     <span className="font-semibold text-gray-700">Trade Partners:</span>
                     <p className="text-black">
-                      {tradeDirection === 'import'
-                        ? `${selectedCountry ? selectedCountry : 'N/A'} → USA`
-                        : `USA → ${selectedCountry ? selectedCountry : 'N/A'}`
-                      }
+                      {`${selectedCountry ? selectedCountry : 'N/A'} → USA`}
                     </p>
                   </div>
                   <div>

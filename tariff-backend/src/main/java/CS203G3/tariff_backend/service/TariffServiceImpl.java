@@ -96,9 +96,9 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
-    public List<Tariff> getTariffRatesByCountries(String country, String tradeDirection, Integer hsCode, Date tradeDate) {
-        String importer = tradeDirection.equals("import") ? country : "USA";
-        String exporter = tradeDirection.equals("export") ? country : "USA";
+    public List<Tariff> getTariffRatesByCountries(String country, Integer hsCode, Date tradeDate) {
+        String importer = "USA";
+        String exporter = country;
         TariffMapping tariffMapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(hsCode, importer, exporter);
         
         if (tariffMapping == null) {

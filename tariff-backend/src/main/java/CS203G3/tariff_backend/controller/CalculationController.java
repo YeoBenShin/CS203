@@ -23,8 +23,8 @@ public class CalculationController {
 
     @PostMapping
     public ResponseEntity<CalculationResult> calculateTariff(@RequestBody CalculationRequest input) {
-        if (input.getShippingCost() == null || input.gethsCode() == 0 || input.getCountry() == null || input.getTradeDirection() == null || input.getTradeDate() == null) {
-            throw new MissingFieldException("Shipping Cost, HS Code, Country, Trade Direction, and Trade Date are required fields.");
+        if (input.getShippingCost() == null || input.gethsCode() == 0 || input.getCountry() == null || input.getTradeDate() == null) {
+            throw new MissingFieldException("Shipping Cost, HS Code, Country, and Trade Date are required fields.");
         }
         CalculationResult result = calculationService.calculateTariff(input);
         return ResponseEntity.ok(result);

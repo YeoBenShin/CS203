@@ -30,7 +30,7 @@ public interface TariffService {
      */
     TariffDto getTariffById(Long id);
 
-    List<Tariff> getTariffRatesByCountries(String country, String tradeDirection, Integer hsCode, Date tradeDate);
+    List<Tariff> getTariffRatesByCountries(String country, Integer hsCode, Date tradeDate);
     
     /**
      * Create a new tariff

@@ -17,11 +17,10 @@ public class CalculationRequest {
     // Constructors
     public CalculationRequest() {}
 
-    public CalculationRequest(BigDecimal shippingCost, int hsCode, String country, String tradeDirection, Date tradeDate) {
+    public CalculationRequest(BigDecimal shippingCost, int hsCode, String country, Date tradeDate) {
         this.shippingCost = shippingCost;
         this.hsCode = hsCode;
         this.country = country;
-        this.tradeDirection = tradeDirection;
         this.tradeDate = tradeDate;
     }
 

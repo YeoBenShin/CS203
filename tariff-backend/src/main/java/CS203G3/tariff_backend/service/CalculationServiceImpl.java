@@ -50,7 +50,7 @@ public class CalculationServiceImpl {
     }
 
     public CalculationResult calculateTariff(CalculationRequest input) {
-        List<Tariff> tariffs = tariffService.getTariffRatesByCountries(input.getCountry(), input.getTradeDirection(), input.gethsCode(), input.getTradeDate());
+        List<Tariff> tariffs = tariffService.getTariffRatesByCountries(input.getCountry(), input.gethsCode(), input.getTradeDate());
         List<TariffForCalDisplayDto> tariffDtos = convertToDto(tariffs, input.getShippingCost());
         BigDecimal totalTariffRate = sumTariffRates(tariffDtos);
         BigDecimal totalTariffCost = sumTariffAmounts(tariffDtos);
