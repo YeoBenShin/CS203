@@ -342,7 +342,7 @@ export default function CalculatorPage() {
             <h2 className="text-xl font-bold text-black mb-4">Trade Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="font-bold mb-2 text-black block">Country:</label>
+                <label className="font-bold mb-2 text-black block">Exporting Country:</label>
                 <div className="relative">
                   <input
                     type="text"
