@@ -16,9 +16,6 @@ public class TariffCreateDto {
     @NotNull(message = "Exporter is required")
     private String exporter;
 
-    @NotNull(message = "Importer is required")
-    private String importer;
-
     @NotNull(message = "HS Code is required")
     @JsonProperty("HSCode")
     private Integer HSCode;
@@ -68,12 +65,6 @@ public class TariffCreateDto {
     }
     public void setExporter(String exporter) {
         this.exporter = exporter;
-    }
-    public String getImporter() {
-        return importer;
-    }
-    public void setImporter(String importer) {
-        this.importer = importer;
     }
     public Integer getHSCode() {
         return HSCode;

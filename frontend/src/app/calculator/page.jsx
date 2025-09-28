@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import FilterSelector from "../components/ui/FilterSelector";
 
 export default function CalculatorPage() {
   // Product search states
@@ -303,20 +304,8 @@ export default function CalculatorPage() {
                     }}
                     placeholder="Enter HS Code or Product Description..."
                   />
-                  {showHsCodeDropdown && filteredHsCodeOptions.length > 0 && (
-                    <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-b max-h-48 overflow-y-auto shadow-lg">
-                      {filteredHsCodeOptions.map((option) => (
-                        <div
-                          key={option.value}
-                          className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
-                          onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
-                          onClick={() => handleHsCodeSelection(option)}
-                        >
-                          {option.label}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {showHsCodeDropdown && filteredHsCodeOptions.length > 0 && 
+                    <FilterSelector options={filteredHsCodeOptions} handlerFunction={handleHsCodeSelection} />}
                   {hsCodeInput && (
                     <button
                       type="button"
@@ -360,20 +349,8 @@ export default function CalculatorPage() {
                     }}
                     placeholder="Enter Country..."
                   />
-                  {showCountryDropdown && filteredCountryOptions.length > 0 && (
-                    <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-b max-h-48 overflow-y-auto shadow-lg">
-                      {filteredCountryOptions.map((option) => (
-                        <div
-                          key={option.value}
-                          className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
-                          onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
-                          onClick={() => handleCountrySelection(option)}
-                        >
-                          {option.label}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {showCountryDropdown && filteredCountryOptions.length > 0 && 
+                  <FilterSelector options={filteredCountryOptions} handlerFunction={handleCountrySelection} />} 
                   {countryInput && (
                     <button
                       type="button"

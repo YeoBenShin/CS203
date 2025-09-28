@@ -1,12 +1,17 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Select from "react-select";
+import dynamic from "next/dynamic";
 import { ErrorDisplay, SuccessDisplay, LoadingSpinner } from "../components/MessageComponents";
+
+// Import Select dynamically to avoid SSR hydration issues
+const Select = dynamic(() => import("react-select"), { 
+  ssr: false,
+  loading: () => <div className="h-9 bg-gray-100 border rounded animate-pulse"></div>
+});
 
 export default function AdminPage() {
   const [form, setForm] = useState({
     exporter: null,
-    importer: null,
     product: null,
     rate: "",
     effectiveDate: "",
@@ -24,9 +29,10 @@ export default function AdminPage() {
     useEffect(() => {
       const fetchCountries = async () => {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/countries`);
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
+          const response = await fetch(`${baseUrl}/api/countries`);
           const countries = await response.json();
-          const options = countries.map(country => ({
+          const options = countries.filter(country => country.isoCode !== 'USA').map(country => ({
             label: country.name,
             value: country.isoCode
           }));
@@ -42,7 +48,8 @@ export default function AdminPage() {
     useEffect(() => {
       const fetchProducts = async () => {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/products`);
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
+          const response = await fetch(`${baseUrl}/api/products`);
           const products = await response.json();
           const options = products.map(product => ({
             label: `${product.hsCode}${product.description ? ` - ${product.description}` : ''}`,
@@ -72,12 +79,6 @@ export default function AdminPage() {
       setErrors([]);
     }
   };
-  const handleImporterChange = (option) => {
-    setForm({ ...form, importer: option });
-    if (errors.length > 0) {
-      setErrors([]);
-    }
-  };
   const handleProductChange = (option) => {
     setForm({ ...form, product: option });
     if (errors.length > 0) {
@@ -91,9 +92,6 @@ export default function AdminPage() {
 
     if (!form.exporter) {
       validationErrors.push("Please select an exporter country");
-    }
-    if (!form.importer) {
-      validationErrors.push("Please select an importer country");
     }
     if (!form.product) {
       validationErrors.push("Please select a product");
@@ -111,7 +109,7 @@ export default function AdminPage() {
     }
 
     // Check if exporter and importer are the same
-    if (form.exporter && form.importer && form.exporter.value === form.importer.value) {
+    if (form.exporter && form.exporter.value === "USA") {
       validationErrors.push("Exporter and importer cannot be the same country");
     }
 
@@ -191,7 +189,6 @@ export default function AdminPage() {
     try {
         const requestData = {
           exporter: form.exporter.value,
-          importer: form.importer.value,
           HSCode: Number(form.product.value),
           rate: parseFloat(form.rate) / 100, // Convert percentage to decimal
           effectiveDate: new Date(form.effectiveDate).toISOString(),
@@ -201,8 +198,8 @@ export default function AdminPage() {
         
         console.log("Sending request data:", requestData);
         
-        const base_url = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
-        const response = await fetch(`${base_url}/api/tariffs`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
+        const response = await fetch(`${baseUrl}/api/tariffs`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -213,7 +210,6 @@ export default function AdminPage() {
         setSuccessMessage("✅ Tariff added successfully!");
         setForm({ 
           exporter: null, 
-          importer: null, 
           product: null, 
           rate: "", 
           effectiveDate: "", 
@@ -260,20 +256,6 @@ export default function AdminPage() {
             isClearable
           />
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Importer <span className="text-red-500">*</span>
-          </label>
-          <Select
-            options={countryOptions}
-            value={form.importer}
-            onChange={handleImporterChange}
-            className="text-black"
-            placeholder="Select importer country"
-            isClearable
-          />
-        </div>
-
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Product <span className="text-red-500">*</span>

@@ -56,7 +56,7 @@ public class TariffServiceImpl implements TariffService {
         // Find existing mapping or create a new one
         TariffMapping mapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(
             createDto.getHSCode(), 
-            createDto.getImporter(), 
+            "USA", 
             createDto.getExporter()
         );
         
@@ -64,7 +64,7 @@ public class TariffServiceImpl implements TariffService {
         if (mapping == null) {
             TariffMappingCreateDto mappingDto = new TariffMappingCreateDto();
             mappingDto.setHSCode(createDto.getHSCode());
-            mappingDto.setImporter(createDto.getImporter());
+            mappingDto.setImporter("USA");
             mappingDto.setExporter(createDto.getExporter());
             
             TariffMappingDto createdMappingDto = tariffMappingService.createTariffMapping(mappingDto);
@@ -132,8 +132,8 @@ public class TariffServiceImpl implements TariffService {
      */
     private void validateTariffBusinessRules(TariffCreateDto createDto) {
         // Rule 1: Exporter and importer cannot be the same
-        if (createDto.getExporter() != null && createDto.getImporter() != null && 
-            createDto.getExporter().equals(createDto.getImporter())) {
+        if (createDto.getExporter() != null && 
+            createDto.getExporter().equals("USA")) {
             throw new SameCountryException(createDto.getExporter());
         }
         
@@ -173,7 +173,7 @@ public class TariffServiceImpl implements TariffService {
         TariffMapping existingMapping = tariffMappingRepository
             .findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(
                 createDto.getHSCode(), 
-                createDto.getImporter(), 
+                "USA", 
                 createDto.getExporter()
             );
         
@@ -189,7 +189,7 @@ public class TariffServiceImpl implements TariffService {
             if (!overlappingTariffs.isEmpty()) {
                 throw new OverlappingTariffPeriodException(
                     String.format("Overlapping tariff period found for %s -> %s, HSCode: %d", 
-                        createDto.getExporter(), createDto.getImporter(), createDto.getHSCode())
+                        createDto.getExporter(), "USA", createDto.getHSCode())
                 );
             }
         }
