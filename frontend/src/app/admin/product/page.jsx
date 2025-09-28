@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { SuccessMessage, showSuccessPopupMessage } from "@/app/components/SuccessMessage";
 
 export default function AddProductPage() {
   const [form, setForm] = useState({
@@ -8,6 +9,8 @@ export default function AddProductPage() {
   });
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -39,7 +42,7 @@ export default function AddProductPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setMessage(`Product created successfully! HS Code: ${data.hsCode}`);
+        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Product created successfully!\nHS Code: " + data.hsCode);
         setForm({ hsCode: "", description: "" }); // Reset form
       } else {
         const errorData = await response.json();
@@ -107,8 +110,10 @@ export default function AddProductPage() {
             </button>
           </div>
 
+          {showSuccessPopup && <SuccessMessage successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
+
           {message && (
-            <div className={`mt-4 p-4 rounded-md ${message.includes("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+            <div className={"mt-4 p-4 rounded-md bg-red-100 text-red-700"}>
               {message}
             </div>
           )}

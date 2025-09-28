@@ -23,7 +23,7 @@ export default function AdminPage() {
   const [errors, setErrors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const [ShowSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const [countryOptions, setCountryOptions] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
@@ -321,7 +321,7 @@ export default function AdminPage() {
           {isLoading ? 'Adding Tariff...' : 'Add Tariff'}
         </button>
 
-        {ShowSuccessPopup && <SuccessMessage successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
+        {showSuccessPopup && <SuccessMessage successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
         
         {/* Error Messages */}
         <ErrorDisplay errors={errors} />

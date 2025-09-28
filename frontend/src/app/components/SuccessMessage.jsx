@@ -10,7 +10,7 @@ const SuccessMessage = ({ successMessage, setShowSuccessPopup }) => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">{successMessage}</p>
+                  <p className="text-sm font-medium text-gray-900 whitespace-pre-line">{successMessage}</p>
                 </div>
                 <div className="ml-auto pl-3">
                   <button
