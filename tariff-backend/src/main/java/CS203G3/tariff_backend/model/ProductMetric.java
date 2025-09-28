@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 public class ProductMetric {
     @Id
     @Column
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productMetricID;
 
     @ManyToOne
