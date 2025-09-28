@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { ErrorDisplay, SuccessDisplay, LoadingSpinner } from "../components/MessageComponents";
+import { ErrorDisplay, LoadingSpinner } from "../components/MessageComponents";
+import { SuccessMessage, showSuccessPopupMessage } from "../components/SuccessMessage";
 
 // Import Select dynamically to avoid SSR hydration issues
 const Select = dynamic(() => import("react-select"), { 
@@ -20,8 +21,9 @@ export default function AdminPage() {
   });
 
   const [errors, setErrors] = useState([]);
-  const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [ShowSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const [countryOptions, setCountryOptions] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
@@ -207,7 +209,7 @@ export default function AdminPage() {
       });
       
       if (response.ok) {
-        setSuccessMessage("✅ Tariff added successfully!");
+        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup,"Tariff added successfully!");
         setForm({ 
           exporter: null, 
           product: null, 
@@ -318,9 +320,8 @@ export default function AdminPage() {
           {isLoading && <LoadingSpinner />}
           {isLoading ? 'Adding Tariff...' : 'Add Tariff'}
         </button>
-        
-        {/* Success Message */}
-        <SuccessDisplay message={successMessage} />
+
+        {ShowSuccessPopup && <SuccessMessage successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
         
         {/* Error Messages */}
         <ErrorDisplay errors={errors} />
