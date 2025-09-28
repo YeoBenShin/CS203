@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useUser } from '@clerk/nextjs';
+import { SuccessMessage, showSuccessPopupMessage } from "../components/SuccessMessage";
 
 export default function ViewTariffsPage() {
 
@@ -98,7 +99,7 @@ export default function ViewTariffsPage() {
 
       if (response.ok) {
         setTariffs(tariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID));
-        showSuccessPopupMessage("Tariff deleted successfully!");
+        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup,"Tariff deleted successfully!");
 
       } else {
         const errorData = await response.json();
@@ -222,7 +223,7 @@ export default function ViewTariffsPage() {
         const updatedTariff = await response.json();
         setTariffs(tariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff)); // show the updated tariff
         handleCancelEdit();
-        showSuccessPopupMessage("Tariff updated successfully!");
+        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup,"Tariff updated successfully!");
       } else {
         const errorData = await response.json();
         setEditErrors([`Error: ${errorData.message || "Failed to update tariff"}`]);
@@ -232,15 +233,6 @@ export default function ViewTariffsPage() {
     } finally {
       setIsUpdating(false);
     }
-  };
-
-  const showSuccessPopupMessage = (message) => {
-    setSuccessMessage(message);
-    setShowSuccessPopup(true);
-    setTimeout(() => {
-      setShowSuccessPopup(false);
-      setSuccessMessage("");
-    }, 5000);
   };
 
   if (loading) {
@@ -343,32 +335,7 @@ export default function ViewTariffsPage() {
         </div>
 
         {/* Success Popup */}
-        {showSuccessPopup && (
-          <div className="fixed top-4 right-4 z-50">
-            <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200 max-w-sm animate-fade-in">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">{successMessage}</p>
-                </div>
-                <div className="ml-auto pl-3">
-                  <button
-                    onClick={() => setShowSuccessPopup(false)}
-                    className="inline-flex text-gray-400 hover:text-gray-500"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {showSuccessPopup && <SuccessMessage successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
 
         {/* Delete Confirmation Popup */}
         {showDeletePopup && tariffToDelete && (
