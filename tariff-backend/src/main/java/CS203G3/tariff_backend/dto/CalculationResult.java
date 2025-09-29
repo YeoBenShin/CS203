@@ -1,7 +1,5 @@
 package CS203G3.tariff_backend.dto;
 
-import CS203G3.tariff_backend.dto.TariffForCalDisplayDto;
-
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;

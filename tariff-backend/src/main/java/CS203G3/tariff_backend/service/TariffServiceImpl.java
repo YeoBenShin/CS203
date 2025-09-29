@@ -5,11 +5,13 @@ import CS203G3.tariff_backend.repository.*;
 import CS203G3.tariff_backend.dto.*;
 import CS203G3.tariff_backend.exception.*;
 import CS203G3.tariff_backend.exception.tariff.*;
-import CS203G3.tariff_backend.exception.ResourceNotFoundException;
 
 import java.sql.Date;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,15 +21,20 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class TariffServiceImpl implements TariffService {
-
+    private final BusinessExceptionHandler businessExceptionHandler;
+    private final TariffRateRepository tariffRateRepository;
     private final TariffRepository tariffRepository;
     private final CountryRepository countryRepository;
-    private final ProductRepository productRepository;    
+    private final ProductRepository productRepository;  
+    private final TariffCalculationService tariffCalculationService; 
 
-    public TariffServiceImpl(TariffRepository tariffRepository, CountryRepository countryRepository, ProductRepository productRepository) {
+    public TariffServiceImpl(TariffRepository tariffRepository, TariffRateRepository tariffRateRepository, CountryRepository countryRepository, ProductRepository productRepository, TariffCalculationService tariffCalculationService, BusinessExceptionHandler businessExceptionHandler) {
         this.tariffRepository = tariffRepository;
+        this.tariffRateRepository = tariffRateRepository;
         this.countryRepository = countryRepository;
         this.productRepository = productRepository;
+        this.tariffCalculationService = tariffCalculationService;
+        this.businessExceptionHandler = businessExceptionHandler;
     }
 
     private TariffDto convertToDto(Tariff tariff) {
@@ -239,5 +246,46 @@ public class TariffServiceImpl implements TariffService {
                 .filter(tariff -> tariff.getProduct().gethSCode().equals(hsCode))
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
+    }
+
+    public CalculationResult calculateTariff(CalculationRequest calculationDto) {
+        // fetch tariff
+        Optional<Tariff> tariffOpt = tariffRepository.findValidTariff(
+            calculationDto.gethSCode(),
+            calculationDto.getExporter(),
+            calculationDto.getTradeDate()
+        );
+        Tariff tariff = tariffOpt.orElseThrow(() ->
+            new ResourceNotFoundException("No such tariff record found")
+        );
+
+        // fetch tariffrates
+        Long tariffId = tariff.getTariffID();
+        List<TariffRate> tariffRates = tariffRateRepository.findAllByTariff_TariffID(tariffId);
+        
+        // format mapping of qty - rate - value
+        List<TariffCalculationMap> tariffList = new ArrayList<>();
+        for (TariffRate tRate : tariffRates) {
+            UnitOfCalculation unitOfCalculation = tRate.getProductMetric().getUnitOfCalculation();
+            BigDecimal rate = tRate.getTariffRate();
+            BigDecimal value = calculationDto.getQuantityValues().get(unitOfCalculation);
+
+            // if Ad Valorem rate required, use productValue as value
+            if (unitOfCalculation.equals(UnitOfCalculation.AV)) {value = calculationDto.getProductValue();}
+
+            TariffCalculationMap tariffMap = new TariffCalculationMap(unitOfCalculation, rate, value);
+
+            tariffList.add(tariffMap);
+        }
+
+        // tariff calculation handler
+        CalculationResult cr = tariffCalculationService.calculate(tariffList, calculationDto.getProductValue());
+
+        // set other tariff info
+        cr.setTariffName(tariff.getTariffName());
+        cr.setEffectiveDate(tariff.getEffectiveDate());
+        cr.setExpiryDate(tariff.getExpiryDate());
+        cr.setReference(tariff.getReference());
+        return cr;
     }
 }

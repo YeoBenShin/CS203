@@ -81,5 +81,6 @@ public enum UnitOfCalculation {
     V,
     W,
     WTS,
-    X
+    X,
+    AV // Ad Valorem
 }

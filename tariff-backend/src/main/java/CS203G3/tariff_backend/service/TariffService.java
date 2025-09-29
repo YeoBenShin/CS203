@@ -2,10 +2,10 @@ package CS203G3.tariff_backend.service;
 
 import CS203G3.tariff_backend.dto.TariffDto;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
-import CS203G3.tariff_backend.model.Tariff;
+import CS203G3.tariff_backend.dto.CalculationRequest;
+import CS203G3.tariff_backend.dto.CalculationResult;
 
 import java.util.List;
-import java.sql.Date;
 
 /**
  * Service interface for Tariff business logic
@@ -58,4 +58,7 @@ public interface TariffService {
      * @return List of tariff DTOs for this HS Code
      */
     List<TariffDto> getTariffsByhSCode(Integer hsCode);
+
+    
+    CalculationResult calculateTariff(CalculationRequest calculationDto);
 }

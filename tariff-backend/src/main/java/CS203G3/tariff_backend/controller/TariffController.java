@@ -1,6 +1,8 @@
 package CS203G3.tariff_backend.controller;
 
 import CS203G3.tariff_backend.dto.TariffDto;
+import CS203G3.tariff_backend.dto.CalculationRequest;
+import CS203G3.tariff_backend.dto.CalculationResult;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
 import CS203G3.tariff_backend.service.TariffService;
 
@@ -13,6 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 
 /**
@@ -103,4 +108,11 @@ public class TariffController {
         List<TariffDto> tariffs = tariffService.getTariffsByhSCode(hSCode);
         return ResponseEntity.ok(tariffs);
     }
+
+    @PostMapping("/calculate")
+    public ResponseEntity<CalculationResult> calculateTariff(@RequestBody CalculationRequest calculationDto) {
+        CalculationResult calculationResult = tariffService.calculateTariff(calculationDto);
+        return ResponseEntity.ok(calculationResult);
+    }
+    
 }
