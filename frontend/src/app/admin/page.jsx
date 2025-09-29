@@ -292,12 +292,12 @@ export default function AdminPage() {
             type="date" 
             value={form.effectiveDate} 
             onChange={handleChange} 
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+            className={`shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${form.effectiveDate ? " text-gray-700" : "text-white"}`} 
           />
         </div>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="expiryDate">Expiry Date</label>
-          <input name="expiryDate" type="date" value={form.expiryDate} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+          <input name="expiryDate" type="date" value={form.expiryDate} onChange={handleChange} className={`shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${form.expiryDate ? " text-gray-700" : "text-white"}`} />
         </div>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="reference">Reference</label>
