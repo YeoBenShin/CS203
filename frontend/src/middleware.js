@@ -38,7 +38,7 @@ export default clerkMiddleware(async (auth, req) => {
     }
   }
 
-  if (isSignInRoute(req)) { // cannot go to sign in page if already signed in
+  if (userId && isSignInRoute(req)) { // cannot go to sign in page if already signed in
     // console.log("meta", user.publicMetadata.role);
     return NextResponse.redirect(new URL('/', req.url));
   }

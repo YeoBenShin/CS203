@@ -1,22 +1,15 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import FilterSelector from "../components/ui/FilterSelector";
+import FieldSelector from "../components/FieldSelector";
 
 export default function CalculatorPage() {
   // Product search states
   const [hsCodeOptions, setHsCodeOptions] = useState([]);
-  const [filteredHsCodeOptions, setFilteredHsCodeOptions] = useState([]);
-  const [selectedHsCode, setSelectedHsCode] = useState(null);
-  const [selectedProductDesc, setSelectedProductDesc] = useState(null);
-  const [hsCodeInput, setHsCodeInput] = useState('');
-  const [showHsCodeDropdown, setShowHsCodeDropdown] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Country and trade direction states
   const [countryOptions, setCountryOptions] = useState([]);
-  const [filteredCountryOptions, setFilteredCountryOptions] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
-  const [countryInput, setCountryInput] = useState('');
-  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
   // Other form states
   const [shippingCost, setShippingCost] = useState('');
@@ -47,11 +40,11 @@ export default function CalculatorPage() {
         // ];
 
         const products = data.map(item => ({
-          value: item.hsCode + '',
+          value: item.hsCode, // required field for react-selector to work
+          description: item.description,
           label: `${item.hsCode} - ${item.description}`
         }));
         setHsCodeOptions(products);
-        setFilteredHsCodeOptions(products);
 
       } catch (error) {
         setErrorMessage("Error fetching HS codes: " + error);
@@ -79,7 +72,6 @@ export default function CalculatorPage() {
           label: country.isoCode + " - " + country.name
         }));
         setCountryOptions(countries);
-        setFilteredCountryOptions(countries);
       } catch (error) {
         setErrorMessage("Error fetching countries: " + error);
         console.error('Error fetching countries:', error);
@@ -90,54 +82,34 @@ export default function CalculatorPage() {
     fetchCountries();
   }, []);
 
-  // Handle HS Code selection and filtering
-  const handleHsCodeInputChange = (value) => {
-    setHsCodeInput(value);
-    if (!value) {
-      setFilteredHsCodeOptions(hsCodeOptions);
-      setSelectedHsCode(null);
-      setSelectedProductDesc(null);
-      setShowHsCodeDropdown(false);
-      return;
-    }
-
-    const filtered = hsCodeOptions.filter(option =>
-      option.label.toLowerCase().includes(value.toLowerCase()) ||
-      option.value.includes(value)
-    );
-    setFilteredHsCodeOptions(filtered);
-    setShowHsCodeDropdown(true);
-  };
-
-  const regexForProductExtraction = /.*-\s*(.*)/;
   const handleHsCodeSelection = (option) => {
-    setSelectedHsCode(option.value);
-    setSelectedProductDesc(regexForProductExtraction.exec(option.label)[1]); // Extract description from label
-    setHsCodeInput(option.label);
-    setShowHsCodeDropdown(false); // Hide dropdown after selection
+    if (!option) {
+      setSelectedProduct(null);
+      return;
+    } 
+    setSelectedProduct(option);
   };
 
   // Handle Country selection and filtering
-  const handleCountryInputChange = (value) => {
-    setCountryInput(value);
-    if (!value) {
-      setFilteredCountryOptions(countryOptions);
-      setSelectedCountry(null);
-      setShowCountryDropdown(false);
-      return;
-    }
+  // const handleCountryInputChange = (value) => {
+  //   setCountryInput(value);
+  //   if (!value) {
+  //     setFilteredCountryOptions(countryOptions);
+  //     setSelectedCountry(null);
+  //     setShowCountryDropdown(false);
+  //     return;
+  //   }
 
-    const filtered = countryOptions.filter(option =>
-      option.label.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredCountryOptions(filtered);
-    setShowCountryDropdown(true);
-  };
+  //   const filtered = countryOptions.filter(option =>
+  //     option.label.toLowerCase().includes(value.toLowerCase())
+  //   );
+  //   setFilteredCountryOptions(filtered);
+  //   setShowCountryDropdown(true);
+  // };
 
   const handleCountrySelection = (option) => {
-    setSelectedCountry(option.value);
-    setCountryInput(option.label);
-    setShowCountryDropdown(false); // Hide dropdown after selection
+    setSelectedCountry(option);
+    // setCountryInput(option.label);
 
   };
 
@@ -148,7 +120,7 @@ export default function CalculatorPage() {
   // Tariff calculation function
   const handleCalculate = async () => {
     // Basic validation -> can upgrade to better UI validation later
-    if (!selectedHsCode) {
+    if (!selectedProduct) {
       setErrorMessage("Please select a valid HS Code");
       return;
     }
@@ -167,8 +139,8 @@ export default function CalculatorPage() {
 
     setLoading(true);
     const data = {
-      hsCode: selectedHsCode,
-      country: selectedCountry,
+      hsCode: selectedProduct.value,
+      country: selectedCountry.value,
       shippingCost: parseFloat(shippingCost),
       tradeDate: tradeDate
     };
@@ -252,9 +224,9 @@ export default function CalculatorPage() {
 
     try {
       const saveData = {
-        hsCode: selectedHsCode,
-        productDescription: selectedProductDesc,
-        country: selectedCountry,
+        hsCode: selectedProduct.value,
+        productDescription: selectedProduct.description,
+        country: selectedCountry.value,
         shippingCost: parseFloat(shippingCost),
         tradeDate: tradeDate,
         tariffBreakdown: tariffBreakdown,
@@ -287,41 +259,14 @@ export default function CalculatorPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="font-bold mb-2 text-black block">Search by HS Code / Description:</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    className="text-black border border-gray-300 rounded px-3 py-2 w-full bg-white"
-                    value={hsCodeInput}
-                    onChange={(e) => handleHsCodeInputChange(e.target.value)}
-                    onFocus={() => {
-                      if (hsCodeInput && filteredHsCodeOptions.length > 0) {
-                        setShowHsCodeDropdown(true);
-                      }
-                    }}
-                    onBlur={() => {
-                      // Delay hiding to allow for clicks on dropdown items
-                      setTimeout(() => setShowHsCodeDropdown(false), 150);
-                    }}
-                    placeholder="Enter HS Code or Product Description..."
-                  />
-                  {showHsCodeDropdown && filteredHsCodeOptions.length > 0 && 
-                    <FilterSelector options={filteredHsCodeOptions} handlerFunction={handleHsCodeSelection} />}
-                  {hsCodeInput && (
-                    <button
-                      type="button"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      onClick={() => {
-                        setHsCodeInput('');
-                        setSelectedHsCode(null);
-                        setSelectedProductDesc(null);
-                        // setProductDescInput('');
-                        setShowHsCodeDropdown(false);
-                      }}
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
+                <FieldSelector
+                  options={hsCodeOptions}
+                  value={selectedProduct}
+                  onChange={handleHsCodeSelection}
+                  className="text-red"
+                  placeholder="Select HS Code..."
+                  isClearable
+                />
               </div>
             </div>
           </div>
@@ -332,39 +277,14 @@ export default function CalculatorPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="font-bold mb-2 text-black block">Exporting Country:</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    className="text-black border border-gray-300 rounded px-3 py-2 w-full bg-white"
-                    value={countryInput}
-                    onChange={(e) => handleCountryInputChange(e.target.value)}
-                    onFocus={() => {
-                      if (countryInput && filteredCountryOptions.length > 0) {
-                        setShowCountryDropdown(true);
-                      }
-                    }}
-                    onBlur={() => {
-                      // Delay hiding to allow for clicks on dropdown items
-                      setTimeout(() => setShowCountryDropdown(false), 150);
-                    }}
-                    placeholder="Enter Country..."
-                  />
-                  {showCountryDropdown && filteredCountryOptions.length > 0 && 
-                  <FilterSelector options={filteredCountryOptions} handlerFunction={handleCountrySelection} />} 
-                  {countryInput && (
-                    <button
-                      type="button"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      onClick={() => {
-                        setCountryInput('');
-                        setSelectedCountry(null);
-                        setShowCountryDropdown(false);
-                      }}
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
+                <FieldSelector
+                  options={countryOptions}
+                  value={selectedCountry}
+                  onChange={handleCountrySelection}
+                  className="text-red"
+                  placeholder="Enter Country..."
+                  isClearable
+                />
               </div>
               <div>
                 <label className="font-bold mb-2 text-black block">Date of Trade:</label>
@@ -428,22 +348,21 @@ export default function CalculatorPage() {
                 <h2 className="text-lg font-bold text-black mb-3">Trade Summary</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-semibold text-gray-700">Product:</span>
-                    <p className="text-black">{selectedProductDesc ? selectedProductDesc : 'N/A'}</p>
+                    <span className="font-semibold text-gray-700">Product: </span>
+                    <span className="text-black">{selectedProduct ? selectedProduct.description : 'N/A'} </span>
                   </div>
                   <div>
-                    <span className="font-semibold text-gray-700">HS Code:</span>
-                    <p className="text-black">{selectedHsCode ? selectedHsCode : 'N/A'}</p>
+                    <span className="font-semibold text-gray-700">HS Code: </span>
+                    <span className="text-black">{selectedProduct ? selectedProduct.value : 'N/A'} </span>
+
                   </div>
                   <div>
-                    <span className="font-semibold text-gray-700">Trade Partners:</span>
-                    <p className="text-black">
-                      {`${selectedCountry ? selectedCountry : 'N/A'} → USA`}
-                    </p>
+                    <span className="font-semibold text-gray-700">Trade Partners: </span>
+                    <span className="text-black">{`${selectedCountry.value ? selectedCountry.value : 'N/A'} → USA`} </span>
                   </div>
                   <div>
-                    <span className="font-semibold text-gray-700">Trade Date:</span>
-                    <p className="text-black">{tradeDate || 'N/A'}</p>
+                    <span className="font-semibold text-gray-700">Trade Date: </span>
+                    <span className="text-black">{tradeDate || 'N/A'}</span>
                   </div>
                   <div className="md:col-span-2">
                     <span className="font-semibold text-gray-700">Total Cumulative Tariff Rate:</span>
