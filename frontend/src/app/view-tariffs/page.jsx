@@ -395,11 +395,11 @@ export default function ViewTariffsPage() {
 
         {/* Edit Confirmation Popup */}
         {showEditPopup && tariffToEdit && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4" >
+          <div className="fixed inset-0 flex items-center justify-center z-50" >
             <div className="fixed inset-0 bg-white/50 backdrop-blur-sm" onClick={handleCancelEdit}></div>
-            <div className="bg-white shadow-xl rounded-lg px-5 py-4 w-full max-w-md animate-fade-in relative">
+            <div className="bg-white shadow-xl rounded-lg px-8 py-4 w-full max-w-md animate-fade-in relative">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold text-gray-800">Edit Tariff</h2>
+                <h3 className="text-lg font-semibold text-gray-800">Edit Tariff</h3>
                 <button
                   onClick={handleCancelEdit}
                   className="text-gray-400 hover:text-gray-500"
@@ -410,8 +410,8 @@ export default function ViewTariffsPage() {
                 </button>
               </div>
               <div className="mb-3 bg-blue-50 p-2 rounded-md">
-                <p className="text-xs font-medium text-gray-700 mb-1">Current Tariff</p>
-                <div className="text-xs text-gray-600 space-y-0.5">
+                <p className="text-sm font-medium text-gray-700 mb-1">Current Tariff</p>
+                <div className="text-xs text-gray-600 space-y-1">
                   <p><span className="font-medium">Route:</span> {tariffToEdit.exporterName} → {tariffToEdit.importerName}</p>
                   <p><span className="font-medium">Product:</span> {tariffToEdit.productDescription || "N/A"} ({tariffToEdit.HSCode})</p>
                   <p><span className="font-medium">Current Rate:</span> {(parseFloat(tariffToEdit.rate) * 100).toFixed(2)}%</p>
@@ -420,7 +420,7 @@ export default function ViewTariffsPage() {
 
               <form onSubmit={handleEditSubmit} className="space-y-2">
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-0.5" htmlFor="rate">
+                  <label className="block text-gray-700 text-sm font-medium mb-1" htmlFor="rate">
                     Rate (%)
                   </label>
                   <input
@@ -430,12 +430,12 @@ export default function ViewTariffsPage() {
                     step="0.01"
                     value={editForm.rate}
                     onChange={handleEditFormChange}
-                    className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py- px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-0.5" htmlFor="effectiveDate">
+                  <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="effectiveDate">
                     Effective Date
                   </label>
                   <input
@@ -448,7 +448,7 @@ export default function ViewTariffsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-0.5" htmlFor="expiryDate">
+                  <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="expiryDate">
                     Expiry Date
                   </label>
                   <input
@@ -461,7 +461,7 @@ export default function ViewTariffsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-0.5" htmlFor="reference">
+                  <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="reference">
                     Reference
                   </label>
                   <input
@@ -482,11 +482,11 @@ export default function ViewTariffsPage() {
                   </div>
                 )}
 
-                <div className="flex justify-end space-x-2 mt-4 pt-3 border-t border-gray-200">
+                <div className="flex justify-end space-x-3 mt-4 pt-3">
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors cursor-pointer"
+                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
