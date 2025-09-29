@@ -1,14 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
 import { ErrorDisplay, LoadingSpinner } from "../components/MessageComponents";
 import { SuccessMessage, showSuccessPopupMessage } from "../components/SuccessMessage";
-
-// Import Select dynamically to avoid SSR hydration issues
-const Select = dynamic(() => import("react-select"), { 
-  ssr: false,
-  loading: () => <div className="h-9 bg-gray-100 border rounded animate-pulse"></div>
-});
+import FieldSelector from "../components/FieldSelector";
 
 export default function AdminPage() {
   const [form, setForm] = useState({
@@ -249,7 +243,7 @@ export default function AdminPage() {
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Exporter <span className="text-red-500">*</span>
           </label>
-          <Select
+          <FieldSelector
             options={countryOptions}
             value={form.exporter}
             onChange={handleExporterChange}
@@ -262,7 +256,7 @@ export default function AdminPage() {
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Product <span className="text-red-500">*</span>
           </label>
-          <Select
+          <FieldSelector
             options={productOptions}
             value={form.product}
             onChange={handleProductChange}

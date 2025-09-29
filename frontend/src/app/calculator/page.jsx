@@ -308,7 +308,7 @@ export default function CalculatorPage() {
                 <input
                   type="number"
                   min={0}
-                  step="0.01"
+                  step="0.5"
                   className="text-black border border-gray-300 rounded px-3 py-2 w-full pl-8 bg-white"
                   value={shippingCost}
                   onChange={handleShippingCost}

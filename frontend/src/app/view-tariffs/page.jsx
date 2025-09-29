@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from '@clerk/nextjs';
 import { SuccessMessage, showSuccessPopupMessage } from "../components/SuccessMessage";
+import ReactTable from "../components/ReactTable";
 
 export default function ViewTariffsPage() {
 
@@ -247,7 +248,7 @@ export default function ViewTariffsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-blue-400 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-extrabold text-gray-900">All Tariffs</h1>
@@ -272,57 +273,21 @@ export default function ViewTariffsPage() {
             <p className="text-gray-500 text-lg">No tariffs found</p>
           </div>
         ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            <div className="overflow-hidden">
-              <table className="w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-                      Exporting Country
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-                      Destination Country
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">
-                      HS Code
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                      Product Description
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">
-                      Rate (%)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {tariffs.map((tariff) => (
-                    <React.Fragment key={tariff.tariffID}>
-                      <tr
-                        className="hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handleShowDetails(tariff)}
-                      >
-                        <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                          {tariff.exporterName}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500">
-                          {tariff.importerName}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500">
-                          {tariff.HSCode}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500" title={tariff.productDescription || "N/A"}>
-                          {tariff.productDescription ? (tariff.productDescription.length > 40 ? tariff.productDescription.substring(0, 40) + "..." : tariff.productDescription) : "N/A"}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-900 font-medium">
-                          {(parseFloat(tariff.rate) * 100).toFixed(2)}%
-                        </td>
-                      </tr>
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            <ReactTable
+              columns={[
+                { header: "Exporting Country", accessorKey: "exporterName",
+                 cell: info => <span className="text-gray-900 font-medium">{info.getValue() || "N/A"}</span> },
+                { header: "Destination Country", accessorKey: "importerName" },
+                { header: "HS Code", accessorKey: "HSCode" },
+                { header: "Product Description", accessorKey: "productDescription", 
+                  cell: info => info.getValue() ? (info.getValue().length > 40 ? info.getValue().substring(0, 40) + "..." : info.getValue()) : "N/A" },
+                { header: "Rate (%)", accessorKey: "rate", 
+                  cell: info => <span className="text-gray-900 font-medium">{(parseFloat(info.getValue()) * 100).toFixed(2)}%</span>
+                 },
+              ]}
+              data={tariffs}
+              rowLevelFunction={handleShowDetails}
+            />
         )}
 
         <div className="mt-8 text-center">
