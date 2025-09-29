@@ -395,36 +395,32 @@ export default function ViewTariffsPage() {
 
         {/* Edit Confirmation Popup */}
         {showEditPopup && tariffToEdit && (
-          <div className="fixed inset-0 flex items-center justify-center z-50" >
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4" >
             <div className="fixed inset-0 bg-white/50 backdrop-blur-sm" onClick={handleCancelEdit}></div>
-            <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md animate-fade-in relative">
-              <div className="mb-6 bg-blue-50 p-4 rounded-md">
-                <h2 className="text-lg font-semibold text-gray-800 mb-2">Tariff Information</h2>
-                <div className="grid grid-cols-1 gap-2 text-sm">
-                  <div>
-                    <p className="font-medium text-gray-600">Exporter: {tariffToEdit.exporterName}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-600">Importer: {tariffToEdit.importerName}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-600">Rate: {(parseFloat(tariffToEdit.rate) * 100).toFixed(2)}%</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-600">Product: {tariffToEdit.productDescription || "N/A"} ({tariffToEdit.HSCode})</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-600">Effective Date: {formatDate(tariffToEdit.effectiveDate)}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-600">Expiry Date: {formatDate(tariffToEdit.expiryDate)}</p>
-                  </div>
+            <div className="bg-white shadow-xl rounded-lg px-5 py-4 w-full max-w-md animate-fade-in relative">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold text-gray-800">Edit Tariff</h2>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="mb-3 bg-blue-50 p-2 rounded-md">
+                <p className="text-xs font-medium text-gray-700 mb-1">Current Tariff</p>
+                <div className="text-xs text-gray-600 space-y-0.5">
+                  <p><span className="font-medium">Route:</span> {tariffToEdit.exporterName} → {tariffToEdit.importerName}</p>
+                  <p><span className="font-medium">Product:</span> {tariffToEdit.productDescription || "N/A"} ({tariffToEdit.HSCode})</p>
+                  <p><span className="font-medium">Current Rate:</span> {(parseFloat(tariffToEdit.rate) * 100).toFixed(2)}%</p>
                 </div>
               </div>
 
-              <form onSubmit={handleEditSubmit}>
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="rate">
+              <form onSubmit={handleEditSubmit} className="space-y-2">
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-0.5" htmlFor="rate">
                     Rate (%)
                   </label>
                   <input
@@ -434,12 +430,12 @@ export default function ViewTariffsPage() {
                     step="0.01"
                     value={editForm.rate}
                     onChange={handleEditFormChange}
-                    className="cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="effectiveDate">
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-0.5" htmlFor="effectiveDate">
                     Effective Date
                   </label>
                   <input
@@ -447,12 +443,12 @@ export default function ViewTariffsPage() {
                     type="date"
                     value={editForm.effectiveDate}
                     onChange={handleEditFormChange}
-                    className={`cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${editForm.effectiveDate ? " text-gray-700" : "text-white"}`}
+                    className={`cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${editForm.effectiveDate ? " text-gray-700" : "text-white"}`}
                   />
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="expiryDate">
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-0.5" htmlFor="expiryDate">
                     Expiry Date
                   </label>
                   <input
@@ -460,12 +456,12 @@ export default function ViewTariffsPage() {
                     type="date"
                     value={editForm.expiryDate}
                     onChange={handleEditFormChange}
-                    className={`cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${editForm.expiryDate ? " text-gray-700" : "text-white"}`}
+                    className={`cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${editForm.expiryDate ? " text-gray-700" : "text-white"}`}
                   />
                 </div>
 
-                <div className="mb-2">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="reference">
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-0.5" htmlFor="reference">
                     Reference
                   </label>
                   <input
@@ -474,22 +470,23 @@ export default function ViewTariffsPage() {
                     value={editForm.reference}
                     onChange={handleEditFormChange}
                     placeholder="Source URL"
-                    className="cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
+                
                 {editErrors.length > 0 && (
-                    <div className="mb-2 text-sm text-red-600">
-                      {editErrors.map((error, index) => (
-                        <p key={index}>{error}</p>
-                      ))}
-                    </div>
-                  )}
+                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+                    {editErrors.map((error, index) => (
+                      <p key={index}>{error}</p>
+                    ))}
+                  </div>
+                )}
 
-                <div className="flex items-center justify-between">
+                <div className="flex justify-end space-x-2 mt-4 pt-3 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer"
+                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -497,12 +494,12 @@ export default function ViewTariffsPage() {
                   <button
                     type="submit"
                     disabled={isUpdating}
-                    className={`flex items-center justify-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isUpdating
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isUpdating
                       ? 'bg-gray-400 cursor-not-allowed text-white'
-                      : 'bg-blue-500 hover:bg-blue-700 text-white cursor-pointer'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
                       }`}
                   >
-                    {isUpdating ? 'Updating...' : 'Update Tariff'}
+                    {isUpdating ? 'Updating...' : 'Update'}
                   </button>
                 </div>
               </form>
