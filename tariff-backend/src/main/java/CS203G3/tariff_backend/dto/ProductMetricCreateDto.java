@@ -3,15 +3,15 @@ package CS203G3.tariff_backend.dto;
 import CS203G3.tariff_backend.model.UnitOfCalculation;
 
 public class ProductMetricCreateDto {
-    private Integer hSCode;
+    private String hSCode;
     private UnitOfCalculation unitOfCalculation;
 
     // Getters and Setters
-    public Integer gethSCode() {
+    public String gethSCode() {
         return hSCode;
     }
 
-    public void sethSCode(Integer hSCode) {
+    public void sethSCode(String hSCode) {
         this.hSCode = hSCode;
     }
 

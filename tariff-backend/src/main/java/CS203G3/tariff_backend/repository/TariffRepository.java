@@ -44,7 +44,7 @@ public interface TariffRepository extends JpaRepository<Tariff, Long> {
     // );
     @Query("SELECT t FROM Tariff t WHERE t.product.hSCode = :hSCode AND t.exporter.isoCode = :exporter AND t.effectiveDate <= :tradeDate AND t.expiryDate >= :tradeDate")
     Optional<Tariff> findValidTariff(
-        @Param("hSCode") int hSCode,
+        @Param("hSCode") String hSCode,
         @Param("exporter") String exporter,
         @Param("tradeDate") Date tradeDate
     );

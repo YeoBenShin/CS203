@@ -21,7 +21,7 @@ public class TariffCreateDto {
 
     @NotNull(message = "HS Code is required")
     @JsonProperty("hSCode")
-    private Integer hSCode;
+    private String hSCode;
 
     @NotNull(message = "Rate is required")
     private BigDecimal rate;
@@ -55,11 +55,11 @@ public class TariffCreateDto {
         this.exporter = exporter;
     }
 
-    public Integer gethSCode() {
+    public String gethSCode() {
         return hSCode;
     }
 
-    public void sethSCode(Integer hSCode) {
+    public void sethSCode(String hSCode) {
         this.hSCode = hSCode;
     }
     

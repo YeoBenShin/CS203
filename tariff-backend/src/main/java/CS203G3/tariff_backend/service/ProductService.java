@@ -24,7 +24,7 @@ public interface ProductService {
      * @param hSCode The product HS code
      * @return The product
      */
-    Product getProductByhSCode(Integer hSCode);
+    Product getProductByhSCode(String hSCode);
 
     /**
      * Create a new product with business validation
@@ -39,12 +39,12 @@ public interface ProductService {
      * @param product The product data to update
      * @return The updated product
      */
-    Product updateProduct(Integer hSCode, Product product);
+    Product updateProduct(String hSCode, Product product);
 
     /**
      * Delete a product
      * @param hSCode The product HS code to delete
      */
-    void deleteProduct(Integer hSCode);
+    void deleteProduct(String hSCode);
     
 }

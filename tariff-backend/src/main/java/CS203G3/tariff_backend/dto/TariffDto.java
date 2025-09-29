@@ -23,7 +23,7 @@ public class TariffDto {
 
     // fields for frontend display from product
     @JsonProperty("hSCode")
-    private Integer hSCode;
+    private String hSCode;
     private String productDescription;
 
     // Constructors
@@ -85,11 +85,11 @@ public class TariffDto {
         this.exporterName = exporterName;
     }
 
-    public Integer gethSCode() {
+    public String gethSCode() {
         return hSCode;
     }
 
-    public void sethSCode(Integer hSCode) {
+    public void sethSCode(String hSCode) {
         this.hSCode = hSCode;
     }
 

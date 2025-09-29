@@ -34,7 +34,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product getProductByhSCode(Integer hSCode) {
+    public Product getProductByhSCode(String hSCode) {
         return productRepository.findById(hSCode).orElseThrow(() -> new ResourceNotFoundException("Product", hSCode.toString()));
     }
 
@@ -46,7 +46,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public Product updateProduct(Integer hSCode, Product product) {
+    public Product updateProduct(String hSCode, Product product) {
         if (!productRepository.existsById(hSCode)) {
             throw new ResourceNotFoundException("Product", hSCode.toString());
         }
@@ -56,7 +56,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public void deleteProduct(Integer hSCode) {
+    public void deleteProduct(String hSCode) {
         if (!productRepository.existsById(hSCode)) {
             throw new ResourceNotFoundException("Product", hSCode.toString());
         }

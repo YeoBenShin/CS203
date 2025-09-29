@@ -50,7 +50,7 @@ public class ProductController {
      * GET /api/products/{hSCode}
      */
     @GetMapping("/hsCode/{hSCode}")
-    public ResponseEntity<Product> getProductByhSCode(@PathVariable Integer hSCode) {
+    public ResponseEntity<Product> getProductByhSCode(@PathVariable String hSCode) {
         Product product = productService.getProductByhSCode(hSCode);
         if (product == null) {
             return ResponseEntity.notFound().build();
@@ -74,7 +74,7 @@ public class ProductController {
      * PUT /api/products/{hSCode}
      */
     @PutMapping("/{hSCode}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Integer hSCode, @RequestBody Product product) {
+    public ResponseEntity<Product> updateProduct(@PathVariable String hSCode, @RequestBody Product product) {
         Product updatedProduct = productService.updateProduct(hSCode, product);
         if (updatedProduct == null) {
             return ResponseEntity.notFound().build();
@@ -87,7 +87,7 @@ public class ProductController {
      * DELETE /api/products/{hSCode}
      */
     @DeleteMapping("/{hSCode}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Integer hSCode) {
+    public ResponseEntity<Void> deleteProduct(@PathVariable String hSCode) {
         productService.deleteProduct(hSCode);
         return ResponseEntity.noContent().build();
     }

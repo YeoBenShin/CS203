@@ -25,7 +25,7 @@ public class TariffRate {
     @JoinColumn(name = "unit_of_calculation", referencedColumnName = "unit_of_calculation")
     private ProductMetric productMetric;
 
-    @Column(name = "tariff_rate")
+    @Column(name = "tariff_rate", precision = 38, scale = 6)
     private BigDecimal tariffRate;
 
     public TariffRate() {

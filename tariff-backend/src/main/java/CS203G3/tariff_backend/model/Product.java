@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 public class Product {
     @Id
     @Column(name = "hs_code")
-    private Integer hSCode;
+    private String hSCode;
     
     @Column(length = 255)
     private String description;
@@ -14,17 +14,17 @@ public class Product {
     // Constructors
     public Product() {}
     
-    public Product(Integer hSCode, String description) {
+    public Product(String hSCode, String description) {
         this.hSCode = hSCode;
         this.description = description;
     }
 
     // Getters and Setters
-    public Integer gethSCode() {
+    public String gethSCode() {
         return hSCode;
     }
 
-    public void sethSCode(Integer hSCode) {
+    public void sethSCode(String hSCode) {
         this.hSCode = hSCode;
     }
 

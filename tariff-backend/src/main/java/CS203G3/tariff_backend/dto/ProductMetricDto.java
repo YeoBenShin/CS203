@@ -4,13 +4,13 @@ import CS203G3.tariff_backend.model.UnitOfCalculation;
 
 public class ProductMetricDto {
     private Long id;
-    private Integer hSCode;
+    private String hSCode;
     private String description;
     private UnitOfCalculation unitOfCalculation;
 
     public ProductMetricDto() {}
 
-    public ProductMetricDto(Long id, Integer hSCode, String description, UnitOfCalculation unitOfCalculation) {
+    public ProductMetricDto(Long id, String hSCode, String description, UnitOfCalculation unitOfCalculation) {
         this.id = id;
         this.hSCode = hSCode;
         this.description = description;
@@ -26,11 +26,11 @@ public class ProductMetricDto {
         this.id = id;
     }
 
-    public Integer gethSCode() {
+    public String gethSCode() {
         return hSCode;
     }
 
-    public void sethSCode(Integer hSCode) {
+    public void sethSCode(String hSCode) {
         this.hSCode = hSCode;
     }
 

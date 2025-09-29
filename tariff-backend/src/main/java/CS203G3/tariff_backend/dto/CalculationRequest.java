@@ -11,7 +11,7 @@ import CS203G3.tariff_backend.model.UnitOfCalculation;
  * Input for tariff cost calculations
  */
 public class CalculationRequest {
-    private int hSCode;
+    private String hSCode;
     private String exporter;
     private BigDecimal productValue;
     private Map<UnitOfCalculation, BigDecimal> quantityValues;
@@ -20,7 +20,7 @@ public class CalculationRequest {
     // Constructors
     public CalculationRequest() {}
 
-    public CalculationRequest(int hSCode, String exporter, BigDecimal productValue, Map<UnitOfCalculation, BigDecimal> quantityValues,
+    public CalculationRequest(String hSCode, String exporter, BigDecimal productValue, Map<UnitOfCalculation, BigDecimal> quantityValues,
             Date tradeDate) {
         this.hSCode = hSCode;
         this.exporter = exporter;
@@ -29,11 +29,11 @@ public class CalculationRequest {
         this.tradeDate = tradeDate;
     }
 
-    public int gethSCode() {
+    public String gethSCode() {
         return hSCode;
     }
 
-    public void sethSCode(int hSCode) {
+    public void sethSCode(String hSCode) {
         this.hSCode = hSCode;
     }
 
