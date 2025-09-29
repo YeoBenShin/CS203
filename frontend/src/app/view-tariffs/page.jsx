@@ -430,7 +430,7 @@ export default function ViewTariffsPage() {
                     step="0.01"
                     value={editForm.rate}
                     onChange={handleEditFormChange}
-                    className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py- px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 

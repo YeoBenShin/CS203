@@ -276,7 +276,7 @@ export default function CalculatorPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white to-blue-400">
+    <main>
       <div className="flex w-full min-h-screen max-w-7xl mx-auto p-8">
         <div className="w-full">
           <h1 className="text-3xl text-black font-bold mb-8 text-center">Tariff Calculator</h1>
