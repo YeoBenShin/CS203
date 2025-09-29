@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import FieldSelector from "../components/FieldSelector";
+import Button from '../components/Button';
 
 export default function CalculatorPage() {
   // Product search states
@@ -322,21 +323,22 @@ export default function CalculatorPage() {
 
           {/* Calculate Button */}
           <div className="flex gap-4 mb-8">
-            <button
-              className="bg-blue-500 hover:bg-blue-600 border-2 border-black text-white font-bold px-8 py-3 text-xl rounded transition disabled:opacity-50"
+            <Button
               onClick={handleCalculate}
-              disabled={loading}
-            >
-              {loading ? 'Calculating...' : 'Calculate Tariffs'}
-            </button>
+              isLoading={loading}
+              isLoadingText="Calculating..."
+              buttonText="Calculate Tariffs"
+              width=''
+              colorBg="bg-blue-500 hover:bg-blue-600 focus:ring-blue-500"/>
 
             {calcResult && (
-              <button
-                className="bg-green-500 hover:bg-green-600 border-2 border-black text-white font-bold px-8 py-3 text-xl rounded transition"
-                onClick={handleSave}
-              >
-                Save Calculation
-              </button>
+              <Button
+              onClick={handleSave}
+              isLoading={loading}
+              isLoadingText="Saving..."
+              buttonText="Save Tariff"
+              width=''
+              colorBg="bg-green-500 hover:bg-green-600 focus:ring-green-500"/>
             )}
           </div>
 

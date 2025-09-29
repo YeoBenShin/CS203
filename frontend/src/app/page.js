@@ -20,7 +20,7 @@ export default function Home() {
         <Link href="/calculator" passHref>
           <button
             type="button"
-            className="md:ml-10 bg-white border border-black text-black font-bold px-8 py-4 text-xl rounded transition cursor-pointer hover:bg-gray-100"
+            className="md:ml-10 bg-white border border-black text-black font-bold px-8 py-4 text-xl rounded transition cursor-pointer hover:bg-gray-200"
             >Calculate Now</button>
         </Link>
     </main>

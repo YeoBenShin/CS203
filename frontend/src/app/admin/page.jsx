@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { ErrorDisplay, LoadingSpinner } from "../components/MessageComponents";
 import { SuccessMessage, showSuccessPopupMessage } from "../components/SuccessMessage";
 import FieldSelector from "../components/FieldSelector";
+import Button from "../components/Button";
 
 export default function AdminPage() {
   const [form, setForm] = useState({
@@ -302,19 +303,12 @@ export default function AdminPage() {
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="reference">Reference</label>
           <input name="reference" type="text" value={form.reference} onChange={handleChange} placeholder="Source URL" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
         </div>
-        <button 
-          type="submit" 
-          disabled={isLoading}
-          className={`w-full font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center justify-center ${
-            isLoading 
-              ? 'bg-gray-400 cursor-not-allowed text-white' 
-              : 'bg-blue-500 hover:bg-blue-700 text-white'
-          }`}
-        >
-          {isLoading && <LoadingSpinner />}
-          {isLoading ? 'Adding Tariff...' : 'Add Tariff'}
-        </button>
-
+        <Button 
+          type='submit'
+          isLoading={isLoading}
+          isLoadingText="Adding Tariff..."
+          buttonText="Add Tariff"
+        />
         {showSuccessPopup && <SuccessMessage successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
         
         {/* Error Messages */}

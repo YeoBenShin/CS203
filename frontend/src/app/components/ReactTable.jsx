@@ -4,6 +4,7 @@ import {
   getPaginationRowModel,
   flexRender,
 } from "@tanstack/react-table";
+import Button from "./Button";
 
 export default function ReactTable({ columns, data, rowLevelFunction }) {
   const table = useReactTable({
@@ -46,23 +47,25 @@ return (
 
       {/* Pagination Controls */}
       <div className="flex justify-between p-4">
-        <button
-          className="px-3 py-1 bg-blue-200 rounded border-2 border-blue-500"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </button>
+        <Button 
+          onClick={table.previousPage}
+          isLoading={!table.getCanPreviousPage()}
+          buttonText="Previous"
+          isLoadingText="No Previous"
+          needSpinner={false}
+          width=""
+        />
         <span>
           Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
         </span>
-        <button
-          className="px-3 py-1 bg-blue-200 rounded border-2 border-blue-500"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </button>
+        <Button 
+          onClick={table.nextPage}
+          isLoading={!table.getCanNextPage()}
+          buttonText="Next"
+          isLoadingText="No More Next"
+          needSpinner={false}
+          width=""
+        />
       </div>
     </div>
   );

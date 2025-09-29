@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useUser } from '@clerk/nextjs';
 import { SuccessMessage, showSuccessPopupMessage } from "../components/SuccessMessage";
 import ReactTable from "../components/ReactTable";
+import Button from "../components/Button";
 
 export default function ViewTariffsPage() {
 
@@ -290,13 +291,13 @@ export default function ViewTariffsPage() {
             />
         )}
 
-        <div className="mt-8 text-center">
-          <button
+        <div className="mt-6 text-center">
+          <Button 
             onClick={fetchTariffs}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
-          >
-            Refresh
-          </button>
+            className="inline-flex items-center"
+            buttonText="Refresh"
+            width=""
+          />
         </div>
 
         {/* Success Popup */}
