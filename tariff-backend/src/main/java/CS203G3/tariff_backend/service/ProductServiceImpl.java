@@ -50,7 +50,7 @@ public class ProductServiceImpl implements ProductService {
         if (!productRepository.existsById(hSCode)) {
             throw new ResourceNotFoundException("Product", hSCode.toString());
         }
-        product.sethSCode(hSCode);
+        product.setHSCode(hSCode);
         return productRepository.save(product);
     }
 

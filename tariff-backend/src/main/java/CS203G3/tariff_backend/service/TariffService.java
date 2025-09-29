@@ -57,7 +57,7 @@ public interface TariffService {
      * @param hsCode The HS Code
      * @return List of tariff DTOs for this HS Code
      */
-    List<TariffDto> getTariffsByhSCode(Integer hsCode);
+    List<TariffDto> getTariffsByHSCode(String hsCode);
 
     
     CalculationResult calculateTariff(CalculationRequest calculationDto);

@@ -26,11 +26,11 @@ public class ProductMetricDto {
         this.id = id;
     }
 
-    public String gethSCode() {
+    public String getHSCode() {
         return hSCode;
     }
 
-    public void sethSCode(String hSCode) {
+    public void setHSCode(String hSCode) {
         this.hSCode = hSCode;
     }
 

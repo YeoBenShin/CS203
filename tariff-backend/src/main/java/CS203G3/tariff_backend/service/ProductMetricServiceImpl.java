@@ -28,7 +28,7 @@ public class ProductMetricServiceImpl implements ProductMetricService {
     public ProductMetricDto convertToDto(ProductMetric productMetric) {
         ProductMetricDto dto = new ProductMetricDto();
         dto.setId(productMetric.getProductMetricID());
-        dto.sethSCode(productMetric.getProduct().gethSCode());
+        dto.setHSCode(productMetric.getProduct().getHSCode());
         dto.setDescription(productMetric.getProduct().getDescription());
         dto.setUnitOfCalculation(productMetric.getUnitOfCalculation());
         return dto;
@@ -36,13 +36,13 @@ public class ProductMetricServiceImpl implements ProductMetricService {
 
 
     public ProductMetric convertToEntity(ProductMetricCreateDto dto) {
-        if (dto.gethSCode() == null) {
+        if (dto.getHSCode() == null) {
             throw new IllegalArgumentException("HSCode cannot be null");
         }
         
         ProductMetric productMetric = new ProductMetric();
-        Product product = productRepository.findById(dto.gethSCode())
-            .orElseThrow(() -> new ResourceNotFoundException("Product", dto.gethSCode().toString()));
+        Product product = productRepository.findById(dto.getHSCode())
+            .orElseThrow(() -> new ResourceNotFoundException("Product", dto.getHSCode().toString()));
         productMetric.setProduct(product);
         productMetric.setUnitOfCalculation(dto.getUnitOfCalculation());
         return productMetric;
@@ -94,8 +94,8 @@ public class ProductMetricServiceImpl implements ProductMetricService {
         ProductMetric existingProductMetric = productMetricRepository.findById(productMetricId)
             .orElseThrow(() -> new ResourceNotFoundException("ProductMetric", productMetricId.toString()));
 
-        Product product = productRepository.findById(productMetricDto.gethSCode())
-            .orElseThrow(() -> new ResourceNotFoundException("Product", productMetricDto.gethSCode().toString()));
+        Product product = productRepository.findById(productMetricDto.getHSCode())
+            .orElseThrow(() -> new ResourceNotFoundException("Product", productMetricDto.getHSCode().toString()));
         
         existingProductMetric.setProduct(product);
         existingProductMetric.setUnitOfCalculation(productMetricDto.getUnitOfCalculation());

@@ -104,8 +104,8 @@ public class TariffController {
      * GET /api/tariffs/hSCode/{hSCode}
      */
     @GetMapping("/hSCode/{hSCode}")
-    public ResponseEntity<List<TariffDto>> getTariffsByHSCode(@PathVariable Integer hSCode) {
-        List<TariffDto> tariffs = tariffService.getTariffsByhSCode(hSCode);
+    public ResponseEntity<List<TariffDto>> getTariffsByHSCode(@PathVariable String hSCode) {
+        List<TariffDto> tariffs = tariffService.getTariffsByHSCode(hSCode);
         return ResponseEntity.ok(tariffs);
     }
 

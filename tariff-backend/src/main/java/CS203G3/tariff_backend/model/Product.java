@@ -20,11 +20,11 @@ public class Product {
     }
 
     // Getters and Setters
-    public String gethSCode() {
+    public String getHSCode() {
         return hSCode;
     }
 
-    public void sethSCode(String hSCode) {
+    public void setHSCode(String hSCode) {
         this.hSCode = hSCode;
     }
 
@@ -39,7 +39,7 @@ public class Product {
     @Override
     public String toString() {
         return "Product{" +
-                "hsCode='" + hSCode + '\'' +
+                "HSCode='" + hSCode + '\'' +
                 ", description='" + description + '\'' +
                 '}';
     }

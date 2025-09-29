@@ -44,7 +44,7 @@ public class TariffServiceImpl implements TariffService {
         dto.setTariffName(tariff.getTariffName());
 
         // product details
-        dto.sethSCode(tariff.getProduct().gethSCode());
+        dto.sethSCode(tariff.getProduct().getHSCode());
         dto.setProductDescription(tariff.getProduct().getDescription());
         // exporter details
         dto.setExporterCode(tariff.getExporter().getIsoCode());
@@ -241,9 +241,9 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
-    public List<TariffDto> getTariffsByhSCode(Integer hsCode) {
+    public List<TariffDto> getTariffsByHSCode(String hsCode) {
         return tariffRepository.findAll().stream()
-                .filter(tariff -> tariff.getProduct().gethSCode().equals(hsCode))
+                .filter(tariff -> tariff.getProduct().getHSCode().equals(hsCode))
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
