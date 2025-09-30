@@ -1,5 +1,5 @@
 // setShowSuccessPopup is a function to control the visibility of the success popup
-const SuccessMessage = ({ successMessage, setShowSuccessPopup }) => {
+const SuccessMessageDisplay = ({ successMessage, setShowSuccessPopup }) => {
     return (
         <div className="fixed top-4 right-4 z-50">
             <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200 max-w-sm animate-fade-in">
@@ -37,4 +37,4 @@ const showSuccessPopupMessage = (setSuccessMessage, setShowSuccessPopup, message
     }, 5000);
   };
 
-export { SuccessMessage, showSuccessPopupMessage };
+export { SuccessMessageDisplay, showSuccessPopupMessage };

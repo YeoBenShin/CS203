@@ -13,7 +13,6 @@ export default function FieldSelector({ options, value, onChange, placeholder}) 
       onChange={onChange}
       placeholder={placeholder}
       className="text-blue"
-      isClearable
     />
   );
 }

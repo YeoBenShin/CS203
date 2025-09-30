@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from "react";
 import FieldSelector from "../components/FieldSelector";
 import Button from '../components/Button';
-import { LoadingSpinner } from "../components/MessageComponents";
+import LoadingSpinner from "../components/messages/LoadingSpinner";
+import ErrorMessageDisplay from "../components/messages/ErrorMessageDisplay";
 
 export default function CalculatorPage() {
   // Product search states
@@ -22,7 +23,7 @@ export default function CalculatorPage() {
   const [tariffBreakdown, setTariffBreakdown] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState([]);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
@@ -35,12 +36,6 @@ export default function CalculatorPage() {
         const data = await response.json();
         // console.log(data);
 
-        // const mockHsCodes = [
-        //   { value: '010121', label: '010121 - Pure-bred breeding horses' },
-        //   { value: '010129', label: '010129 - Other live horses' },
-        //   { value: '020130', label: '020130 - Fresh or chilled bovine meat, boneless' },
-        // ];
-
         const products = data.map(item => ({
           value: item.hsCode, // required field for react-selector to work
           description: item.description,
@@ -49,7 +44,7 @@ export default function CalculatorPage() {
         setHsCodeOptions(products);
 
       } catch (error) {
-        setErrorMessage("Error fetching HS codes: " + error);
+        errorMessage.push("Error fetching HS codes: " + error);
         console.error('Error fetching HS codes:', error);
       }
     };
@@ -61,21 +56,13 @@ export default function CalculatorPage() {
         const data = await response.json();
         // console.log(data);
 
-        // const mockCountries = [
-        //   { value: 'CN', label: 'China' },
-        //   { value: 'CA', label: 'Canada' },
-        //   { value: 'MX', label: 'Mexico' },
-        //   { value: 'DE', label: 'Germany' },
-        //   { value: 'JP', label: 'Japan' },
-        // ].filter(country => country.value !== 'USA'); // Exclude USA
-
         const countries = data.filter(country => country.isoCode !== 'USA').map(country => ({
           value: country.isoCode,
           label: country.isoCode + " - " + country.name
         }));
         setCountryOptions(countries);
       } catch (error) {
-        setErrorMessage("Error fetching countries: " + error);
+        errorMessage.push("Error fetching countries: " + error);
         console.error('Error fetching countries:', error);
       }
     };
@@ -89,53 +76,52 @@ export default function CalculatorPage() {
       setSelectedProduct(null);
       return;
     } 
+    setErrorMessage([]);
+    setCalcResult(null);
     setSelectedProduct(option);
   };
 
-  // Handle Country selection and filtering
-  // const handleCountryInputChange = (value) => {
-  //   setCountryInput(value);
-  //   if (!value) {
-  //     setFilteredCountryOptions(countryOptions);
-  //     setSelectedCountry(null);
-  //     setShowCountryDropdown(false);
-  //     return;
-  //   }
-
-  //   const filtered = countryOptions.filter(option =>
-  //     option.label.toLowerCase().includes(value.toLowerCase())
-  //   );
-  //   setFilteredCountryOptions(filtered);
-  //   setShowCountryDropdown(true);
-  // };
-
   const handleCountrySelection = (option) => {
+    if (!option) {
+      setSelectedCountry(null);
+      return;
+    }
     setSelectedCountry(option);
-    // setCountryInput(option.label);
-
+    setCalcResult(null);
+    setErrorMessage([]);
   };
 
   // Handle form inputs
-  const handleShippingCost = (e) => setShippingCost(e.target.value);
-  const handleTradeDate = (e) => setTradeDate(e.target.value);
+  const handleShippingCost = (e) => {
+    setShippingCost(e.target.value);
+    setCalcResult(null);
+    setErrorMessage([]);
+  }
+  const handleTradeDate = (e) => {
+    setTradeDate(e.target.value);
+    setCalcResult(null);
+    setErrorMessage([]);
+  }
 
   // Tariff calculation function
   const handleCalculate = async () => {
+    setErrorMessage([]); // Clear previous errors
+    let newErrorMsg = [];
     // Basic validation -> can upgrade to better UI validation later
     if (!selectedProduct) {
-      setErrorMessage("Please select a valid HS Code");
-      return;
+      newErrorMsg.push("Please select a valid HS Code");
     }
     if (!selectedCountry) {
-      setErrorMessage("Please select a valid Country");
-      return;
+      newErrorMsg.push("Please select a valid Country");
     }
     if (!shippingCost || !/^\d+(\.\d{1,2})?$/.test(shippingCost)) {
-      setErrorMessage("Please enter a valid Shipping Cost");
-      return;
+      newErrorMsg.push("Please enter a valid Shipping Cost");
     }
     if (!tradeDate) {
-      setErrorMessage("Please select a valid Trade Date");
+      newErrorMsg.push("Please select a valid Trade Date");
+    }
+    if (newErrorMsg.length > 0) {
+      setErrorMessage(newErrorMsg);
       return;
     }
 
@@ -168,50 +154,12 @@ export default function CalculatorPage() {
       } else {
         const errorData = await response.json();
         console.log(errorData)
-        setErrorMessage(errorData.message || "Error calculating tariff");
+        newErrorMsg.push(errorData.message || "Error calculating tariff");
+        setErrorMessage(newErrorMsg);
       }
 
-      // Mock response for demo
-      // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-
-      // const mockTariffBreakdown = [
-      //   {
-      //     id: 1,
-      //     tariffType: 'Ad Valorem Duty',
-      //     rate: '15%',
-      //     appliedAmount: parseFloat(shippingCost) * 0.15,
-      //     reference: 'USMCA Trade Agreement Article 4.2'
-      //   },
-      //   {
-      //     id: 2,
-      //     tariffType: 'Anti-Dumping Duty',
-      //     rate: '8.5%',
-      //     appliedAmount: parseFloat(shippingCost) * 0.085,
-      //     reference: null
-      //   },
-      //   {
-      //     id: 3,
-      //     tariffType: 'Processing Fee',
-      //     rate: '$25 flat',
-      //     appliedAmount: 25,
-      //     reference: 'CBP Processing Regulation 19.6'
-      //   }
-      // ];
-
-      // const totalTariffCost = mockTariffBreakdown.reduce((sum, tariff) => sum + tariff.appliedAmount, 0);
-      // const totalCost = parseFloat(shippingCost) + totalTariffCost;
-      // const totalTariffRate = ((totalTariffCost / parseFloat(shippingCost)) * 100).toFixed(2);
-
-      // setTariffBreakdown(mockTariffBreakdown);
-      // setCalcResult({
-      //   originalCost: parseFloat(shippingCost),
-      //   totalTariffCost: totalTariffCost,
-      //   totalCost: totalCost,
-      //   totalTariffRate: totalTariffRate
-      // });
-
     } catch (error) {
-      setErrorMessage("Error calculating tariffs: " + error);
+      errorMessage.push("Error calculating tariffs: " + error);
     } finally {
       setLoading(false);
     }
@@ -235,13 +183,6 @@ export default function CalculatorPage() {
         totalCost: calcResult.totalCost,
         savedAt: new Date().toISOString()
       };
-
-      // Replace with actual API call
-      // const response = await fetch(`${baseUrl}/api/tariff/save`, {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(saveData)
-      // });
 
       alert("Tariff calculation saved successfully!");
     } catch (error) {
@@ -318,7 +259,7 @@ export default function CalculatorPage() {
             </div>
           </div>
 
-          {errorMessage ? <div className="text-red-600 font-bold mb-4">{errorMessage}</div> : null}
+          <ErrorMessageDisplay errors={errorMessage} />
 
           {/* Calculate Button */}
           <div className="flex gap-4 mb-8">

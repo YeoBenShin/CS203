@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { ErrorDisplay, LoadingSpinner } from "../components/MessageComponents";
-import { SuccessMessage, showSuccessPopupMessage } from "../components/SuccessMessage";
+import ErrorDisplay from "../components/messages/ErrorMessageDisplay";
+import LoadingSpinner from "../components/messages/LoadingSpinner";
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
 import FieldSelector from "../components/FieldSelector";
 import Button from "../components/Button";
 
@@ -302,10 +303,10 @@ export default function AdminPage() {
         <Button 
           type='submit'
         >
-          {isLoading && <LoadingSpinner />}
+          {isLoading && <LoadingSpinner />} 
           {isLoading ? "Adding Tariff..." : "Add Tariff"}
         </Button>
-        {showSuccessPopup && <SuccessMessage successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
+        {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
         
         {/* Error Messages */}
         <ErrorDisplay errors={errors} />

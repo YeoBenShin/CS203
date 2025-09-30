@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useUser } from '@clerk/nextjs';
-import { SuccessMessage, showSuccessPopupMessage } from "../components/SuccessMessage";
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
 import ReactTable from "../components/ReactTable";
 import Button from "../components/Button";
 
@@ -382,7 +382,7 @@ export default function ViewTariffsPage() {
         </div>
 
         {/* Success Popup */}
-        {showSuccessPopup && <SuccessMessage successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
+        {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
 
         {/* Delete Confirmation Popup */}
         {showDeletePopup && tariffToDelete && (

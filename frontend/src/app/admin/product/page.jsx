@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { SuccessMessage, showSuccessPopupMessage } from "@/app/components/SuccessMessage";
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "@/app/components/messages/SuccessMessageDisplay";
 import Button from '../../components/Button';
 
 export default function AddProductPage() {
@@ -105,7 +105,7 @@ export default function AddProductPage() {
             {isLoading ? "Adding Product..." : "Add Product"}
           </Button>
 
-          {showSuccessPopup && <SuccessMessage successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
+          {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
 
           {message && (
             <div className={"mt-4 p-4 rounded-md bg-red-100 text-red-700"}>
