@@ -431,7 +431,7 @@ export default function CalculatorPage() {
               <label className="font-bold mb-2 text-black block">Date of Trade:</label>
               <input
                 type="date"
-                className="text-black border border-gray-300 rounded px-3 py-2 w-full bg-white"
+                className="text-black border border-gray-300 rounded px-3 py-2 w-90 bg-white"
                 value={tradeDate}
                 onChange={handleTradeDate}
               />
@@ -449,7 +449,7 @@ export default function CalculatorPage() {
                   type="number"
                   min={0}
                   step="0.5"
-                  className="text-black border border-gray-300 rounded px-3 py-2 w-full pl-8 bg-white"
+                  className="text-black border border-gray-300 rounded px-3 py-2 w-90 pl-8 bg-white"
                   value={shippingCost}
                   onChange={handleShippingCost}
                   placeholder="0.00"
@@ -463,6 +463,7 @@ export default function CalculatorPage() {
           {/* Calculate Button */}
           <div className="flex gap-4 mb-8">
             <Button
+              className="w-200"
               onClick={handleCalculate}
               isLoading={loading}
               width=''
@@ -474,6 +475,7 @@ export default function CalculatorPage() {
 
             {calcResult && (
               <Button
+               className="w-200"
                 onClick={handleSave}
                 isLoading={loading}
                 width=''
