@@ -265,9 +265,7 @@ export default function CalculatorPage() {
                   options={hsCodeOptions}
                   value={selectedProduct}
                   onChange={handleHsCodeSelection}
-                  className="text-red"
                   placeholder="Select HS Code..."
-                  isClearable
                 />
               </div>
             </div>

@@ -248,9 +248,7 @@ export default function AdminPage() {
             options={countryOptions}
             value={form.exporter}
             onChange={handleExporterChange}
-            className="text-blue"
             placeholder="Select exporter country"
-            isClearable
           />
         </div>
         <div className="mb-4">
@@ -261,9 +259,7 @@ export default function AdminPage() {
             options={productOptions}
             value={form.product}
             onChange={handleProductChange}
-            className="text-black"
             placeholder="Select Product HSCode"
-            isClearable
           />
         </div>
         
