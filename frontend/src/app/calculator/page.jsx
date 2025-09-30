@@ -568,18 +568,21 @@ export default function CalculatorPage() {
               <div className="space-y-3">
                 {recentCalculations.map((calc) => (
                   <div key={calc.id} className="bg-white/30 rounded-lg p-3 border border-white/20">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
+                    <div className= "justify-between items-start mb-2">
                         <h4 className="text-sm font-semibold text-black truncate">{calc.product}</h4>
                         <p className="text-xs text-gray-600">HS: {calc.hsCode}</p>
                         <p className="text-xs text-gray-600">{calc.country}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-green-600">${calc.totalCost.toFixed(2)}</p>
-                        <p className="text-xs text-red-600">{calc.totalTariffRate}%</p>
-                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-green-600 ">Total Cost: ${calc.totalCost.toFixed(2)}</p>
+                        <p className="text-xs text-red-600">Tariff Rate: {calc.totalTariffRate}%</p>
+                        <div>
+                        <p className="text-xs text-red-600">Tariff Cost: ${calcResult.totalTariffCost}</p>
+                        </div>
                     </div>
-                    <p className="text-xs text-gray-500">{calc.date}</p>
+                    <div>
+                      <span className="text-xs text-gray-500">{calc.date}</span>
+                    </div>
                   </div>
                 ))}
               </div>
