@@ -7,8 +7,6 @@ const isSignInRoute = createRouteMatcher('/sign-in(.*)');
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionId } = await auth();
 
-  // console.log(`Middleware: userId=${userId}, sessionId=${sessionId}, url=${req.url}`);
-
   if (!userId || !sessionId) {
     if (isSignInRoute(req)) { // prevent redirect loop
       return NextResponse.next();
@@ -56,7 +54,7 @@ export default clerkMiddleware(async (auth, req) => {
 export const config = {
   matcher: [
     // Skip Next.js internals, static files, and favicon
-    '/((?!_next|favicon.ico|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/((?!_next|public|favicon.ico|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
