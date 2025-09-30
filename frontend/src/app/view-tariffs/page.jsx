@@ -295,9 +295,10 @@ export default function ViewTariffsPage() {
           <Button 
             onClick={fetchTariffs}
             className="inline-flex items-center"
-            buttonText="Refresh"
             width=""
-          />
+          >
+            Refresh
+          </Button>
         </div>
 
         {/* Success Popup */}

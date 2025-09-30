@@ -305,10 +305,10 @@ export default function AdminPage() {
         </div>
         <Button 
           type='submit'
-          isLoading={isLoading}
-          isLoadingText="Adding Tariff..."
-          buttonText="Add Tariff"
-        />
+        >
+          {isLoading && <LoadingSpinner />}
+          {isLoading ? "Adding Tariff..." : "Add Tariff"}
+        </Button>
         {showSuccessPopup && <SuccessMessage successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
         
         {/* Error Messages */}

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import FieldSelector from "../components/FieldSelector";
 import Button from '../components/Button';
+import { LoadingSpinner } from "../components/MessageComponents";
 
 export default function CalculatorPage() {
   // Product search states
@@ -291,7 +292,7 @@ export default function CalculatorPage() {
                 <label className="font-bold mb-2 text-black block">Date of Trade:</label>
                 <input
                   type="date"
-                  className="text-black border border-gray-300 rounded px-3 py-2 w-full bg-white"
+                  className={`text-black border border-gray-300 rounded px-3 py-2 w-full bg-white ${tradeDate ? " text-gray-700" : "text-white"}`}
                   value={tradeDate}
                   onChange={handleTradeDate}
                 />
@@ -326,19 +327,23 @@ export default function CalculatorPage() {
             <Button
               onClick={handleCalculate}
               isLoading={loading}
-              isLoadingText="Calculating..."
-              buttonText="Calculate Tariffs"
               width=''
-              colorBg="bg-blue-500 hover:bg-blue-600 focus:ring-blue-500"/>
+              colorBg="bg-blue-500 hover:bg-blue-600 focus:ring-blue-500"
+            >
+              {loading && <LoadingSpinner />}
+              {loading ? "Calculating..." : "Calculate Tariffs"}
+            </Button>
 
             {calcResult && (
               <Button
-              onClick={handleSave}
-              isLoading={loading}
-              isLoadingText="Saving..."
-              buttonText="Save Tariff"
-              width=''
-              colorBg="bg-green-500 hover:bg-green-600 focus:ring-green-500"/>
+                onClick={handleSave}
+                isLoading={loading}
+                width=''
+                colorBg="bg-green-500 hover:bg-green-600 focus:ring-green-500"
+                >
+                {loading && <LoadingSpinner />}
+                {loading ? "Saving..." : "Save Tariff"}
+              </Button>
             )}
           </div>
 

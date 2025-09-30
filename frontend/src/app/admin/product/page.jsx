@@ -101,7 +101,9 @@ export default function AddProductPage() {
             </div>
           </div>
 
-          <Button onClick={handleSubmit} type="submit" isLoading={isLoading} isLoadingText="Adding Product..." buttonText="Add Product" />
+          <Button onClick={handleSubmit} type="submit" isLoading={isLoading}>
+            {isLoading ? "Adding Product..." : "Add Product"}
+          </Button>
 
           {showSuccessPopup && <SuccessMessage successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
 

@@ -47,25 +47,23 @@ return (
 
       {/* Pagination Controls */}
       <div className="flex justify-between p-4">
-        <Button 
+        <Button
           onClick={table.previousPage}
           isLoading={!table.getCanPreviousPage()}
-          buttonText="Previous"
-          isLoadingText="No Previous"
-          needSpinner={false}
           width=""
-        />
+        >
+          {!table.getCanPreviousPage() ? "No Previous" : "Previous"}
+        </Button>
         <span>
           Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
         </span>
         <Button 
           onClick={table.nextPage}
           isLoading={!table.getCanNextPage()}
-          buttonText="Next"
-          isLoadingText="No More Next"
-          needSpinner={false}
           width=""
-        />
+        >
+          {!table.getCanNextPage() ? "No More Next" : "Next"}
+        </Button>
       </div>
     </div>
   );
