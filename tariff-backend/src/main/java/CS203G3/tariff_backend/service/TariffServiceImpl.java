@@ -26,19 +26,26 @@ public class TariffServiceImpl implements TariffService {
     private final TariffRepository tariffRepository;
     private final CountryRepository countryRepository;
     private final ProductRepository productRepository;  
+    private final ProductMetricRepository productMetricRepository;
     private final TariffCalculationService tariffCalculationService; 
 
-    public TariffServiceImpl(TariffRepository tariffRepository, TariffRateRepository tariffRateRepository, CountryRepository countryRepository, ProductRepository productRepository, TariffCalculationService tariffCalculationService, BusinessExceptionHandler businessExceptionHandler) {
+    public TariffServiceImpl(TariffRepository tariffRepository, TariffRateRepository tariffRateRepository, 
+    CountryRepository countryRepository, ProductRepository productRepository, TariffCalculationService tariffCalculationService, 
+    BusinessExceptionHandler businessExceptionHandler, ProductMetricRepository productMetricRepository) {
         this.tariffRepository = tariffRepository;
         this.tariffRateRepository = tariffRateRepository;
         this.countryRepository = countryRepository;
         this.productRepository = productRepository;
         this.tariffCalculationService = tariffCalculationService;
         this.businessExceptionHandler = businessExceptionHandler;
+        this.productMetricRepository = productMetricRepository;
     }
 
-    private TariffDto convertToDto(Tariff tariff) {
+    private TariffDto convertToDto(TariffRate tariffRate) {
+        
         TariffDto dto = new TariffDto();
+
+        Tariff tariff = tariffRate.getTariff();
 
         dto.setTariffID(tariff.getTariffID());
         dto.setTariffName(tariff.getTariffName());
@@ -54,10 +61,14 @@ public class TariffServiceImpl implements TariffService {
         dto.setEffectiveDate(tariff.getEffectiveDate());
         dto.setExpiryDate(tariff.getExpiryDate());
         dto.setReference(tariff.getReference());  
+
+        // tariff rate details - assume only one rate per tariff for now
+        dto.setUnitOfCalculation(tariffRate.getProductMetric().getUnitOfCalculation());
+        dto.setTariffRate(tariffRate.getTariffRate());
         return dto;
     }
 
-    private Tariff convertToEntity(TariffCreateDto createDto) {
+    private TariffRate convertToEntity(TariffCreateDto createDto) {
 
         String name = createDto.getName();
 
@@ -84,21 +95,46 @@ public class TariffServiceImpl implements TariffService {
         newTariff.setExpiryDate(expiryDate);
         newTariff.setReference(reference);
 
-        return newTariff;
+        // create and set TariffRate
+        TariffRate tariffRate = new TariffRate();
+
+        // map tariffid
+        tariffRate.setTariff(newTariff);
+
+        // check whether product metric exists before setting tariff rate to it
+        ProductMetric existingMetric = productMetricRepository.findByProductAndUnitOfCalculation(product, createDto.getUnitOfCalculation());
+        if (existingMetric != null) {
+            tariffRate.setProductMetric(existingMetric);
+        } else {
+            ProductMetric productMetric = new ProductMetric();
+            productMetric.setProduct(product);
+            productMetric.setUnitOfCalculation(createDto.getUnitOfCalculation());
+            
+            // save new product metric
+            productMetricRepository.save(productMetric);
+            tariffRate.setProductMetric(productMetric);
+        }
+        
+        // update tariff rate
+        tariffRate.setTariffRate(createDto.getTariffRate());
+
+        // save tariff
+        tariffRepository.save(newTariff);
+        return tariffRate;
     }
 
     @Override
-    public List<TariffDto> getAllTariffs() {
-        return tariffRepository.findAll().stream()
+    public List<TariffDto> getAllTariffRates() {
+        return tariffRateRepository.findAll().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public TariffDto getTariffById(Long id) {
-        Tariff tariff = tariffRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Tariff", id));
-        return convertToDto(tariff);
+    public List<TariffDto> getTariffById(Long id) {
+        return tariffRateRepository.findAllByTariff_TariffID(id).stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     // @Override
@@ -115,7 +151,7 @@ public class TariffServiceImpl implements TariffService {
 
     @Override
     public List<TariffDto> getTariffsByPage(int page, int pageSize) {
-        return tariffRepository.findAll().stream()
+        return tariffRateRepository.findAll().stream()
                 .skip((long) page * pageSize)
                 .limit(pageSize)
                 .map(this::convertToDto)
@@ -127,9 +163,9 @@ public class TariffServiceImpl implements TariffService {
     public TariffDto createTariff(TariffCreateDto createDto) {
         // Validate business rules
         validateTariffBusinessRules(createDto);
-        
-        Tariff entity = convertToEntity(createDto);
-        Tariff saved = tariffRepository.save(entity);
+
+        TariffRate entity = convertToEntity(createDto);
+        TariffRate saved = tariffRateRepository.save(entity);
         return convertToDto(saved);
     }
     
@@ -171,48 +207,48 @@ public class TariffServiceImpl implements TariffService {
     //     }
     // }
 
-    @Override
-    @Transactional
-    public TariffDto updateTariff(Long id, TariffCreateDto createDto) {
-        // Find the existing tariff
-        Tariff existing = tariffRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Tariff", id.toString()));
+    // @Override
+    // @Transactional
+    // public TariffDto updateTariff(Long id, TariffCreateDto createDto) {
+    //     // Find the existing tariff
+    //     Tariff existing = tariffRepository.findById(id)
+    //         .orElseThrow(() -> new ResourceNotFoundException("Tariff", id.toString()));
         
-        // Important: Preserve the existing tariff mapping relationship
-        // This ensures tariff_mapping_id never changes during updates
-        Tariff updatedTariff = convertToEntity(createDto);
+    //     // Important: Preserve the existing tariff mapping relationship
+    //     // This ensures tariff_mapping_id never changes during updates
+    //     Tariff updatedTariff = convertToEntity(createDto);
 
-        // update name
-        existing.setTariffName(updatedTariff.getTariffName());
+    //     // update name
+    //     existing.setTariffName(updatedTariff.getTariffName());
 
-        // update exporter
-        existing.setExporter(updatedTariff.getExporter());
+    //     // update exporter
+    //     existing.setExporter(updatedTariff.getExporter());
 
-        // update product
-        existing.setProduct(updatedTariff.getProduct());
+    //     // update product
+    //     existing.setProduct(updatedTariff.getProduct());
         
-        // Only update the dates and reference
-        if (updatedTariff.getEffectiveDate() != null) {
-            existing.setEffectiveDate(updatedTariff.getEffectiveDate());
-        }
+    //     // Only update the dates and reference
+    //     if (updatedTariff.getEffectiveDate() != null) {
+    //         existing.setEffectiveDate(updatedTariff.getEffectiveDate());
+    //     }
         
-        if (updatedTariff.getExpiryDate() != null) {
-            existing.setExpiryDate(updatedTariff.getExpiryDate());
-        }
+    //     if (updatedTariff.getExpiryDate() != null) {
+    //         existing.setExpiryDate(updatedTariff.getExpiryDate());
+    //     }
         
-        // Reference can be null or updated
-        if (updatedTariff.getReference() == null && existing.getReference() == null) {
-        } else {
-            existing.setReference(updatedTariff.getReference());
-        }
+    //     // Reference can be null or updated
+    //     if (updatedTariff.getReference() == null && existing.getReference() == null) {
+    //     } else {
+    //         existing.setReference(updatedTariff.getReference());
+    //     }
         
-        // Validate tariff business rules (dates, rates, etc.)
-        validateTariffUpdateRules(existing);
+    //     // Validate tariff business rules (dates, rates, etc.)
+    //     validateTariffUpdateRules(existing);
         
-        // Save and return
-        Tariff updated = tariffRepository.save(existing);
-        return convertToDto(updated);
-    }
+    //     // Save and return
+    //     Tariff updated = tariffRepository.save(existing);
+    //     return convertToDto(updated);
+    // }
 
     /**
      * Validates business rules for tariff updates
@@ -242,8 +278,8 @@ public class TariffServiceImpl implements TariffService {
 
     @Override
     public List<TariffDto> getTariffsByHSCode(String hsCode) {
-        return tariffRepository.findAll().stream()
-                .filter(tariff -> tariff.getProduct().getHSCode().equals(hsCode))
+        return tariffRateRepository.findAll().stream()
+                .filter(tariffRate -> tariffRate.getProductMetric().getProduct().getHSCode().equals(hsCode))
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }

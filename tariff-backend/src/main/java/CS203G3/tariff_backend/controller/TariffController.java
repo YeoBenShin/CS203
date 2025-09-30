@@ -39,8 +39,8 @@ public class TariffController {
      * GET /api/tariffs
      */
     @GetMapping
-    public ResponseEntity<List<TariffDto>> getAllTariffs() {
-        List<TariffDto> tariffs = tariffService.getAllTariffs();
+    public ResponseEntity<List<TariffDto>> getAllTariffRates() {
+        List<TariffDto> tariffs = tariffService.getAllTariffRates();
         return ResponseEntity.ok(tariffs);
     }
 
@@ -57,9 +57,9 @@ public class TariffController {
      * GET /api/tariffs/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<TariffDto> getTariffById(@PathVariable Long id) {
-        TariffDto tariff = tariffService.getTariffById(id);
-        return ResponseEntity.ok(tariff);
+    public ResponseEntity<List<TariffDto>> getTariffById(@PathVariable Long id) {
+        List<TariffDto> tariffs = tariffService.getTariffById(id);
+        return ResponseEntity.ok(tariffs);
     }
 
     /**
@@ -83,11 +83,11 @@ public class TariffController {
      * Update an existing tariff
      * PUT /api/tariffs/{id}
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<TariffDto> updateTariff(@PathVariable Long id, @RequestBody TariffCreateDto createDto) {
-        TariffDto updatedTariff = tariffService.updateTariff(id, createDto);
-        return ResponseEntity.ok(updatedTariff);
-    }
+    // @PutMapping("/{id}")
+    // public ResponseEntity<TariffDto> updateTariff(@PathVariable Long id, @RequestBody TariffCreateDto createDto) {
+    //     TariffDto updatedTariff = tariffService.updateTariff(id, createDto);
+    //     return ResponseEntity.ok(updatedTariff);
+    // }
 
     /**
      * Delete a tariff

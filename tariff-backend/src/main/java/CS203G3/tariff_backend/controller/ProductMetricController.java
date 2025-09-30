@@ -45,8 +45,8 @@ public class ProductMetricController {
      * GET /api/productmetrics/{hSCode}
      */
     @GetMapping("/{hSCode}")
-    public ResponseEntity<List<ProductMetricDto>> getProductByhSCode(@PathVariable Integer hSCode) {
-        List<ProductMetricDto> productMetrics = productMetricService.getProductMetricByhSCode(hSCode);
+    public ResponseEntity<List<ProductMetricDto>> getProductByHSCode(@PathVariable String hSCode) {
+        List<ProductMetricDto> productMetrics = productMetricService.getProductMetricByHSCode(hSCode);
         if (productMetrics == null || productMetrics.isEmpty()) {
             return ResponseEntity.notFound().build();
         }

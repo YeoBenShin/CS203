@@ -16,7 +16,7 @@ public interface TariffService {
      * Get all tariffs
      * @return List of all tariff DTOs
      */
-    List<TariffDto> getAllTariffs();
+    List<TariffDto> getAllTariffRates();
     
     /**
      * Get tariffs by page number
@@ -29,7 +29,7 @@ public interface TariffService {
      * @param id The tariff ID
      * @return The tariff DTO
      */
-    TariffDto getTariffById(Long id);
+    List<TariffDto> getTariffById(Long id);
 
     /**
      * Create a new tariff
@@ -44,7 +44,7 @@ public interface TariffService {
      * @param createDto The updated tariff data
      * @return The updated tariff DTO
      */
-    TariffDto updateTariff(Long id, TariffCreateDto createDto);
+    // TariffDto updateTariff(Long id, TariffCreateDto createDto);
     
     /**
      * Delete a tariff

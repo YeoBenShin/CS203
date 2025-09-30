@@ -81,7 +81,7 @@ public class ProductMetricServiceImpl implements ProductMetricService {
     }
 
     @Override
-    public List<ProductMetricDto> getProductMetricByhSCode(Integer hSCode) {
+    public List<ProductMetricDto> getProductMetricByHSCode(String hSCode) {
         List<ProductMetric> productMetrics = productMetricRepository.findAllByProductHSCode(hSCode);
         return productMetrics.stream()
             .map(this::convertToDto)

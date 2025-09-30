@@ -3,8 +3,11 @@ package CS203G3.tariff_backend.dto;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import org.springframework.format.annotation.DurationFormat.Unit;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import CS203G3.tariff_backend.model.UnitOfCalculation;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
@@ -35,6 +38,13 @@ public class TariffCreateDto {
 
     @Size(max = 255, message = "Reference cannot exceed 255 characters")
     private String reference;
+
+    @NotNull(message = "UnitOfCalculation is required")
+    private UnitOfCalculation unitOfCalculation;
+
+    @NotNull(message = "TariffRate is required")
+    private BigDecimal tariffRate;
+
     
     // Constructors
     public TariffCreateDto() {}
@@ -86,4 +96,21 @@ public class TariffCreateDto {
     public void setReference(String reference) {
         this.reference = reference;
     }
+
+    public UnitOfCalculation getUnitOfCalculation() {
+        return unitOfCalculation;
+    }
+
+    public void setUnitOfCalculation(UnitOfCalculation unitOfCalculation) {
+        this.unitOfCalculation = unitOfCalculation;
+    }
+
+    public BigDecimal getTariffRate() {
+        return rate;
+    }
+
+    public void setTariffRate(BigDecimal rate) {
+        this.rate = rate;
+    }
+
 }

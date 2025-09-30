@@ -25,7 +25,7 @@ public interface ProductMetricService {
      * @param hSCode The product HS code
      * @return The product metric
      */
-    List<ProductMetricDto> getProductMetricByhSCode(Integer hSCode);
+    List<ProductMetricDto> getProductMetricByHSCode(String hSCode);
 
     /**
      * Create a new product metric with business validation
