@@ -562,7 +562,7 @@ export default function CalculatorPage() {
         </div>
 
         {/* Right Side - Recent Calculations */}
-        <div className="w-1/3">
+        <div className="w-1/3 mt-17">
           <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6">
             <h2 className="text-xl font-bold text-black mb-4">Recent Calculations</h2>
 
