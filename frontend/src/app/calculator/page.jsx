@@ -247,6 +247,7 @@ export default function CalculatorPage() {
           hsCode: selectedProduct.value,
           country: selectedCountry.label.split(' - ')[1], // Get country name
           totalCost: result.totalCost,
+          totalTariffCost: result.totalTariffCost,
           totalTariffRate: result.totalTariffRate.toFixed(2),
           date: new Date().toLocaleDateString()
         };
@@ -586,7 +587,7 @@ export default function CalculatorPage() {
                         <p className="text-sm font-bold text-green-600 ">Total Cost: ${calc.totalCost.toFixed(2)}</p>
                         <p className="text-xs text-red-600">Tariff Rate: {calc.totalTariffRate}%</p>
                         <div>
-                        <p className="text-xs text-red-600">Tariff Cost: ${calcResult.totalTariffCost}</p>
+                        <p className="text-xs text-red-600">Tariff Cost: ${calc.totalTariffCost}</p>
                         </div>
                     </div>
                     <div>
