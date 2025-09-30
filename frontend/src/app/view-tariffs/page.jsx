@@ -9,6 +9,8 @@ export default function ViewTariffsPage() {
 
   // loading tariffs
   const [tariffs, setTariffs] = useState([]);
+  const [filteredTariffs, setFilteredTariffs] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [fetchingError, setFetchingError] = useState("");
 
@@ -57,6 +59,7 @@ export default function ViewTariffsPage() {
         const data = await response.json();
         console.log("Fetched tariffs:", data);
         setTariffs(data);
+        setFilteredTariffs(data); // Initialize filtered tariffs with all data
       } else {
         setFetchingError("Failed to fetch tariffs");
       }
@@ -65,6 +68,30 @@ export default function ViewTariffsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Search functionality
+  const handleSearchChange = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+
+    if (query === "") {
+      setFilteredTariffs(tariffs);
+    } else {
+      const filtered = tariffs.filter(tariff => 
+        tariff.exporterName?.toLowerCase().includes(query) ||
+        tariff.importerName?.toLowerCase().includes(query) ||
+        tariff.HSCode?.toString().toLowerCase().includes(query) ||
+        tariff.productDescription?.toLowerCase().includes(query) ||
+        (parseFloat(tariff.rate) * 100).toFixed(2).includes(query)
+      );
+      setFilteredTariffs(filtered);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setFilteredTariffs(tariffs);
   };
 
   const handleShowDetails = (tariff) => {
@@ -100,7 +127,10 @@ export default function ViewTariffsPage() {
       });
 
       if (response.ok) {
-        setTariffs(tariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID));
+        const updatedTariffs = tariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID);
+        setTariffs(updatedTariffs);
+        // Update filtered tariffs to reflect the deletion
+        setFilteredTariffs(filteredTariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID));
         showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup,"Tariff deleted successfully!");
 
       } else {
@@ -223,7 +253,10 @@ export default function ViewTariffsPage() {
 
       if (response.ok) {
         const updatedTariff = await response.json();
-        setTariffs(tariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff)); // show the updated tariff
+        const updatedTariffs = tariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff);
+        setTariffs(updatedTariffs); // show the updated tariff
+        // Update filtered tariffs to reflect the edit
+        setFilteredTariffs(filteredTariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff));
         handleCancelEdit();
         showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup,"Tariff updated successfully!");
       } else {
@@ -257,6 +290,41 @@ export default function ViewTariffsPage() {
           <p className="mt-1 text-sm text-gray-600"> Click on a tariff to view more details</p>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search tariffs by country, HS code, product, or rate..."
+              className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+            {searchQuery && (
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                  onClick={clearSearch}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="mt-2 text-sm text-gray-600">
+              Showing {filteredTariffs.length} of {tariffs.length} tariffs
+            </p>
+          )}
+        </div>
+
         {deleteMessage && deleteMessage.includes("Error") && (
           <div className="mb-4 p-4 rounded-md bg-red-100 text-red-700">
             {deleteMessage}
@@ -269,9 +337,21 @@ export default function ViewTariffsPage() {
           </div>
         )}
 
-        {tariffs.length === 0 ? (
+        {filteredTariffs.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No tariffs found</p>
+            {searchQuery ? (
+              <div>
+                <p className="text-gray-500 text-lg">No tariffs found matching "{searchQuery}"</p>
+                <button 
+                  onClick={clearSearch}
+                  className="mt-2 text-blue-600 hover:text-blue-800 text-sm underline"
+                >
+                  Clear search to show all tariffs
+                </button>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-lg">No tariffs found</p>
+            )}
           </div>
         ) : (
             <ReactTable
@@ -286,7 +366,7 @@ export default function ViewTariffsPage() {
                   cell: info => <span className="text-gray-900 font-medium">{(parseFloat(info.getValue()) * 100).toFixed(2)}%</span>
                  },
               ]}
-              data={tariffs}
+              data={filteredTariffs}
               rowLevelFunction={handleShowDetails}
             />
         )}
