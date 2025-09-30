@@ -6,6 +6,21 @@ import LoadingSpinner from "../components/messages/LoadingSpinner";
 import ErrorMessageDisplay from "../components/messages/ErrorMessageDisplay";
 import LoadingPage from "../components/LoadingPage";
 
+// Helper functions for recent calculations persistence
+const loadRecentCalculations = () => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('recentCalculations');
+    return saved ? JSON.parse(saved) : [];
+  }
+  return [];
+};
+
+const saveRecentCalculations = (calculations) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('recentCalculations', JSON.stringify(calculations));
+  }
+};
+
 export default function CalculatorPage() {
   const [pageLoading, setPageLoading] = useState(false);
   // Product search states  
@@ -31,8 +46,8 @@ export default function CalculatorPage() {
   const [tariffBreakdown, setTariffBreakdown] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Recent calculations
-  const [recentCalculations, setRecentCalculations] = useState([]);
+  // Recent calculations with persistence
+  const [recentCalculations, setRecentCalculations] = useState(() => loadRecentCalculations());
 
   const [errorMessage, setErrorMessage] = useState([]);
 
@@ -253,13 +268,15 @@ export default function CalculatorPage() {
           product: selectedProduct.description,
           hsCode: selectedProduct.value,
           country: selectedCountry.label.split(' - ')[1], // Get country name
-          totalCost: result.totalCost,
-          totalTariffCost: result.totalTariffCost,
-          totalTariffRate: result.totalTariffRate.toFixed(2),
+          totalCost: responseData.totalCost,
+          totalTariffCost: responseData.totalTariffCost,
+          totalTariffRate: responseData.totalTariffRate.toFixed(2),
           date: new Date().toLocaleDateString()
         };
 
-        setRecentCalculations(prev => [newCalculation, ...prev.slice(0, 4)]); // Keep only 5 recent
+        const updatedCalculations = [newCalculation, ...recentCalculations.slice(0, 4)]; // Keep only 5 recent
+        setRecentCalculations(updatedCalculations);
+        saveRecentCalculations(updatedCalculations);
       } else {
         const errorData = await response.json();
         console.log(errorData)
