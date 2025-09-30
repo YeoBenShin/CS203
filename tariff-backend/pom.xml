@@ -47,6 +47,13 @@
 			<version>2.7.0</version>
 		</dependency>
 
+		<!-- Rate Limiting -->
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j-core</artifactId>
+			<version>8.7.0</version>
+		</dependency>
+
 		<!-- Spring Boot Starter Data JPA (uses Hibernate) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

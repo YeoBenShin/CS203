@@ -6,6 +6,7 @@ import CS203G3.tariff_backend.dto.*;
 import CS203G3.tariff_backend.exception.*;
 import CS203G3.tariff_backend.exception.tariff.*;
 import CS203G3.tariff_backend.exception.ResourceNotFoundException;
+import CS203G3.tariff_backend.validation.TariffValidator;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -25,10 +26,16 @@ public class TariffServiceImpl implements TariffService {
     private final TariffMappingRepository tariffMappingRepository;
     private final TariffMappingService tariffMappingService;
 
-    public TariffServiceImpl(TariffRepository tariffRepository, TariffMappingRepository tariffMappingRepository, TariffMappingService tariffMappingService) {
+    private final TariffValidator tariffValidator;
+
+    public TariffServiceImpl(TariffRepository tariffRepository, 
+                           TariffMappingRepository tariffMappingRepository, 
+                           TariffMappingService tariffMappingService,
+                           TariffValidator tariffValidator) {
         this.tariffRepository = tariffRepository;
         this.tariffMappingRepository = tariffMappingRepository;
         this.tariffMappingService = tariffMappingService;
+        this.tariffValidator = tariffValidator;
     }
 
     private TariffDto convertToDto(Tariff tariff) {

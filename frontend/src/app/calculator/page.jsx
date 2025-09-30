@@ -195,19 +195,28 @@ export default function CalculatorPage() {
   const handleCalculate = async () => {
     setErrorMessage([]); // Clear previous errors
     let newErrorMsg = [];
-    // Basic validation -> can upgrade to better UI validation later
+    
+    // Basic validation
     if (!selectedProduct) {
       newErrorMsg.push("Please select a valid HS Code");
+    } else if (selectedProduct.value < 0 || selectedProduct.value > 9999999999) {
+      newErrorMsg.push("HS Code must be a 10 digit number");
     }
+    
     if (!selectedCountry) {
       newErrorMsg.push("Please select a valid Country");
     }
-    if (!shippingCost || !/^\d+(\.\d{1,2})?$/.test(shippingCost)) {
-      newErrorMsg.push("Please enter a valid Shipping Cost");
+    
+    if (!shippingCost || !/^\d+(\.\d{1,2})?$/.test(shippingCost) || parseFloat(shippingCost) <= 0) {
+      newErrorMsg.push("Please enter a valid Shipping Cost greater than 0");
     }
+    
     if (!tradeDate) {
       newErrorMsg.push("Please select a valid Trade Date");
+    } else if (new Date(tradeDate) > new Date()) {
+      // newErrorMsg.push("Trade date cannot be in the future");
     }
+    
     if (newErrorMsg.length > 0) {
       setErrorMessage(newErrorMsg);
       return;
@@ -222,22 +231,20 @@ export default function CalculatorPage() {
     };
 
     try {
-      // Replace with actual API call
       const response = await fetch(`${baseUrl}/api/calculations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       });
 
+      const responseData = await response.json();
       if (response.ok) {
-        const result = await response.json();
-        console.log(result);
-        setTariffBreakdown(result.tariffs);
+        setTariffBreakdown(responseData.tariffs);
         setCalcResult({
           originalCost: parseFloat(shippingCost),
-          totalCost: result.totalCost,
-          totalTariffRate: result.totalTariffRate.toFixed(2),
-          totalTariffCost: result.totalTariffCost,
+          totalCost: responseData.totalCost,
+          totalTariffRate: responseData.totalTariffRate.toFixed(2),
+          totalTariffCost: responseData.totalTariffCost,
         });
 
         // Automatically add to recent calculations
