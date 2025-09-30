@@ -40,8 +40,8 @@ public class TariffController {
      * GET /api/tariffs
      */
     @GetMapping
-    public ResponseEntity<List<TariffDto>> getAllTariffRates() {
-        List<TariffDto> tariffs = tariffService.getAllTariffRates();
+    public ResponseEntity<List<List<TariffDto>>> getAllTariffRates() {
+        List<List<TariffDto>> tariffs = tariffService.getAllTariffRates();
         return ResponseEntity.ok(tariffs);
     }
 

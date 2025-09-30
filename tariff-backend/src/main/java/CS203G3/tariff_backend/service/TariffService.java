@@ -15,9 +15,9 @@ public interface TariffService {
     
     /**
      * Get all tariffs
-     * @return List of all tariff DTOs
+     * @return List of all tariff rates grouped by tariff IDs
      */
-    List<TariffDto> getAllTariffRates();
+    List<List<TariffDto>> getAllTariffRates();
     
     /**
      * Get tariffs by page number

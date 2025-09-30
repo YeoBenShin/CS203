@@ -125,9 +125,17 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
-    public List<TariffDto> getAllTariffRates() {
-        return tariffRateRepository.findAll().stream()
-                .map(this::convertToDto)
+    public List<List<TariffDto>> getAllTariffRates() {
+
+        // group tariffrates by tariffID
+        List<Long> tariffIds = tariffRateRepository.findAll().stream()
+                .map(tr -> tr.getTariff().getTariffID())
+                .distinct()
+                .collect(Collectors.toList());
+        return tariffIds.stream()
+                .map(id -> tariffRateRepository.findAllByTariff_TariffID(id).stream()
+                        .map(this::convertToDto)
+                        .collect(Collectors.toList()))
                 .collect(Collectors.toList());
     }
 
