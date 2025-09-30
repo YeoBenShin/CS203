@@ -4,7 +4,9 @@ import { useUser } from '@clerk/nextjs';
 import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
 import ReactTable from "../components/ReactTable";
 import Button from "../components/Button";
-import PopUpWrapper from "../components/PopUpWrapper";
+import PopUpWrapper from "../components/popUps/PopUpWrapper";
+import TariffDetailPopUp from "../components/popUps/TariffDetailPopUp";
+import DeleteTariffPopUp from "../components/popUps/DeleteTariffPopUp";
 import LoadingPage from "../components/LoadingPage";
 
 export default function ViewTariffsPage() {
@@ -56,6 +58,7 @@ export default function ViewTariffsPage() {
 
   const fetchTariffs = async () => {
     try {
+      setLoading(true)
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs`);
       if (response.ok) {
         const data = await response.json();
@@ -374,6 +377,7 @@ export default function ViewTariffsPage() {
         <div className="mt-6 text-center">
           <Button
             onClick={fetchTariffs}
+            isLoading={loading}
             className="inline-flex items-center"
             width=""
           >
@@ -384,56 +388,28 @@ export default function ViewTariffsPage() {
         {/* Success Popup */}
         {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
 
+        {/* Tariff Details Popup */}
+        {showDetailsPopup && selectedTariff && (
+          <PopUpWrapper OnClick={closeDetailsPopup}>
+            <TariffDetailPopUp
+              selectedTariff={selectedTariff}
+              OnClick={closeDetailsPopup}
+              openEditPopup={openEditPopup}
+              openDeletePopup={handleDelete}
+              hasPermissionToEdit={role === "admin"}
+              hasPermissionToDelete={role === "admin"}
+            />
+          </PopUpWrapper>
+        )}
+
         {/* Delete Confirmation Popup */}
         {showDeletePopup && tariffToDelete && (
           <PopUpWrapper OnClick={cancelDelete}>
-            <div className="flex items-center mb-4">
-              <div className="flex-shrink-0">
-                <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-lg font-medium text-gray-900">Delete Tariff</h3>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-sm text-gray-500 mb-3">
-                Are you sure you want to delete this tariff?
-                <br /> This action cannot be undone.
-              </p>
-              <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm font-medium text-gray-900">
-                  {tariffToDelete.exporterName} → {tariffToDelete.importerName}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Rate: {(parseFloat(tariffToDelete.rate) * 100).toFixed(2)}%
-                </p>
-                <p className="text-sm text-gray-600">
-                  Product: {tariffToDelete.productDescription} ({tariffToDelete.HSCode})
-                </p>
-                <p className="text-sm text-gray-600">
-                  Expiry Date: {formatDate(tariffToDelete.expiryDate)}
-                </p>
-
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={cancelDelete}
-                className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-              >
-                Delete Tariff
-              </button>
-            </div>
+            <DeleteTariffPopUp
+              tariffToDelete={tariffToDelete}
+              handleCancelDelete={cancelDelete}
+              handleConfirmDelete={confirmDelete}
+            />
           </PopUpWrapper>
         )}
 
@@ -545,90 +521,6 @@ export default function ViewTariffsPage() {
                   </button>
                 </div>
               </form>
-          </PopUpWrapper>
-        )}
-
-        {/* Tariff Details Popup */}
-        {showDetailsPopup && selectedTariff && (
-          <PopUpWrapper OnClick={closeDetailsPopup}>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Tariff Details</h3>
-                <button
-                  onClick={closeDetailsPopup}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Exporting Country</label>
-                    <p className="text-sm text-gray-900">{selectedTariff.exporterName}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Destination Country</label>
-                    <p className="text-sm text-gray-900">{selectedTariff.importerName}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">HS Code</label>
-                    <p className="text-sm text-gray-900">{selectedTariff.HSCode}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tariff Rate</label>
-                    <p className="text-sm text-gray-900">{(parseFloat(selectedTariff.rate) * 100).toFixed(2)}%</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Effective Date</label>
-                    <p className="text-sm text-gray-900">{formatDate(selectedTariff.effectiveDate)}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                    <p className="text-sm text-gray-900">{formatDate(selectedTariff.expiryDate)}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Reference</label>
-                    <p className="text-sm text-gray-900 break-all">{selectedTariff.reference || "N/A"}</p>
-                  </div>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Product Description</label>
-                  <p className="text-sm text-gray-900">{selectedTariff.productDescription || "N/A"}</p>
-                </div>
-              </div>
-
-              {role === 'admin' && <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => {
-                    closeDetailsPopup();
-                    openEditPopup();
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors cursor-pointer"
-                >
-                  Update Tariff
-                </button>
-                <button
-                  onClick={() => {
-                    closeDetailsPopup();
-                    handleDelete();
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors cursor-pointer"
-                >
-                  Delete Tariff
-                </button>
-              </div>}
           </PopUpWrapper>
         )}
       </div>
