@@ -247,6 +247,7 @@ export default function CalculatorPage() {
           hsCode: selectedProduct.value,
           country: selectedCountry.label.split(' - ')[1], // Get country name
           totalCost: result.totalCost,
+          totalTariffCost: result.totalTariffCost,
           totalTariffRate: result.totalTariffRate.toFixed(2),
           date: new Date().toLocaleDateString()
         };
@@ -430,7 +431,7 @@ export default function CalculatorPage() {
               <label className="font-bold mb-2 text-black block">Date of Trade:</label>
               <input
                 type="date"
-                className="text-black border border-gray-300 rounded px-3 py-2 w-full bg-white"
+                className="text-black border border-gray-300 rounded px-3 py-2 w-90 bg-white"
                 value={tradeDate}
                 onChange={handleTradeDate}
               />
@@ -448,7 +449,7 @@ export default function CalculatorPage() {
                   type="number"
                   min={0}
                   step="0.5"
-                  className="text-black border border-gray-300 rounded px-3 py-2 w-full pl-8 bg-white"
+                  className="text-black border border-gray-300 rounded px-3 py-2 w-90 pl-8 bg-white"
                   value={shippingCost}
                   onChange={handleShippingCost}
                   placeholder="0.00"
@@ -462,6 +463,7 @@ export default function CalculatorPage() {
           {/* Calculate Button */}
           <div className="flex gap-4 mb-8">
             <Button
+              className="w-200"
               onClick={handleCalculate}
               isLoading={loading}
               width=''
@@ -473,6 +475,7 @@ export default function CalculatorPage() {
 
             {calcResult && (
               <Button
+               className="w-200"
                 onClick={handleSave}
                 isLoading={loading}
                 width=''
@@ -561,7 +564,7 @@ export default function CalculatorPage() {
         </div>
 
         {/* Right Side - Recent Calculations */}
-        <div className="w-1/3">
+        <div className="w-1/3 mt-17">
           <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6">
             <h2 className="text-xl font-bold text-black mb-4">Recent Calculations</h2>
 
@@ -577,18 +580,21 @@ export default function CalculatorPage() {
               <div className="space-y-3">
                 {recentCalculations.map((calc) => (
                   <div key={calc.id} className="bg-white/30 rounded-lg p-3 border border-white/20">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
+                    <div className= "justify-between items-start mb-2">
                         <h4 className="text-sm font-semibold text-black truncate">{calc.product}</h4>
                         <p className="text-xs text-gray-600">HS: {calc.hsCode}</p>
                         <p className="text-xs text-gray-600">{calc.country}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-green-600">${calc.totalCost.toFixed(2)}</p>
-                        <p className="text-xs text-red-600">{calc.totalTariffRate}%</p>
-                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-green-600 ">Total Cost: ${calc.totalCost.toFixed(2)}</p>
+                        <p className="text-xs text-red-600">Tariff Rate: {calc.totalTariffRate}%</p>
+                        <div>
+                        <p className="text-xs text-red-600">Tariff Cost: ${calc.totalTariffCost}</p>
+                        </div>
                     </div>
-                    <p className="text-xs text-gray-500">{calc.date}</p>
+                    <div>
+                      <span className="text-xs text-gray-500">{calc.date}</span>
+                    </div>
                   </div>
                 ))}
               </div>
