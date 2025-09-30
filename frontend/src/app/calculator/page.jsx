@@ -13,14 +13,24 @@ export default function CalculatorPage() {
   const [countryOptions, setCountryOptions] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
 
+  // Tariff search and selection
+  const [tariffs, setTariffs] = useState([]);
+  const [filteredTariffs, setFilteredTariffs] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTariff, setSelectedTariff] = useState(null);
+  const [tariffsLoading, setTariffsLoading] = useState(false);
+
   // Other form states
   const [shippingCost, setShippingCost] = useState('');
-  const [tradeDate, setTradeDate] = useState('');
+  const [tradeDate, setTradeDate] = useState(new Date().toISOString().split('T')[0]); // Default to today
 
   // Calculation results
   const [calcResult, setCalcResult] = useState(null);
   const [tariffBreakdown, setTariffBreakdown] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Recent calculations
+  const [recentCalculations, setRecentCalculations] = useState([]);
 
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -30,19 +40,11 @@ export default function CalculatorPage() {
     // Fetch HS codes from backend
     const fetchHsCodes = async () => {
       try {
-        // Replace with actual API call
         const response = await fetch(`${baseUrl}/api/products`);
         const data = await response.json();
-        // console.log(data);
-
-        // const mockHsCodes = [
-        //   { value: '010121', label: '010121 - Pure-bred breeding horses' },
-        //   { value: '010129', label: '010129 - Other live horses' },
-        //   { value: '020130', label: '020130 - Fresh or chilled bovine meat, boneless' },
-        // ];
 
         const products = data.map(item => ({
-          value: item.hsCode, // required field for react-selector to work
+          value: item.hsCode,
           description: item.description,
           label: `${item.hsCode} - ${item.description}`
         }));
@@ -59,15 +61,6 @@ export default function CalculatorPage() {
       try {
         const response = await fetch(`${baseUrl}/api/countries`);
         const data = await response.json();
-        // console.log(data);
-
-        // const mockCountries = [
-        //   { value: 'CN', label: 'China' },
-        //   { value: 'CA', label: 'Canada' },
-        //   { value: 'MX', label: 'Mexico' },
-        //   { value: 'DE', label: 'Germany' },
-        //   { value: 'JP', label: 'Japan' },
-        // ].filter(country => country.value !== 'USA'); // Exclude USA
 
         const countries = data.filter(country => country.isoCode !== 'USA').map(country => ({
           value: country.isoCode,
@@ -80,8 +73,29 @@ export default function CalculatorPage() {
       }
     };
 
+    // Fetch tariffs from backend
+    const fetchTariffs = async () => {
+      setTariffsLoading(true);
+      try {
+        const response = await fetch(`${baseUrl}/api/tariffs`);
+        if (response.ok) {
+          const data = await response.json();
+          setTariffs(data);
+          setFilteredTariffs(data.slice(0, 5)); // Show first 5 tariffs initially
+        } else {
+          setErrorMessage("Failed to fetch tariffs");
+        }
+      } catch (error) {
+        setErrorMessage("Error fetching tariffs: " + error);
+        console.error('Error fetching tariffs:', error);
+      } finally {
+        setTariffsLoading(false);
+      }
+    };
+
     fetchHsCodes();
     fetchCountries();
+    fetchTariffs();
   }, []);
 
   const handleHsCodeSelection = (option) => {
@@ -92,27 +106,58 @@ export default function CalculatorPage() {
     setSelectedProduct(option);
   };
 
-  // Handle Country selection and filtering
-  // const handleCountryInputChange = (value) => {
-  //   setCountryInput(value);
-  //   if (!value) {
-  //     setFilteredCountryOptions(countryOptions);
-  //     setSelectedCountry(null);
-  //     setShowCountryDropdown(false);
-  //     return;
-  //   }
-
-  //   const filtered = countryOptions.filter(option =>
-  //     option.label.toLowerCase().includes(value.toLowerCase())
-  //   );
-  //   setFilteredCountryOptions(filtered);
-  //   setShowCountryDropdown(true);
-  // };
-
   const handleCountrySelection = (option) => {
     setSelectedCountry(option);
-    // setCountryInput(option.label);
+  };
 
+  // Search functionality for tariffs
+  const handleSearchChange = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+
+    if (query === "") {
+      setFilteredTariffs(tariffs.slice(0, 5));
+    } else {
+      const filtered = tariffs.filter(tariff => 
+        tariff.exporterName?.toLowerCase().includes(query) ||
+        tariff.importerName?.toLowerCase().includes(query) ||
+        tariff.HSCode?.toString().toLowerCase().includes(query) ||
+        tariff.productDescription?.toLowerCase().includes(query) ||
+        (parseFloat(tariff.rate) * 100).toFixed(2).includes(query)
+      ).slice(0, 5);
+      setFilteredTariffs(filtered);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setFilteredTariffs(tariffs.slice(0, 5));
+  };
+
+  const handleTariffSelection = (tariff) => {
+    setSelectedTariff(tariff);
+    // Auto-populate form fields based on selected tariff
+    const matchingProduct = hsCodeOptions.find(product => product.value === tariff.HSCode);
+    const matchingCountry = countryOptions.find(country => country.value === tariff.exporterCode);
+    
+    if (matchingProduct) setSelectedProduct(matchingProduct);
+    if (matchingCountry) setSelectedCountry(matchingCountry);
+  };
+
+  // Function to highlight matching text
+  const highlightText = (text, query) => {
+    if (!query || !text) return text;
+    
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.toString().split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <span key={index} className="bg-yellow-200 font-semibold text-gray-900">
+          {part}
+        </span>
+      ) : part
+    );
   };
 
   // Handle form inputs
@@ -236,6 +281,19 @@ export default function CalculatorPage() {
         savedAt: new Date().toISOString()
       };
 
+      // Add to recent calculations
+      const newCalculation = {
+        id: Date.now(),
+        product: selectedProduct.description,
+        hsCode: selectedProduct.value,
+        country: selectedCountry.label.split(' - ')[1], // Get country name
+        totalCost: calcResult.totalCost,
+        totalTariffRate: calcResult.totalTariffRate,
+        date: new Date().toLocaleDateString()
+      };
+
+      setRecentCalculations(prev => [newCalculation, ...prev.slice(0, 4)]); // Keep only 5 recent
+
       // Replace with actual API call
       // const response = await fetch(`${baseUrl}/api/tariff/save`, {
       //   method: "POST",
@@ -251,13 +309,140 @@ export default function CalculatorPage() {
 
   return (
     <main>
-      <div className="flex w-full min-h-screen max-w-7xl mx-auto p-8">
-        <div className="w-full">
+      <div className="flex w-full min-h-screen max-w-7xl mx-auto p-8 gap-8">
+        {/* Left Side - Main Calculator */}
+        <div className="w-2/3">
           <h1 className="text-3xl text-black font-bold mb-8 text-center">Tariff Calculator</h1>
 
-          {/* Product Selection Section */}
+          {/* Search Bar or Selected Tariff Display */}
+          {selectedTariff ? (
+            // Selected Tariff Display
+            <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-6 mb-2">
+                    <h3 className="text-lg font-semibold text-blue-900">Selected Tariff</h3>
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                      selectedTariff.expiryDate && new Date(selectedTariff.expiryDate) < new Date() 
+                        ? 'bg-red-100 text-red-800' 
+                        : 'bg-green-600 text-white'
+                    }`}>
+                      {selectedTariff.expiryDate && new Date(selectedTariff.expiryDate) < new Date() 
+                        ? 'Expired' 
+                        : 'In Effect'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-blue-700">Route: </span>
+                      <span className="text-blue-900">{selectedTariff.exporterName} → {selectedTariff.importerName}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-blue-700">HS Code: </span>
+                      <span className="text-blue-900">{selectedTariff.HSCode}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-blue-700">Product: </span>
+                      <span className="text-blue-900">{selectedTariff.productDescription || "N/A"}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-blue-700">Rate: </span>
+                      <span className="text-blue-900 font-semibold">{(parseFloat(selectedTariff.rate) * 100).toFixed(2)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedTariff(null)}
+                  className="text-blue-400 hover:text-blue-600"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Search Bar
+            <div className="bg-white/20 rounded-lg p-6 mb-6">
+              <h2 className="text-xl font-bold text-black mb-4">Find Tariff</h2>
+              <div className="relative max-w-md mb-4">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  placeholder="Search tariffs by country, HS code, product, or rate..."
+                  className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {searchQuery && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <button
+                      onClick={clearSearch}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Tariff List */}
+              {tariffsLoading ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-sm text-gray-600">Loading tariffs...</p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-lg border border-gray-200 max-h-80 overflow-y-auto">
+                  {filteredTariffs.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      {searchQuery ? `No tariffs found matching "${searchQuery}"` : "No tariffs available"}
+                    </div>
+                  ) : (
+                    <div>
+                      {filteredTariffs.map((tariff) => (
+                        <div
+                          key={tariff.tariffID}
+                          onClick={() => handleTariffSelection(tariff)}
+                          className="p-3 border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="text-sm font-medium text-gray-900">
+                                  {highlightText(tariff.exporterName, searchQuery)} → {highlightText(tariff.importerName, searchQuery)}
+                                </span>
+                                <span className="text-sm font-semibold text-blue-600">
+                                  {highlightText((parseFloat(tariff.rate) * 100).toFixed(2) + "%", searchQuery)}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-600 mb-1">
+                                <span className="font-medium">HS: </span>
+                                {highlightText(tariff.HSCode, searchQuery)}
+                              </div>
+                              <div className="text-xs text-gray-500 truncate">
+                                {highlightText(tariff.productDescription || "N/A", searchQuery)}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Manual Input Section */}
           <div className="bg-white/20 rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-bold text-black mb-4">Product Selection</h2>
+            <h2 className="text-xl font-bold text-black mb-4">Or Enter Details Manually</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="font-bold mb-2 text-black block">Search by HS Code / Description:</label>
@@ -265,45 +450,36 @@ export default function CalculatorPage() {
                   options={hsCodeOptions}
                   value={selectedProduct}
                   onChange={handleHsCodeSelection}
-                  className="text-red"
                   placeholder="Select HS Code..."
                   isClearable
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Trade Details Section */}
-          <div className="bg-white/20 rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-bold text-black mb-4">Trade Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="font-bold mb-2 text-black block">Exporting Country:</label>
                 <FieldSelector
                   options={countryOptions}
                   value={selectedCountry}
                   onChange={handleCountrySelection}
-                  className="text-red"
                   placeholder="Enter Country..."
                   isClearable
                 />
               </div>
-              <div>
-                <label className="font-bold mb-2 text-black block">Date of Trade:</label>
-                <input
-                  type="date"
-                  className={`text-black border border-gray-300 rounded px-3 py-2 w-full bg-white ${tradeDate ? " text-gray-700" : "text-white"}`}
-                  value={tradeDate}
-                  onChange={handleTradeDate}
-                />
-              </div>
+            </div>
+            <div className="mt-4 w-full md:w-1/2">
+              <label className="font-bold mb-2 text-black block">Date of Trade:</label>
+              <input
+                type="date"
+                className="text-black border border-gray-300 rounded px-3 py-2 w-full bg-white"
+                value={tradeDate}
+                onChange={handleTradeDate}
+              />
             </div>
           </div>
 
           {/* Shipping Cost Section */}
           <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 mb-6">
             <h2 className="text-xl font-bold text-black mb-4">Cost Details</h2>
-            <div className="w-full md:w-1/3">
+            <div className="w-full md:w-1/2">
               <label className="font-bold mb-2 text-black block">Total Shipping Cost:</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
@@ -320,7 +496,7 @@ export default function CalculatorPage() {
             </div>
           </div>
 
-          {errorMessage ? <div className="text-red-600 font-bold mb-4">{errorMessage}</div> : null}
+          {errorMessage && <div className="text-red-600 font-bold mb-4">{errorMessage}</div>}
 
           {/* Calculate Button */}
           <div className="flex gap-4 mb-8">
@@ -361,11 +537,10 @@ export default function CalculatorPage() {
                   <div>
                     <span className="font-semibold text-gray-700">HS Code: </span>
                     <span className="text-black">{selectedProduct ? selectedProduct.value : 'N/A'} </span>
-
                   </div>
                   <div>
                     <span className="font-semibold text-gray-700">Trade Partners: </span>
-                    <span className="text-black">{`${selectedCountry.value ? selectedCountry.value : 'N/A'} → USA`} </span>
+                    <span className="text-black">{`${selectedCountry?.value ? selectedCountry.value : 'N/A'} → USA`} </span>
                   </div>
                   <div>
                     <span className="font-semibold text-gray-700">Trade Date: </span>
@@ -422,6 +597,42 @@ export default function CalculatorPage() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Right Side - Recent Calculations */}
+        <div className="w-1/3">
+          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6">
+            <h2 className="text-xl font-bold text-black mb-4">Recent Calculations</h2>
+            
+            {recentCalculations.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <svg className="h-12 w-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <p className="text-sm">No calculations yet</p>
+                <p className="text-xs text-gray-400 mt-1">Your saved calculations will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentCalculations.map((calc) => (
+                  <div key={calc.id} className="bg-white/30 rounded-lg p-3 border border-white/20">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-black truncate">{calc.product}</h4>
+                        <p className="text-xs text-gray-600">HS: {calc.hsCode}</p>
+                        <p className="text-xs text-gray-600">{calc.country}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-green-600">${calc.totalCost.toFixed(2)}</p>
+                        <p className="text-xs text-red-600">{calc.totalTariffRate}%</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500">{calc.date}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </main>
