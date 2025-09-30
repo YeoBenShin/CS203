@@ -103,7 +103,7 @@ export default function CalculatorPage() {
     if (!option) {
       setSelectedProduct(null);
       return;
-    } 
+    }
     setErrorMessage([]);
     setCalcResult(null);
     setSelectedProduct(option);
@@ -125,7 +125,7 @@ export default function CalculatorPage() {
     if (query === "") {
       setFilteredTariffs(tariffs.slice(0, 5));
     } else {
-      const filtered = tariffs.filter(tariff => 
+      const filtered = tariffs.filter(tariff =>
         tariff.exporterName?.toLowerCase().includes(query) ||
         tariff.importerName?.toLowerCase().includes(query) ||
         tariff.HSCode?.toString().toLowerCase().includes(query) ||
@@ -146,7 +146,7 @@ export default function CalculatorPage() {
     // Auto-populate form fields based on selected tariff
     const matchingProduct = hsCodeOptions.find(product => product.value === tariff.HSCode);
     const matchingCountry = countryOptions.find(country => country.value === tariff.exporterCode);
-    
+
     if (matchingProduct) setSelectedProduct(matchingProduct);
     if (matchingCountry) setSelectedCountry(matchingCountry);
   };
@@ -154,11 +154,11 @@ export default function CalculatorPage() {
   // Function to highlight matching text
   const highlightText = (text, query) => {
     if (!query || !text) return text;
-    
+
     const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     const parts = text.toString().split(regex);
-    
-    return parts.map((part, index) => 
+
+    return parts.map((part, index) =>
       regex.test(part) ? (
         <span key={index} className="bg-yellow-200 font-semibold text-gray-900">
           {part}
@@ -226,7 +226,20 @@ export default function CalculatorPage() {
           totalCost: result.totalCost,
           totalTariffRate: result.totalTariffRate.toFixed(2),
           totalTariffCost: result.totalTariffCost,
-        })
+        });
+
+        // Automatically add to recent calculations
+        const newCalculation = {
+          id: Date.now(),
+          product: selectedProduct.description,
+          hsCode: selectedProduct.value,
+          country: selectedCountry.label.split(' - ')[1], // Get country name
+          totalCost: result.totalCost,
+          totalTariffRate: result.totalTariffRate.toFixed(2),
+          date: new Date().toLocaleDateString()
+        };
+
+        setRecentCalculations(prev => [newCalculation, ...prev.slice(0, 4)]); // Keep only 5 recent
       } else {
         const errorData = await response.json();
         console.log(errorData)
@@ -241,49 +254,11 @@ export default function CalculatorPage() {
     }
   };
 
-  // Save tariff calculation
+  // Save tariff calculation - changed to placeholder 
   const handleSave = async () => {
-    if (!calcResult) {
-      alert("Please calculate tariffs first before saving");
-      return;
-    }
-
-    try {
-      const saveData = {
-        hsCode: selectedProduct.value,
-        productDescription: selectedProduct.description,
-        country: selectedCountry.value,
-        shippingCost: parseFloat(shippingCost),
-        tradeDate: tradeDate,
-        tariffBreakdown: tariffBreakdown,
-        totalCost: calcResult.totalCost,
-        savedAt: new Date().toISOString()
-      };
-
-      // Add to recent calculations
-      const newCalculation = {
-        id: Date.now(),
-        product: selectedProduct.description,
-        hsCode: selectedProduct.value,
-        country: selectedCountry.label.split(' - ')[1], // Get country name
-        totalCost: calcResult.totalCost,
-        totalTariffRate: calcResult.totalTariffRate,
-        date: new Date().toLocaleDateString()
-      };
-
-      setRecentCalculations(prev => [newCalculation, ...prev.slice(0, 4)]); // Keep only 5 recent
-
-      // Replace with actual API call
-      // const response = await fetch(`${baseUrl}/api/tariff/save`, {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(saveData)
-      // });
-
-      alert("Tariff calculation saved successfully!");
-    } catch (error) {
-      alert("Error saving tariff: " + error.message);
-    }
+    // Empty placeholder for future functionality
+    console.log("Save button clicked - functionality not yet implemented");
+    // You can add your desired functionality here in the future
   };
 
   return (
@@ -301,13 +276,12 @@ export default function CalculatorPage() {
                 <div>
                   <div className="flex items-center gap-6 mb-2">
                     <h3 className="text-lg font-semibold text-blue-900">Selected Tariff</h3>
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                      selectedTariff.expiryDate && new Date(selectedTariff.expiryDate) < new Date() 
-                        ? 'bg-red-100 text-red-800' 
-                        : 'bg-green-600 text-white'
-                    }`}>
-                      {selectedTariff.expiryDate && new Date(selectedTariff.expiryDate) < new Date() 
-                        ? 'Expired' 
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${selectedTariff.expiryDate && new Date(selectedTariff.expiryDate) < new Date()
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-green-600 text-white'
+                      }`}>
+                      {selectedTariff.expiryDate && new Date(selectedTariff.expiryDate) < new Date()
+                        ? 'Expired'
                         : 'In Effect'}
                     </span>
                   </div>
@@ -494,7 +468,7 @@ export default function CalculatorPage() {
                 isLoading={loading}
                 width=''
                 colorBg="bg-green-500 hover:bg-green-600 focus:ring-green-500"
-                >
+              >
                 {loading && <LoadingSpinner />}
                 {loading ? "Saving..." : "Save Tariff"}
               </Button>
@@ -581,7 +555,7 @@ export default function CalculatorPage() {
         <div className="w-1/3">
           <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6">
             <h2 className="text-xl font-bold text-black mb-4">Recent Calculations</h2>
-            
+
             {recentCalculations.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <svg className="h-12 w-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
