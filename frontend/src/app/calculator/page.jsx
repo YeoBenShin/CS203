@@ -4,9 +4,11 @@ import FieldSelector from "../components/FieldSelector";
 import Button from '../components/Button';
 import LoadingSpinner from "../components/messages/LoadingSpinner";
 import ErrorMessageDisplay from "../components/messages/ErrorMessageDisplay";
+import LoadingPage from "../components/LoadingPage";
 
 export default function CalculatorPage() {
-  // Product search states
+  const [pageLoading, setPageLoading] = useState(false);
+  // Product search states  
   const [hsCodeOptions, setHsCodeOptions] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -19,7 +21,6 @@ export default function CalculatorPage() {
   const [filteredTariffs, setFilteredTariffs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTariff, setSelectedTariff] = useState(null);
-  const [tariffsLoading, setTariffsLoading] = useState(false);
 
   // Other form states
   const [shippingCost, setShippingCost] = useState('');
@@ -38,8 +39,27 @@ export default function CalculatorPage() {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
   useEffect(() => {
-    // Fetch HS codes from backend
-    const fetchHsCodes = async () => {
+    const fetchAllData = async () => {
+        setPageLoading(true);
+        
+        try {
+            // Execute all fetch operations in parallel
+            await Promise.all([
+                fetchHsCodes(),
+                fetchCountries(), 
+                fetchTariffs()
+            ]);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+            setPageLoading(false);
+        }
+    };
+
+    fetchAllData();
+}, []);
+
+  const fetchHsCodes = async () => {
       try {
         const response = await fetch(`${baseUrl}/api/products`);
         const data = await response.json();
@@ -54,7 +74,7 @@ export default function CalculatorPage() {
       } catch (error) {
         errorMessage.push("Error fetching HS codes: " + error);
         console.error('Error fetching HS codes:', error);
-      }
+      } 
     };
 
     // Fetch countries from backend
@@ -76,7 +96,6 @@ export default function CalculatorPage() {
 
     // Fetch tariffs from backend
     const fetchTariffs = async () => {
-      setTariffsLoading(true);
       try {
         const response = await fetch(`${baseUrl}/api/tariffs`);
         if (response.ok) {
@@ -89,15 +108,8 @@ export default function CalculatorPage() {
       } catch (error) {
         setErrorMessage("Error fetching tariffs: " + error);
         console.error('Error fetching tariffs:', error);
-      } finally {
-        setTariffsLoading(false);
       }
     };
-
-    fetchHsCodes();
-    fetchCountries();
-    fetchTariffs();
-  }, []);
 
   const handleHsCodeSelection = (option) => {
     if (!option) {
@@ -286,6 +298,10 @@ export default function CalculatorPage() {
     }
   };
 
+  if (pageLoading) {
+    return <LoadingPage />;
+  }
+
   return (
     <main>
       <div className="flex w-full min-h-screen max-w-7xl mx-auto p-8 gap-8">
@@ -372,12 +388,6 @@ export default function CalculatorPage() {
               </div>
 
               {/* Tariff List */}
-              {tariffsLoading ? (
-                <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-2 text-sm text-gray-600">Loading tariffs...</p>
-                </div>
-              ) : (
                 <div className="bg-white rounded-lg border border-gray-200 max-h-80 overflow-y-auto">
                   {filteredTariffs.length === 0 ? (
                     <div className="p-4 text-center text-gray-500">
@@ -415,7 +425,6 @@ export default function CalculatorPage() {
                     </div>
                   )}
                 </div>
-              )}
             </div>
           )}
 
