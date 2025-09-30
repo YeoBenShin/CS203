@@ -63,6 +63,7 @@ public class TariffServiceImpl implements TariffService {
         dto.setReference(tariff.getReference());  
 
         // tariff rate details - assume only one rate per tariff for now
+        dto.setTariffRateID(tariffRate.getTariffRateID());
         dto.setUnitOfCalculation(tariffRate.getProductMetric().getUnitOfCalculation());
         dto.setTariffRate(tariffRate.getTariffRate());
         return dto;
@@ -207,63 +208,65 @@ public class TariffServiceImpl implements TariffService {
     //     }
     // }
 
-    // @Override
-    // @Transactional
-    // public TariffDto updateTariff(Long id, TariffCreateDto createDto) {
-    //     // Find the existing tariff
-    //     Tariff existing = tariffRepository.findById(id)
-    //         .orElseThrow(() -> new ResourceNotFoundException("Tariff", id.toString()));
-        
-    //     // Important: Preserve the existing tariff mapping relationship
-    //     // This ensures tariff_mapping_id never changes during updates
-    //     Tariff updatedTariff = convertToEntity(createDto);
 
-    //     // update name
-    //     existing.setTariffName(updatedTariff.getTariffName());
+    private Tariff updateTariff(TariffUpdateDto updateDto) {
+        Tariff tariff = tariffRepository.findById(updateDto.getTariffID())
+            .orElseThrow(() -> new ResourceNotFoundException("Tariff", updateDto.getTariffID().toString()));
 
-    //     // update exporter
-    //     existing.setExporter(updatedTariff.getExporter());
-
-    //     // update product
-    //     existing.setProduct(updatedTariff.getProduct());
-        
-    //     // Only update the dates and reference
-    //     if (updatedTariff.getEffectiveDate() != null) {
-    //         existing.setEffectiveDate(updatedTariff.getEffectiveDate());
-    //     }
-        
-    //     if (updatedTariff.getExpiryDate() != null) {
-    //         existing.setExpiryDate(updatedTariff.getExpiryDate());
-    //     }
-        
-    //     // Reference can be null or updated
-    //     if (updatedTariff.getReference() == null && existing.getReference() == null) {
-    //     } else {
-    //         existing.setReference(updatedTariff.getReference());
-    //     }
-        
-    //     // Validate tariff business rules (dates, rates, etc.)
-    //     validateTariffUpdateRules(existing);
-        
-    //     // Save and return
-    //     Tariff updated = tariffRepository.save(existing);
-    //     return convertToDto(updated);
-    // }
-
-    /**
-     * Validates business rules for tariff updates
-     */
-    private void validateTariffUpdateRules(Tariff tariff) {
-        // // Rule 1: Rate cannot be negative
-        // if (tariff.getRate().compareTo(BigDecimal.ZERO) < 0) {
-        //     throw new NegativeTariffRateException("Tariff rate cannot be negative: " + tariff.getRate());
-        // }
-        
-        // Rule 2: Expiry date must be after effective date
-        if (tariff.getEffectiveDate() != null && tariff.getExpiryDate() != null 
-                && tariff.getExpiryDate().before(tariff.getEffectiveDate())) {
-            throw new ExpiryBeforeEffectiveException("Expiry date must be after effective date");
+        if (updateDto.getTariffCreateDto().getName() != null) {
+            tariff.setTariffName(updateDto.getTariffCreateDto().getName());
         }
+
+        if (updateDto.getTariffCreateDto().gethSCode() != null) {
+            Product product = productRepository.findById(updateDto.getTariffCreateDto().gethSCode())
+                .orElseThrow(() -> new ResourceNotFoundException("Product", updateDto.getTariffCreateDto().gethSCode().toString()));
+            tariff.setProduct(product);
+        }
+
+        if (updateDto.getTariffCreateDto().getExporter() != null) {
+            Country exporter = countryRepository.findById(updateDto.getTariffCreateDto().getExporter())
+                .orElseThrow(() -> new ResourceNotFoundException("Country", updateDto.getTariffCreateDto().getExporter()));
+            tariff.setExporter(exporter);
+        }
+
+        if (updateDto.getTariffCreateDto().getEffectiveDate() != null) {
+            tariff.setEffectiveDate(new Date(updateDto.getTariffCreateDto().getEffectiveDate().getTime()));
+        }
+
+        if (updateDto.getTariffCreateDto().getExpiryDate() != null) {
+            tariff.setExpiryDate(new Date(updateDto.getTariffCreateDto().getExpiryDate().getTime()));
+        }
+
+        if (updateDto.getTariffCreateDto().getReference() != null) {
+            tariff.setReference(updateDto.getTariffCreateDto().getReference());
+        }
+
+        return tariffRepository.save(tariff);
+    }
+
+    @Override
+    @Transactional
+    public TariffDto updateTariffRate(Long id, TariffUpdateDto updateDto) {
+        TariffRate existing = tariffRateRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("TariffRate", id.toString()));
+
+        Tariff updatedTariff = updateTariff(updateDto);
+        existing.setTariff(updatedTariff);
+
+        if (updateDto.getTariffCreateDto().getTariffRate() != null) {
+            existing.setTariffRate(updateDto.getTariffCreateDto().getTariffRate());
+        }
+
+        if (updateDto.getTariffCreateDto().getUnitOfCalculation() != null) {
+            ProductMetric productMetric = productMetricRepository.findByProductAndUnitOfCalculation(
+                updatedTariff.getProduct(), updateDto.getTariffCreateDto().getUnitOfCalculation());
+            if (productMetric != null) {
+                existing.setProductMetric(productMetric);
+            }
+        }
+
+        TariffRate updated = tariffRateRepository.save(existing);
+        return convertToDto(updated);
     }
 
     @Override

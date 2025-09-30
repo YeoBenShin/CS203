@@ -2,6 +2,7 @@ package CS203G3.tariff_backend.service;
 
 import CS203G3.tariff_backend.dto.TariffDto;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
+import CS203G3.tariff_backend.dto.TariffUpdateDto;
 import CS203G3.tariff_backend.dto.CalculationRequest;
 import CS203G3.tariff_backend.dto.CalculationResult;
 
@@ -41,10 +42,10 @@ public interface TariffService {
     /**
      * Update an existing tariff
      * @param id The tariff ID to update
-     * @param createDto The updated tariff data
+     * @param updateDto The updated tariff data
      * @return The updated tariff DTO
      */
-    // TariffDto updateTariff(Long id, TariffCreateDto createDto);
+    TariffDto updateTariffRate(Long id, TariffUpdateDto updateDto);
     
     /**
      * Delete a tariff

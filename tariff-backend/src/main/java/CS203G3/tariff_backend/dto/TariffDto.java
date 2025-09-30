@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 
 public class TariffDto {
     private Long tariffID;
-    
+    private Long tariffRateID;
     private String tariffName;
     
     // Core tariff fields
@@ -43,6 +43,14 @@ public class TariffDto {
         this.tariffID = tariffID;
     }
 
+    public Long getTariffRateID() {
+        return tariffRateID;
+    }
+
+    public void setTariffRateID(Long tariffRateID) {
+        this.tariffRateID = tariffRateID;
+    }
+    
     public String getTariffName() {
         return tariffName;
     }

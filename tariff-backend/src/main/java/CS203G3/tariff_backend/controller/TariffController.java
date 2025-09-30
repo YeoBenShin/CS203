@@ -4,6 +4,7 @@ import CS203G3.tariff_backend.dto.TariffDto;
 import CS203G3.tariff_backend.dto.CalculationRequest;
 import CS203G3.tariff_backend.dto.CalculationResult;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
+import CS203G3.tariff_backend.dto.TariffUpdateDto;
 import CS203G3.tariff_backend.service.TariffService;
 
 
@@ -81,13 +82,13 @@ public class TariffController {
 
     /**
      * Update an existing tariff
-     * PUT /api/tariffs/{id}
+     * PUT /api/tariffs/{tariffRateId}
      */
-    // @PutMapping("/{id}")
-    // public ResponseEntity<TariffDto> updateTariff(@PathVariable Long id, @RequestBody TariffCreateDto createDto) {
-    //     TariffDto updatedTariff = tariffService.updateTariff(id, createDto);
-    //     return ResponseEntity.ok(updatedTariff);
-    // }
+    @PutMapping("/{tariffRateId}")
+    public ResponseEntity<TariffDto> updateTariff(@PathVariable Long tariffRateId, @RequestBody TariffUpdateDto updateDto) {
+        TariffDto updatedTariff = tariffService.updateTariffRate(tariffRateId, updateDto);
+        return ResponseEntity.ok(updatedTariff);
+    }
 
     /**
      * Delete a tariff

@@ -15,7 +15,7 @@ public class TariffRate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
-    private Long TariffRateID;
+    private Long tariffRateID;
 
     @ManyToOne
     @JoinColumn(name = "tariff_id", referencedColumnName = "tariff_id")
@@ -36,11 +36,11 @@ public class TariffRate {
     }
 
     public Long getTariffRateID() {
-        return TariffRateID;
+        return tariffRateID;
     }
 
     public void setTariffRateID(Long tariffRateID) {
-        TariffRateID = tariffRateID;
+        this.tariffRateID = tariffRateID;
     }
 
     public Tariff getTariff() {
