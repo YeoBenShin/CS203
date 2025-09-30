@@ -4,6 +4,7 @@ import { useUser } from '@clerk/nextjs';
 import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
 import ReactTable from "../components/ReactTable";
 import Button from "../components/Button";
+import PopUpWrapper from "../components/PopUpWrapper";
 
 export default function ViewTariffsPage() {
 
@@ -78,7 +79,7 @@ export default function ViewTariffsPage() {
     if (query === "") {
       setFilteredTariffs(tariffs);
     } else {
-      const filtered = tariffs.filter(tariff => 
+      const filtered = tariffs.filter(tariff =>
         tariff.exporterName?.toLowerCase().includes(query) ||
         tariff.importerName?.toLowerCase().includes(query) ||
         tariff.HSCode?.toString().toLowerCase().includes(query) ||
@@ -131,7 +132,7 @@ export default function ViewTariffsPage() {
         setTariffs(updatedTariffs);
         // Update filtered tariffs to reflect the deletion
         setFilteredTariffs(filteredTariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID));
-        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup,"Tariff deleted successfully!");
+        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff deleted successfully!");
 
       } else {
         const errorData = await response.json();
@@ -258,7 +259,7 @@ export default function ViewTariffsPage() {
         // Update filtered tariffs to reflect the edit
         setFilteredTariffs(filteredTariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff));
         handleCancelEdit();
-        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup,"Tariff updated successfully!");
+        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff updated successfully!");
       } else {
         const errorData = await response.json();
         setEditErrors([`Error: ${errorData.message || "Failed to update tariff"}`]);
@@ -342,7 +343,7 @@ export default function ViewTariffsPage() {
             {searchQuery ? (
               <div>
                 <p className="text-gray-500 text-lg">No tariffs found matching "{searchQuery}"</p>
-                <button 
+                <button
                   onClick={clearSearch}
                   className="mt-2 text-blue-600 hover:text-blue-800 text-sm underline"
                 >
@@ -354,25 +355,30 @@ export default function ViewTariffsPage() {
             )}
           </div>
         ) : (
-            <ReactTable
-              columns={[
-                { header: "Exporting Country", accessorKey: "exporterName",
-                 cell: info => <span className="text-gray-900 font-medium">{info.getValue() || "N/A"}</span> },
-                { header: "Destination Country", accessorKey: "importerName" },
-                { header: "HS Code", accessorKey: "HSCode" },
-                { header: "Product Description", accessorKey: "productDescription", 
-                  cell: info => info.getValue() ? (info.getValue().length > 40 ? info.getValue().substring(0, 40) + "..." : info.getValue()) : "N/A" },
-                { header: "Rate (%)", accessorKey: "rate", 
-                  cell: info => <span className="text-gray-900 font-medium">{(parseFloat(info.getValue()) * 100).toFixed(2)}%</span>
-                 },
-              ]}
-              data={filteredTariffs}
-              rowLevelFunction={handleShowDetails}
-            />
+          <ReactTable
+            columns={[
+              {
+                header: "Exporting Country", accessorKey: "exporterName",
+                cell: info => <span className="text-gray-900 font-medium">{info.getValue() || "N/A"}</span>
+              },
+              { header: "Destination Country", accessorKey: "importerName" },
+              { header: "HS Code", accessorKey: "HSCode" },
+              {
+                header: "Product Description", accessorKey: "productDescription",
+                cell: info => info.getValue() ? (info.getValue().length > 40 ? info.getValue().substring(0, 40) + "..." : info.getValue()) : "N/A"
+              },
+              {
+                header: "Rate (%)", accessorKey: "rate",
+                cell: info => <span className="text-gray-900 font-medium">{(parseFloat(info.getValue()) * 100).toFixed(2)}%</span>
+              },
+            ]}
+            data={filteredTariffs}
+            rowLevelFunction={handleShowDetails}
+          />
         )}
 
         <div className="mt-6 text-center">
-          <Button 
+          <Button
             onClick={fetchTariffs}
             className="inline-flex items-center"
             width=""
@@ -386,65 +392,60 @@ export default function ViewTariffsPage() {
 
         {/* Delete Confirmation Popup */}
         {showDeletePopup && tariffToDelete && (
-          <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="fixed inset-0 bg-white/50 backdrop-blur-sm" onClick={cancelDelete}></div>
-            <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 max-w-md w-full mx-4 animate-fade-in relative">
-              <div className="flex items-center mb-4">
-                <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-medium text-gray-900">Delete Tariff</h3>
-                </div>
+          <PopUpWrapper OnClick={cancelDelete}>
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
               </div>
-
-              <div className="mb-6">
-                <p className="text-sm text-gray-500 mb-3">
-                  Are you sure you want to delete this tariff?
-                  <br /> This action cannot be undone.
-                </p>
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <p className="text-sm font-medium text-gray-900">
-                    {tariffToDelete.exporterName} → {tariffToDelete.importerName}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Rate: {(parseFloat(tariffToDelete.rate) * 100).toFixed(2)}%
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Product: {tariffToDelete.productDescription} ({tariffToDelete.HSCode})
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Expiry Date: {formatDate(tariffToDelete.expiryDate)}
-                  </p>
-
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={cancelDelete}
-                  className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-                >
-                  Delete Tariff
-                </button>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-gray-900">Delete Tariff</h3>
               </div>
             </div>
-          </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-500 mb-3">
+                Are you sure you want to delete this tariff?
+                <br /> This action cannot be undone.
+              </p>
+              <div className="bg-gray-50 p-3 rounded-md">
+                <p className="text-sm font-medium text-gray-900">
+                  {tariffToDelete.exporterName} → {tariffToDelete.importerName}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Rate: {(parseFloat(tariffToDelete.rate) * 100).toFixed(2)}%
+                </p>
+                <p className="text-sm text-gray-600">
+                  Product: {tariffToDelete.productDescription} ({tariffToDelete.HSCode})
+                </p>
+                <p className="text-sm text-gray-600">
+                  Expiry Date: {formatDate(tariffToDelete.expiryDate)}
+                </p>
+
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelDelete}
+                className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+              >
+                Delete Tariff
+              </button>
+            </div>
+          </PopUpWrapper>
         )}
 
         {/* Edit Confirmation Popup */}
         {showEditPopup && tariffToEdit && (
-          <div className="fixed inset-0 flex items-center justify-center z-50" >
-            <div className="fixed inset-0 bg-white/50 backdrop-blur-sm" onClick={handleCancelEdit}></div>
-            <div className="bg-white shadow-xl rounded-lg px-8 py-4 w-full max-w-md animate-fade-in relative">
+          <PopUpWrapper OnClick={handleCancelEdit}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-semibold text-gray-800">Edit Tariff</h3>
                 <button
@@ -520,7 +521,7 @@ export default function ViewTariffsPage() {
                     className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-                
+
                 {editErrors.length > 0 && (
                   <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
                     {editErrors.map((error, index) => (
@@ -537,7 +538,7 @@ export default function ViewTariffsPage() {
                   >
                     Cancel
                   </button>
-                  
+
                   <button
                     type="submit"
                     disabled={isUpdating}
@@ -550,15 +551,12 @@ export default function ViewTariffsPage() {
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
+          </PopUpWrapper>
         )}
 
         {/* Tariff Details Popup */}
         {showDetailsPopup && selectedTariff && (
-          <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="fixed inset-0 bg-white/50 backdrop-blur-sm" onClick={closeDetailsPopup}></div>
-            <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 max-w-2xl w-full mx-4 animate-fade-in relative">
+          <PopUpWrapper OnClick={closeDetailsPopup}>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-medium text-gray-900">Tariff Details</h3>
                 <button
@@ -637,8 +635,7 @@ export default function ViewTariffsPage() {
                   Delete Tariff
                 </button>
               </div>}
-            </div>
-          </div>
+          </PopUpWrapper>
         )}
       </div>
     </div>
