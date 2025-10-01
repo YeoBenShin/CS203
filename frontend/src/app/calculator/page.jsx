@@ -34,12 +34,6 @@ export default function CalculatorPage() {
   const [countryOptions, setCountryOptions] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
 
-  // Tariff search and selection
-  const [tariffs, setTariffs] = useState([]);
-  const [filteredTariffs, setFilteredTariffs] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTariff, setSelectedTariff] = useState(null);
-  
   // Ensure dates are formatted consistently
   const formatDate = (date) => {
     return new Date(date).toISOString().split('T')[0];
@@ -81,11 +75,10 @@ export default function CalculatorPage() {
         setPageLoading(true);
         
         try {
-            // Execute all fetch operations in parallel
+            // Execute fetch operations in parallel
             await Promise.all([
                 fetchHsCodes(),
-                fetchCountries(), 
-                fetchTariffs()
+                fetchCountries()
             ]);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -132,23 +125,6 @@ export default function CalculatorPage() {
       }
     };
 
-    // Fetch tariffs from backend
-    const fetchTariffs = async () => {
-      try {
-        const response = await fetch(`${baseUrl}/api/tariffs`);
-        if (response.ok) {
-          const data = await response.json();
-          setTariffs(data);
-          setFilteredTariffs(data);
-        } else {
-          setErrorMessage("Failed to fetch tariffs");
-        }
-      } catch (error) {
-        setErrorMessage("Error fetching tariffs: " + error);
-        console.error('Error fetching tariffs:', error);
-      }
-    };
-
   const handleHsCodeSelection = (option) => {
     if (!option) {
       setSelectedProduct(null);
@@ -167,54 +143,7 @@ export default function CalculatorPage() {
     setSelectedCountry(option);
   };
 
-  // Search functionality for tariffs
-  const handleSearchChange = (e) => {
-    const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
-
-    if (query === "") {
-      setFilteredTariffs(tariffs);
-    } else {
-      const filtered = tariffs.filter(tariff =>
-        tariff.exporterName?.toLowerCase().includes(query) ||
-        tariff.importerName?.toLowerCase().includes(query) ||
-        tariff.HSCode?.toString().toLowerCase().includes(query) ||
-        tariff.productDescription?.toLowerCase().includes(query) ||
-        (parseFloat(tariff.rate) * 100).toFixed(2).includes(query));
-      setFilteredTariffs(filtered);
-    }
-  };
-
-  const clearSearch = () => {
-    setSearchQuery("");
-    setFilteredTariffs(tariffs);
-  };
-
-  const handleTariffSelection = (tariff) => {
-    setSelectedTariff(tariff);
-    // Auto-populate form fields based on selected tariff
-    const matchingProduct = hsCodeOptions.find(product => product.value === tariff.HSCode);
-    const matchingCountry = countryOptions.find(country => country.value === tariff.exporterCode);
-
-    if (matchingProduct) setSelectedProduct(matchingProduct);
-    if (matchingCountry) setSelectedCountry(matchingCountry);
-  };
-
-  // Function to highlight matching text
-  const highlightText = (text, query) => {
-    if (!query || !text) return text;
-
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    const parts = text.toString().split(regex);
-
-    return parts.map((part, index) =>
-      regex.test(part) ? (
-        <span key={index} className="bg-yellow-200 font-semibold text-gray-900">
-          {part}
-        </span>
-      ) : part
-    );
-  };
+  // Removed search and tariff selection related functions
 
   // Handle form inputs
   const handleShippingCost = (e) => {
@@ -255,19 +184,6 @@ export default function CalculatorPage() {
     }
     
     if (newErrorMsg.length > 0) {
-      setErrorMessage(newErrorMsg);
-      return;
-    }
-
-    // Check if there's a matching tariff in the database
-    const matchingTariff = tariffs.find(
-      tariff => 
-        tariff.HSCode === selectedProduct.value && 
-        tariff.exporterCode === selectedCountry.value
-    );
-
-    if (!matchingTariff) {
-      newErrorMsg.push("No tariff found for the selected HS Code and Country combination. Please select a valid combination.");
       setErrorMessage(newErrorMsg);
       return;
     }
@@ -315,14 +231,21 @@ export default function CalculatorPage() {
           saveRecentCalculations(updatedCalculations);
         }
       } else {
-        const errorData = await response.json();
-        console.log(errorData)
-        newErrorMsg.push(errorData.message || "Error calculating tariff");
+        // Handle error response
+        if (responseData.message) {
+          newErrorMsg.push(responseData.message);
+        } else if (responseData.error) {
+          newErrorMsg.push(responseData.error);
+        } else {
+          newErrorMsg.push("Error calculating tariff. No matching tariff found for the selected combination.");
+        }
         setErrorMessage(newErrorMsg);
       }
 
     } catch (error) {
-      errorMessage.push("Error calculating tariffs: " + error);
+      newErrorMsg.push("Error calculating tariffs. Please try again later.");
+      setErrorMessage(newErrorMsg);
+      console.error('Calculation error:', error);
     } finally {
       setLoading(false);
     }
@@ -377,141 +300,23 @@ export default function CalculatorPage() {
         <div className="w-2/3">
           <h1 className="text-3xl text-black font-bold mb-8 text-center">Tariff Calculator</h1>
 
-          {/* Search Bar or Selected Tariff Display */}
+          {/* Search Bar and Tariff Selection commented out
           {selectedTariff ? (
-            // Selected Tariff Display
-            <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-6 mb-2">
-                    <h3 className="text-lg font-semibold text-blue-900">Selected Tariff</h3>
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${selectedTariff.expiryDate && new Date(selectedTariff.expiryDate) < new Date()
-                      ? 'bg-red-100 text-red-800'
-                      : selectedTariff.effectiveDate && new Date(selectedTariff.effectiveDate).setHours(0,0,0,0) > new Date().setHours(0,0,0,0)
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-green-600 text-white'
-                      }`}>
-                      {selectedTariff.expiryDate && new Date(selectedTariff.expiryDate) < new Date()
-                        ? 'Expired'
-                        : selectedTariff.effectiveDate && new Date(selectedTariff.effectiveDate).setHours(0,0,0,0) > new Date().setHours(0,0,0,0)
-                          ? `Future Effective`
-                          : 'Currently Active'}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-600 mt-1 space-y-1">
-                    <div className="font-medium">Effective Date: {selectedTariff.effectiveDate 
-                      ? new Date(selectedTariff.effectiveDate).toLocaleDateString()
-                      : 'Not specified'}
-                    </div>
-                    {selectedTariff.expiryDate && (
-                      <div className="font-medium">Expiry Date: {new Date(selectedTariff.expiryDate).toLocaleDateString()}</div>
-                    )}
-                    <div className="font-medium">Current Date: {new Date().toISOString().split('T')[0]}</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-blue-700">Route: </span>
-                      <span className="text-blue-900">{selectedTariff.exporterName} → {selectedTariff.importerName}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-blue-700">HS Code: </span>
-                      <span className="text-blue-900">{selectedTariff.HSCode}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-blue-700">Product: </span>
-                      <span className="text-blue-900">{selectedTariff.productDescription || "N/A"}</span>
-                    </div>
-                    <div>
-                      <span className="font-medium text-blue-700">Rate: </span>
-                      <span className="text-blue-900 font-semibold">{(parseFloat(selectedTariff.rate) * 100).toFixed(2)}%</span>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedTariff(null)}
-                  className="text-blue-400 hover:text-blue-600"
-                >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+            // Selected Tariff Display section
           ) : (
-            // Search Bar
-            <div className="bg-white/20 rounded-lg p-6 mb-6">
-              <h2 className="text-xl font-bold text-black mb-4">Find Tariff</h2>
-              <div className="relative max-w-md mb-4">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  placeholder="Search tariffs by country, HS code, product, or rate..."
-                  className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                />
-                {searchQuery && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <button
-                      onClick={clearSearch}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Tariff List */}
-                <div className="bg-white rounded-lg border border-gray-200 max-h-80 overflow-y-auto">
-                  {filteredTariffs.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500">
-                      {searchQuery ? `No tariffs found matching "${searchQuery}"` : "No tariffs available"}
-                    </div>
-                  ) : (
-                    <div>
-                      {filteredTariffs.map((tariff) => (
-                        <div
-                          key={tariff.tariffID}
-                          onClick={() => handleTariffSelection(tariff)}
-                          className="p-3 border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <span className="text-sm font-medium text-gray-900">
-                                  {highlightText(tariff.exporterName, searchQuery)} → {highlightText(tariff.importerName, searchQuery)}
-                                </span>
-                                <span className="text-sm font-semibold text-blue-600">
-                                  {highlightText((parseFloat(tariff.rate) * 100).toFixed(2) + "%", searchQuery)}
-                                </span>
-                              </div>
-                              <div className="text-xs text-gray-600 mb-1">
-                                <span className="font-medium">HS: </span>
-                                {highlightText(tariff.HSCode, searchQuery)}
-                              </div>
-                              <div className="text-xs text-gray-500 truncate">
-                                {highlightText(tariff.productDescription || "N/A", searchQuery)}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-            </div>
+            // Search Bar section
           )}
+          */}
+          
+          {/* Descriptive Header */}
+          <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
+            <h2 className="text-lg font-semibold text-blue-900 mb-2">Tariff Calculator</h2>
+            <p className="text-sm text-gray-600">Calculate import tariffs for your international trade. Enter your product details, shipping cost, and trade date below to get started.</p>
+          </div>
 
           {/* Manual Input Section */}
           <div className="bg-white/20 rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-bold text-black mb-4">Or Enter Details Manually</h2>
+            <h2 className="text-xl font-bold text-black mb-4">Enter Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="font-bold mb-2 text-black block">Search by HS Code / Description:</label>
