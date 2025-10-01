@@ -6,6 +6,9 @@ import LoadingSpinner from "../components/messages/LoadingSpinner";
 import ErrorMessageDisplay from "../components/messages/ErrorMessageDisplay";
 import LoadingPage from "../components/LoadingPage";
 
+import { useUser } from '@clerk/nextjs';
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
+
 // Helper functions for recent calculations persistence
 const loadRecentCalculations = () => {
   if (typeof window !== 'undefined') {
@@ -50,8 +53,13 @@ export default function CalculatorPage() {
   const [recentCalculations, setRecentCalculations] = useState(() => loadRecentCalculations());
 
   const [errorMessage, setErrorMessage] = useState([]);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+
+  const { user } = useUser();
+  const userUuid = user ? user.id : null;
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -292,10 +300,41 @@ export default function CalculatorPage() {
   };
 
   // Save tariff calculation - changed to placeholder 
-  const handleSave = async () => {
-    // Empty placeholder for future functionality
-    console.log("Save button clicked - functionality not yet implemented");
-    // You can add your desired functionality here in the future
+  const handleSave = async () => {  
+    setErrorMessage([]); // Clear previous errors
+    let newErrorMsg = [];
+    if (!tariffBreakdown || tariffBreakdown.length === 0) {
+      newErrorMsg.push("No tariff information available to save.");
+      setErrorMessage(newErrorMsg);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const data = {
+        uuid: userUuid,
+        tariffs: tariffBreakdown,
+      }
+
+      const response = await fetch(`${baseUrl}/api/watchlists`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      if (response.ok) {
+        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff saved to watchlist successfully!");
+
+      } else {
+        const errorData = await response.json();
+        newErrorMsg.push("Error saving watchlist: " + errorData.message);
+        setErrorMessage(newErrorMsg);
+      }
+    } catch (error) {
+      errorMessage.push("Error saving tariff: " + error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (pageLoading) {
@@ -483,6 +522,7 @@ export default function CalculatorPage() {
           </div>
 
           <ErrorMessageDisplay errors={errorMessage} />
+          {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
 
           {/* Calculate Button */}
           <div className="flex gap-4 mb-8">

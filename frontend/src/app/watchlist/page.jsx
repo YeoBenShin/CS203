@@ -9,7 +9,6 @@ import DeleteTariffPopUp from "../components/popUps/DeleteTariffPopUp";
 import LoadingPage from "../components/LoadingPage";
 
 export default function ViewWatchListPage() {
-
     // loading tariffs
     const [tariffs, setTariffs] = useState([]);
     const [filteredTariffs, setFilteredTariffs] = useState([]);
@@ -41,11 +40,11 @@ export default function ViewWatchListPage() {
     const fetchTariffs = async () => {
         try {
             setIsLoading(true);
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/watchlists`);
             if (response.ok) {
                 const data = await response.json();
-                setTariffs(data);
-                setFilteredTariffs(data); // Initialize filtered tariffs with all data
+                setTariffs(data); // Store a copy of the original data
+                setFilteredTariffs(data);
             } else {
                 setFetchingError("Failed to fetch tariffs");
             }
@@ -107,7 +106,7 @@ export default function ViewWatchListPage() {
         }
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs/${tariffToDelete.tariffID}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/watchlists/${tariffToDelete.watchlistID}`, {
                 method: "DELETE",
             });
 
@@ -116,7 +115,7 @@ export default function ViewWatchListPage() {
                 setTariffs(updatedTariffs);
                 // Update filtered tariffs to reflect the deletion
                 setFilteredTariffs(filteredTariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID));
-                showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff deleted successfully!");
+                showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff removed from watchlist successfully!");
 
             } else {
                 const errorData = await response.json();
@@ -135,16 +134,6 @@ export default function ViewWatchListPage() {
         document.body.style.overflow = 'unset';
     };
 
-    const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
-        return new Date(dateString).toLocaleDateString();
-    };
-
-    const formatDateForInput = (dateString) => {
-        if (!dateString) return "";
-        return new Date(dateString).toISOString().split('T')[0];
-    };
-
     if (isLoading) {
         return <LoadingPage />;
     }
@@ -153,8 +142,8 @@ export default function ViewWatchListPage() {
         <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-extrabold text-gray-900">All Tariffs</h1>
-                    <p className="mt-2 text-sm text-gray-600"> View all tariff entries in the system</p>
+                    <h1 className="text-3xl font-extrabold text-gray-900">Tariff Watchlist</h1>
+                    <p className="mt-2 text-sm text-gray-600"> View all your saved tariffs</p>
                     <p className="mt-1 text-sm text-gray-600"> Click on a tariff to view more details</p>
                 </div>
 
@@ -192,12 +181,6 @@ export default function ViewWatchListPage() {
                         </p>
                     )}
                 </div>
-
-                {deleteMessage && deleteMessage.includes("Error") && (
-                    <div className="mb-4 p-4 rounded-md bg-red-100 text-red-700">
-                        {deleteMessage}
-                    </div>
-                )}
 
                 {fetchingError && (
                     <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
@@ -267,6 +250,11 @@ export default function ViewWatchListPage() {
                             openDeletePopup={handleDelete}
                             hasPermissionToDelete={true}
                         />
+                        {deleteMessage && deleteMessage.includes("Error") && (
+                            <div className="mb-4 p-4 rounded-md bg-red-100 text-red-700">
+                                {deleteMessage}
+                            </div>
+                        )}
                     </PopUpWrapper>
                 )}
 
@@ -274,12 +262,14 @@ export default function ViewWatchListPage() {
                 {showDeletePopup && tariffToDelete && (
                     <PopUpWrapper OnClick={cancelDelete}>
                         <DeleteTariffPopUp
-                            selectedTariff={tariffToDelete}
+                            tariffToDelete={tariffToDelete}
+                            handleCancelDelete={cancelDelete}
+                            handleConfirmDelete={confirmDelete}
                         />
                     </PopUpWrapper>
                 )}
 
-                
+
             </div>
         </div>
     );

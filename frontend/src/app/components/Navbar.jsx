@@ -35,12 +35,9 @@ export default function Navbar() {
             <Link href="/" className="block px-4 py-2 text-black hover:bg-blue-100">Home</Link>
             <Link href="/calculator" className="block px-4 py-2 text-black hover:bg-blue-100">Tariff Calculator</Link>
             <Link href="/view-tariffs" className="block px-4 py-2 text-black hover:bg-blue-100">View All Tariffs</Link>
-            {role === "admin" ? (
-              <Link href="/admin" className="block px-4 py-2 text-black hover:bg-blue-100">Add Tariff</Link>
-            ) : <div></div>}
-            {role === "admin" ? (
-              <Link href="/admin/product" className="block px-4 py-2 text-black hover:bg-blue-100">Add Product</Link>
-            ) : <div></div>}
+            <Link href="/watchlist" className="block px-4 py-2 text-black hover:bg-blue-100">My Watchlist</Link>
+            {role === "admin" && <Link href="/admin" className="block px-4 py-2 text-black hover:bg-blue-100">Add Tariff</Link>}
+            {role === "admin" && <Link href="/admin/product" className="block px-4 py-2 text-black hover:bg-blue-100">Add Product</Link>}
           </div>
         </li>
         <li>
