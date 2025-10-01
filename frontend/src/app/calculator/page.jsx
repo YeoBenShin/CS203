@@ -5,7 +5,6 @@ import Button from '../components/Button';
 import LoadingSpinner from "../components/messages/LoadingSpinner";
 import ErrorMessageDisplay from "../components/messages/ErrorMessageDisplay";
 import LoadingPage from "../components/LoadingPage";
-
 import { useUser } from '@clerk/nextjs';
 import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
 
@@ -245,6 +244,19 @@ export default function CalculatorPage() {
       return;
     }
 
+    // Check if there's a matching tariff in the database
+    const matchingTariff = tariffs.find(
+      tariff => 
+        tariff.HSCode === selectedProduct.value && 
+        tariff.exporterCode === selectedCountry.value
+    );
+
+    if (!matchingTariff) {
+      newErrorMsg.push("No tariff found for the selected HS Code and Country combination. Please select a valid combination.");
+      setErrorMessage(newErrorMsg);
+      return;
+    }
+
     setLoading(true);
     const data = {
       hsCode: selectedProduct.value,
@@ -358,12 +370,26 @@ export default function CalculatorPage() {
                     <h3 className="text-lg font-semibold text-blue-900">Selected Tariff</h3>
                     <span className={`px-3 py-1 text-xs font-medium rounded-full ${selectedTariff.expiryDate && new Date(selectedTariff.expiryDate) < new Date()
                       ? 'bg-red-100 text-red-800'
-                      : 'bg-green-600 text-white'
+                      : selectedTariff.effectiveDate && new Date(selectedTariff.effectiveDate).setHours(0,0,0,0) > new Date().setHours(0,0,0,0)
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-green-600 text-white'
                       }`}>
                       {selectedTariff.expiryDate && new Date(selectedTariff.expiryDate) < new Date()
                         ? 'Expired'
-                        : 'In Effect'}
+                        : selectedTariff.effectiveDate && new Date(selectedTariff.effectiveDate).setHours(0,0,0,0) > new Date().setHours(0,0,0,0)
+                          ? `Future Effective`
+                          : 'Currently Active'}
                     </span>
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1 space-y-1">
+                    <div className="font-medium">Effective Date: {selectedTariff.effectiveDate 
+                      ? new Date(selectedTariff.effectiveDate).toLocaleDateString()
+                      : 'Not specified'}
+                    </div>
+                    {selectedTariff.expiryDate && (
+                      <div className="font-medium">Expiry Date: {new Date(selectedTariff.expiryDate).toLocaleDateString()}</div>
+                    )}
+                    <div className="font-medium">Current Date: {new Date().toLocaleDateString()}</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
