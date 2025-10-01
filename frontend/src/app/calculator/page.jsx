@@ -593,7 +593,7 @@ export default function CalculatorPage() {
             <h2 className="text-xl font-bold text-black mb-4">Recent Calculations</h2>
 
             {recentCalculations.length === 0 ? (
-              <div className="space-y-3">
+              <div className="text-center py-8 text-gray-500">
                 <svg className="h-12 w-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
