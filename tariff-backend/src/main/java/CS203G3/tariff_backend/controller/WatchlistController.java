@@ -43,7 +43,6 @@ public class WatchlistController {
         return ResponseEntity.status(HttpStatus.CREATED).body(watchlistsToCreate);
     }
 
-
     /**
      * Delete a watchlist by ID
      * DELETE /api/watchlists/{id}

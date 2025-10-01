@@ -8,22 +8,6 @@ import LoadingPage from "../components/LoadingPage";
 import { useUser } from '@clerk/nextjs';
 import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
 
-// Helper functions for recent calculations persistence
-const loadRecentCalculations = () => {
-  // Always return empty array during server-side rendering
-  if (typeof window === 'undefined') {
-    return [];
-  }
-  const saved = localStorage.getItem('recentCalculations');
-  return saved ? JSON.parse(saved) : [];
-};
-
-const saveRecentCalculations = (calculations) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('recentCalculations', JSON.stringify(calculations));
-  }
-};
-
 export default function CalculatorPage() {
   const [pageLoading, setPageLoading] = useState(false);
   // Product search states  
@@ -34,20 +18,9 @@ export default function CalculatorPage() {
   const [countryOptions, setCountryOptions] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
 
-  // Ensure dates are formatted consistently
-  const formatDate = (date) => {
-    return new Date(date).toISOString().split('T')[0];
-  };
-
   // Other form states
   const [shippingCost, setShippingCost] = useState('');
   const [tradeDate, setTradeDate] = useState("");
-  
-  useEffect(() => {
-    // Set initial trade date only on client side
-    const date = new Date();
-    setTradeDate(formatDate(date));
-  }, []);
 
   // Calculation results
   const [calcResult, setCalcResult] = useState(null);
@@ -56,10 +29,6 @@ export default function CalculatorPage() {
 
   // Recent calculations with persistence
   const [recentCalculations, setRecentCalculations] = useState([]);
-
-  useEffect(() => {
-    setRecentCalculations(loadRecentCalculations());
-  }, []);
 
   const [errorMessage, setErrorMessage] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
@@ -70,60 +39,75 @@ export default function CalculatorPage() {
   const { user } = useUser();
   const userUuid = user ? user.id : null;
 
+  // Ensure dates are formatted consistently
+  const formatDate = (date) => {
+    return new Date(date).toISOString().split('T')[0];
+  };
+
+  useEffect(() => {
+    // Set initial trade date only on client side
+    const date = new Date();
+    setTradeDate(formatDate(date));
+  }, []);
+
+  useEffect(() => {
+    setRecentCalculations(loadRecentCalculations());
+  }, []);
+
   useEffect(() => {
     const fetchAllData = async () => {
-        setPageLoading(true);
-        
-        try {
-            // Execute fetch operations in parallel
-            await Promise.all([
-                fetchHsCodes(),
-                fetchCountries()
-            ]);
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        } finally {
-            setPageLoading(false);
-        }
+      setPageLoading(true);
+
+      try {
+        // Execute fetch operations in parallel
+        await Promise.all([
+          fetchHsCodes(),
+          fetchCountries()
+        ]);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setPageLoading(false);
+      }
     };
 
     fetchAllData();
-}, []);
+  }, []);
 
   const fetchHsCodes = async () => {
-      try {
-        const response = await fetch(`${baseUrl}/api/products`);
-        const data = await response.json();
+    try {
+      const response = await fetch(`${baseUrl}/api/products`);
+      const data = await response.json();
 
-        const products = data.map(item => ({
-          value: item.hsCode,
-          description: item.description,
-          label: `${item.hsCode} - ${item.description}`
-        }));
-        setHsCodeOptions(products);
+      const products = data.map(item => ({
+        value: item.hsCode,
+        description: item.description,
+        label: `${item.hsCode} - ${item.description}`
+      }));
+      setHsCodeOptions(products);
 
-      } catch (error) {
-        errorMessage.push("Error fetching HS codes: " + error);
-        console.error('Error fetching HS codes:', error);
-      } 
-    };
+    } catch (error) {
+      errorMessage.push("Error fetching HS codes: " + error);
+      console.error('Error fetching HS codes:', error);
+    }
+  };
 
-    // Fetch countries from backend
-    const fetchCountries = async () => {
-      try {
-        const response = await fetch(`${baseUrl}/api/countries`);
-        const data = await response.json();
+  // Fetch countries from backend
+  const fetchCountries = async () => {
+    try {
+      const response = await fetch(`${baseUrl}/api/countries`);
+      const data = await response.json();
 
-        const countries = data.filter(country => country.isoCode !== 'USA').map(country => ({
-          value: country.isoCode,
-          label: country.isoCode + " - " + country.name
-        }));
-        setCountryOptions(countries);
-      } catch (error) {
-        errorMessage.push("Error fetching countries: " + error);
-        console.error('Error fetching countries:', error);
-      }
-    };
+      const countries = data.filter(country => country.isoCode !== 'USA').map(country => ({
+        value: country.isoCode,
+        label: country.isoCode + " - " + country.name
+      }));
+      setCountryOptions(countries);
+    } catch (error) {
+      errorMessage.push("Error fetching countries: " + error);
+      console.error('Error fetching countries:', error);
+    }
+  };
 
   const handleHsCodeSelection = (option) => {
     if (!option) {
@@ -140,6 +124,8 @@ export default function CalculatorPage() {
       setSelectedCountry(null);
       return;
     }
+    setCalcResult(null);
+    setErrorMessage([]);
     setSelectedCountry(option);
   };
 
@@ -161,28 +147,28 @@ export default function CalculatorPage() {
   const handleCalculate = async () => {
     setErrorMessage([]); // Clear previous errors
     let newErrorMsg = [];
-    
+
     // Basic validation
     if (!selectedProduct) {
       newErrorMsg.push("Please select a valid HS Code");
     } else if (selectedProduct.value < 0 || selectedProduct.value > 9999999999) {
       newErrorMsg.push("HS Code must be a 10 digit number");
     }
-    
+
     if (!selectedCountry) {
       newErrorMsg.push("Please select a valid Country");
     }
-    
+
     if (!shippingCost || !/^\d+(\.\d{1,2})?$/.test(shippingCost) || parseFloat(shippingCost) <= 0) {
       newErrorMsg.push("Please enter a valid Shipping Cost greater than 0");
     }
-    
+
     if (!tradeDate) {
       newErrorMsg.push("Please select a valid Trade Date");
     } else if (new Date(tradeDate) > new Date()) {
       // newErrorMsg.push("Trade date cannot be in the future");
     }
-    
+
     if (newErrorMsg.length > 0) {
       setErrorMessage(newErrorMsg);
       return;
@@ -252,7 +238,7 @@ export default function CalculatorPage() {
   };
 
   // Save tariff calculation - changed to placeholder 
-  const handleSave = async () => {  
+  const handleSave = async () => {
     setErrorMessage([]); // Clear previous errors
     let newErrorMsg = [];
     if (!tariffBreakdown || tariffBreakdown.length === 0) {
@@ -289,6 +275,22 @@ export default function CalculatorPage() {
     }
   };
 
+  // Helper functions for recent calculations persistence
+  const loadRecentCalculations = () => {
+    // Always return empty array during server-side rendering
+    if (typeof window === 'undefined') {
+      return [];
+    }
+    const saved = localStorage.getItem('recentCalculations');
+    return saved ? JSON.parse(saved) : [];
+  };
+
+  const saveRecentCalculations = (calculations) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('recentCalculations', JSON.stringify(calculations));
+    }
+  };
+
   if (pageLoading) {
     return <LoadingPage />;
   }
@@ -307,11 +309,12 @@ export default function CalculatorPage() {
             // Search Bar section
           )}
           */}
-          
+
           {/* Descriptive Header */}
           <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
-            <h2 className="text-lg font-semibold text-blue-900 mb-2">Tariff Calculator</h2>
-            <p className="text-sm text-gray-600">Calculate import tariffs for your international trade. Enter your product details, shipping cost, and trade date below to get started.</p>
+            <h2 className="text-lg font-semibold text-blue-900 mb-2">Calculate Tariff For A Product!</h2>
+            <p className="text-sm text-gray-600">Calculate import tariffs for your international trade.
+            <br/> Enter your product details, shipping cost, and trade date below to get started. </p>
           </div>
 
           {/* Manual Input Section */}
@@ -387,7 +390,7 @@ export default function CalculatorPage() {
 
             {calcResult && (
               <Button
-               className="w-200"
+                className="w-200"
                 onClick={handleSave}
                 isLoading={loading}
                 width=''
@@ -492,17 +495,17 @@ export default function CalculatorPage() {
               <div className="space-y-3">
                 {recentCalculations.map((calc) => (
                   <div key={calc.id} className="bg-white/30 rounded-lg p-3 border border-white/20">
-                    <div className= "justify-between items-start mb-2">
-                        <h4 className="text-sm font-semibold text-black truncate">{calc.product}</h4>
-                        <p className="text-xs text-gray-600">HS: {calc.hsCode}</p>
-                        <p className="text-xs text-gray-600">{calc.country}</p>
-                      </div>
+                    <div className="justify-between items-start mb-2">
+                      <h4 className="text-sm font-semibold text-black truncate">{calc.product}</h4>
+                      <p className="text-xs text-gray-600">HS: {calc.hsCode}</p>
+                      <p className="text-xs text-gray-600">{calc.country}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-green-600 ">Total Cost: ${calc.totalCost.toFixed(2)}</p>
+                      <p className="text-xs text-red-600">Tariff Rate: {calc.totalTariffRate}%</p>
                       <div>
-                        <p className="text-sm font-bold text-green-600 ">Total Cost: ${calc.totalCost.toFixed(2)}</p>
-                        <p className="text-xs text-red-600">Tariff Rate: {calc.totalTariffRate}%</p>
-                        <div>
                         <p className="text-xs text-red-600">Tariff Cost: ${calc.totalTariffCost}</p>
-                        </div>
+                      </div>
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">{calc.date}</span>
