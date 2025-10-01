@@ -10,11 +10,12 @@ import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/me
 
 // Helper functions for recent calculations persistence
 const loadRecentCalculations = () => {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('recentCalculations');
-    return saved ? JSON.parse(saved) : [];
+  // Always return empty array during server-side rendering
+  if (typeof window === 'undefined') {
+    return [];
   }
-  return [];
+  const saved = localStorage.getItem('recentCalculations');
+  return saved ? JSON.parse(saved) : [];
 };
 
 const saveRecentCalculations = (calculations) => {
@@ -38,10 +39,21 @@ export default function CalculatorPage() {
   const [filteredTariffs, setFilteredTariffs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTariff, setSelectedTariff] = useState(null);
+  
+  // Ensure dates are formatted consistently
+  const formatDate = (date) => {
+    return new Date(date).toISOString().split('T')[0];
+  };
 
   // Other form states
   const [shippingCost, setShippingCost] = useState('');
-  const [tradeDate, setTradeDate] = useState(new Date().toISOString().split('T')[0]); // Default to today
+  const [tradeDate, setTradeDate] = useState("");
+  
+  useEffect(() => {
+    // Set initial trade date only on client side
+    const date = new Date();
+    setTradeDate(formatDate(date));
+  }, []);
 
   // Calculation results
   const [calcResult, setCalcResult] = useState(null);
@@ -49,7 +61,11 @@ export default function CalculatorPage() {
   const [loading, setLoading] = useState(false);
 
   // Recent calculations with persistence
-  const [recentCalculations, setRecentCalculations] = useState(() => loadRecentCalculations());
+  const [recentCalculations, setRecentCalculations] = useState([]);
+
+  useEffect(() => {
+    setRecentCalculations(loadRecentCalculations());
+  }, []);
 
   const [errorMessage, setErrorMessage] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
@@ -123,7 +139,7 @@ export default function CalculatorPage() {
         if (response.ok) {
           const data = await response.json();
           setTariffs(data);
-          setFilteredTariffs(data.slice(0, 5)); // Show first 5 tariffs initially
+          setFilteredTariffs(data);
         } else {
           setErrorMessage("Failed to fetch tariffs");
         }
@@ -157,22 +173,21 @@ export default function CalculatorPage() {
     setSearchQuery(query);
 
     if (query === "") {
-      setFilteredTariffs(tariffs.slice(0, 5));
+      setFilteredTariffs(tariffs);
     } else {
       const filtered = tariffs.filter(tariff =>
         tariff.exporterName?.toLowerCase().includes(query) ||
         tariff.importerName?.toLowerCase().includes(query) ||
         tariff.HSCode?.toString().toLowerCase().includes(query) ||
         tariff.productDescription?.toLowerCase().includes(query) ||
-        (parseFloat(tariff.rate) * 100).toFixed(2).includes(query)
-      ).slice(0, 5);
+        (parseFloat(tariff.rate) * 100).toFixed(2).includes(query));
       setFilteredTariffs(filtered);
     }
   };
 
   const clearSearch = () => {
     setSearchQuery("");
-    setFilteredTariffs(tariffs.slice(0, 5));
+    setFilteredTariffs(tariffs);
   };
 
   const handleTariffSelection = (tariff) => {
@@ -291,12 +306,14 @@ export default function CalculatorPage() {
           totalCost: responseData.totalCost,
           totalTariffCost: responseData.totalTariffCost,
           totalTariffRate: responseData.totalTariffRate.toFixed(2),
-          date: new Date().toLocaleDateString()
+          date: formatDate(new Date())
         };
 
         const updatedCalculations = [newCalculation, ...recentCalculations.slice(0, 4)]; // Keep only 5 recent
         setRecentCalculations(updatedCalculations);
-        saveRecentCalculations(updatedCalculations);
+        if (typeof window !== 'undefined') {
+          saveRecentCalculations(updatedCalculations);
+        }
       } else {
         const errorData = await response.json();
         console.log(errorData)
@@ -389,7 +406,7 @@ export default function CalculatorPage() {
                     {selectedTariff.expiryDate && (
                       <div className="font-medium">Expiry Date: {new Date(selectedTariff.expiryDate).toLocaleDateString()}</div>
                     )}
-                    <div className="font-medium">Current Date: {new Date().toLocaleDateString()}</div>
+                    <div className="font-medium">Current Date: {new Date().toISOString().split('T')[0]}</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
