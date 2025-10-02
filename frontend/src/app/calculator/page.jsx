@@ -201,7 +201,7 @@ export default function CalculatorPage() {
 
         // Automatically add to recent calculations
         const newCalculation = {
-          id: Date.now(),
+          id: crypto.randomUUID(),
           product: selectedProduct.description,
           hsCode: selectedProduct.value,
           country: selectedCountry.label.split(' - ')[1], // Get country name
