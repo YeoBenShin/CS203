@@ -4,8 +4,6 @@ import Navbar from "./components/Navbar";
 import {
   ClerkProvider,
   SignedIn,
-  SignedOut,
-  SignIn,
 } from '@clerk/nextjs'
 
 const geistSans = Geist({
