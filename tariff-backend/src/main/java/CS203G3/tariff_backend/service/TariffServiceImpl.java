@@ -51,7 +51,7 @@ public class TariffServiceImpl implements TariffService {
         dto.setTariffName(tariff.getTariffName());
 
         // product details
-        dto.sethSCode(tariff.getProduct().getHSCode());
+        dto.setHSCode(tariff.getProduct().getHSCode());
         dto.setProductDescription(tariff.getProduct().getDescription());
         // exporter details
         dto.setExporterCode(tariff.getExporter().getIsoCode());
@@ -73,8 +73,8 @@ public class TariffServiceImpl implements TariffService {
 
         String name = createDto.getName();
 
-        Product product = productRepository.findById(createDto.gethSCode())
-            .orElseThrow(() -> new ResourceNotFoundException("Product", createDto.gethSCode().toString()));
+        Product product = productRepository.findById(createDto.getHSCode())
+            .orElseThrow(() -> new ResourceNotFoundException("Product", createDto.getHSCode()));
 
         Country exporter = countryRepository.findById(createDto.getExporter())
             .orElseThrow(() -> new ResourceNotFoundException("Country", createDto.getExporter()));
@@ -189,9 +189,9 @@ public class TariffServiceImpl implements TariffService {
         }
         
         // Rule 2: Rate cannot be negative
-        if (createDto.getRate() != null && createDto.getRate().compareTo(BigDecimal.ZERO) < 0) {
-            throw new NegativeTariffRateException("Tariff rate cannot be negative: " + createDto.getRate());
-        }
+        // if (createDto.getRate() != null && createDto.getRate().compareTo(BigDecimal.ZERO) < 0) {
+        //     throw new NegativeTariffRateException("Tariff rate cannot be negative: " + createDto.getRate());
+        // }
         
         // Rule 3: Rate validation removed - allowing any positive rate
         // (No upper limit on tariff rates as they can vary widely in real-world scenarios)
@@ -248,9 +248,9 @@ public class TariffServiceImpl implements TariffService {
             tariff.setTariffName(updateDto.getTariffCreateDto().getName());
         }
 
-        if (updateDto.getTariffCreateDto().gethSCode() != null) {
-            Product product = productRepository.findById(updateDto.getTariffCreateDto().gethSCode())
-                .orElseThrow(() -> new ResourceNotFoundException("Product", updateDto.getTariffCreateDto().gethSCode().toString()));
+        if (updateDto.getTariffCreateDto().getHSCode() != null) {
+            Product product = productRepository.findById(updateDto.getTariffCreateDto().getHSCode())
+                .orElseThrow(() -> new ResourceNotFoundException("Product", updateDto.getTariffCreateDto().getHSCode()));
             tariff.setProduct(product);
         }
 
@@ -321,7 +321,7 @@ public class TariffServiceImpl implements TariffService {
     public CalculationResult calculateTariff(CalculationRequest calculationDto) {
         // fetch tariff
         Optional<Tariff> tariffOpt = tariffRepository.findValidTariff(
-            calculationDto.gethSCode(),
+            calculationDto.getHSCode(),
             calculationDto.getExporter(),
             calculationDto.getTradeDate()
         );
