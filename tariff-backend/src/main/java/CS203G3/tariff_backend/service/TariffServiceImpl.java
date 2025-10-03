@@ -56,6 +56,9 @@ public class TariffServiceImpl implements TariffService {
         // exporter details
         dto.setExporterCode(tariff.getExporter().getIsoCode());
         dto.setExporterName(tariff.getExporter().getName());
+        // importer details
+        dto.setImporterCode(tariff.getImporter().getIsoCode());
+        dto.setImporterName(tariff.getImporter().getName());
 
         // tariff details
         dto.setEffectiveDate(tariff.getEffectiveDate());
@@ -79,6 +82,9 @@ public class TariffServiceImpl implements TariffService {
         Country exporter = countryRepository.findById(createDto.getExporter())
             .orElseThrow(() -> new ResourceNotFoundException("Country", createDto.getExporter()));
         
+        Country importer = countryRepository.findById(createDto.getImporter())
+            .orElseThrow(() -> new ResourceNotFoundException("Country", createDto.getImporter()));
+
         String reference = createDto.getReference();
 
         // Convert java.util.Date to java.sql.Date
@@ -92,6 +98,7 @@ public class TariffServiceImpl implements TariffService {
         newTariff.setTariffName(name);
         newTariff.setProduct(product);
         newTariff.setExporter(exporter);
+        newTariff.setImporter(importer);
         newTariff.setEffectiveDate(effectiveDate);
         newTariff.setExpiryDate(expiryDate);
         newTariff.setReference(reference);
@@ -258,6 +265,12 @@ public class TariffServiceImpl implements TariffService {
             Country exporter = countryRepository.findById(updateDto.getTariffCreateDto().getExporter())
                 .orElseThrow(() -> new ResourceNotFoundException("Country", updateDto.getTariffCreateDto().getExporter()));
             tariff.setExporter(exporter);
+        }
+
+        if (updateDto.getTariffCreateDto().getImporter() != null) {
+            Country importer = countryRepository.findById(updateDto.getTariffCreateDto().getImporter())
+                .orElseThrow(() -> new ResourceNotFoundException("Country", updateDto.getTariffCreateDto().getImporter()));
+            tariff.setImporter(importer);
         }
 
         if (updateDto.getTariffCreateDto().getEffectiveDate() != null) {
