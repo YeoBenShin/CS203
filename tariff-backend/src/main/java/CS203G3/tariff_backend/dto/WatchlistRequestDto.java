@@ -1,41 +1,33 @@
 package CS203G3.tariff_backend.dto;
 
+import java.math.BigDecimal;
 import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import CS203G3.tariff_backend.model.UnitOfCalculation;
-import java.math.BigDecimal;
-
-/**
- * DTO for Tariff responses - includes all tariff data plus mapping details for frontend
- */
-
-public class TariffDto {
+public class WatchlistRequestDto {
     private Long tariffID;
-    private Long tariffRateID;
-    private String tariffName;
+    private Long tariffMappingID;
+    private Long watchlistID;
+    private String userID;
     
     // Core tariff fields
+    private BigDecimal rate;
     private Date effectiveDate;  // JavaScript Date object
     private Date expiryDate;     // JavaScript Date object
     private String reference;
     
-    // fields for frontend display from exporter country
+    // fields for frontend display from tariff mapping
     private String exporterCode;
     private String exporterName;
     private String importerCode;
     private String importerName;
-
-    // fields for frontend display from product
-    @JsonProperty("hSCode")
+    @JsonProperty("HSCode")
     private String hSCode;
     private String productDescription;
 
-    private UnitOfCalculation unitOfCalculation;
-    private BigDecimal tariffRate;
-
     // Constructors
-    public TariffDto() {}
+    public WatchlistRequestDto() {}
 
     public Long getTariffID() {
         return tariffID;
@@ -45,20 +37,36 @@ public class TariffDto {
         this.tariffID = tariffID;
     }
 
-    public Long getTariffRateID() {
-        return tariffRateID;
+    public Long getTariffMappingID() {
+        return tariffMappingID;
     }
 
-    public void setTariffRateID(Long tariffRateID) {
-        this.tariffRateID = tariffRateID;
-    }
-    
-    public String getTariffName() {
-        return tariffName;
+    public void setTariffMappingID(Long tariffMappingID) {
+        this.tariffMappingID = tariffMappingID;
     }
 
-    public void setTariffName(String tariffName) {
-        this.tariffName = tariffName;
+    public Long getWatchlistID() {
+        return watchlistID;
+    }
+
+    public void setWatchlistID(Long watchlistID) {
+        this.watchlistID = watchlistID;
+    }
+
+    public String getUserID() {
+        return userID;
+    }
+
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
+
+    public BigDecimal getRate() {
+        return rate;
+    }
+
+    public void setRate(BigDecimal rate) {
+        this.rate = rate;
     }
 
     public Date getEffectiveDate() {
@@ -93,20 +101,20 @@ public class TariffDto {
         this.exporterCode = exporterCode;
     }
 
-    public String getImporterCode() {
-        return importerCode;
-    }
-
-    public void setImporterCode (String importerCode) {
-        this.importerCode = importerCode;
-    }
-
     public String getExporterName() {
         return exporterName;
     }
 
     public void setExporterName(String exporterName) {
         this.exporterName = exporterName;
+    }
+
+    public String getImporterCode() {
+        return importerCode;
+    }
+
+    public void setImporterCode(String importerCode) {
+        this.importerCode = importerCode;
     }
 
     public String getImporterName() {
@@ -117,7 +125,7 @@ public class TariffDto {
         this.importerName = importerName;
     }
 
-    public String gethSCode() {
+    public String getHSCode() {
         return hSCode;
     }
 
@@ -133,19 +141,5 @@ public class TariffDto {
         this.productDescription = productDescription;
     }
 
-    public UnitOfCalculation getUnitOfCalculation() {
-        return unitOfCalculation;
-    }
 
-    public void setUnitOfCalculation(UnitOfCalculation unitOfCalculation) {
-        this.unitOfCalculation = unitOfCalculation;
-    }
-    
-    public BigDecimal getTariffRate() {
-        return tariffRate;
-    }
-
-    public void setTariffRate(BigDecimal tariffRate) {
-        this.tariffRate = tariffRate;
-    }
 }

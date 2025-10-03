@@ -3,8 +3,6 @@ package CS203G3.tariff_backend.dto;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import org.springframework.format.annotation.DurationFormat.Unit;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import CS203G3.tariff_backend.model.UnitOfCalculation;
@@ -80,7 +78,7 @@ public class TariffCreateDto {
         return hSCode;
     }
 
-    public void sethSCode(String hSCode) {
+    public void setHSCode(String hSCode) {
         this.hSCode = hSCode;
     }
     

@@ -1,12 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Select from "react-select";
-import { ErrorDisplay, SuccessDisplay, LoadingSpinner } from "../components/MessageComponents";
+import ErrorDisplay from "../components/messages/ErrorMessageDisplay";
+import LoadingSpinner from "../components/messages/LoadingSpinner";
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
+import FieldSelector from "../components/FieldSelector";
+import Button from "../components/Button";
 
 export default function AdminPage() {
   const [form, setForm] = useState({
     exporter: null,
-    importer: null,
     product: null,
     rate: "",
     effectiveDate: "",
@@ -15,8 +17,9 @@ export default function AdminPage() {
   });
 
   const [errors, setErrors] = useState([]);
-  const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const [countryOptions, setCountryOptions] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
@@ -24,9 +27,10 @@ export default function AdminPage() {
     useEffect(() => {
       const fetchCountries = async () => {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/countries`);
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
+          const response = await fetch(`${baseUrl}/api/countries`);
           const countries = await response.json();
-          const options = countries.map(country => ({
+          const options = countries.filter(country => country.isoCode !== 'USA').map(country => ({
             label: country.name,
             value: country.isoCode
           }));
@@ -42,7 +46,8 @@ export default function AdminPage() {
     useEffect(() => {
       const fetchProducts = async () => {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/products`);
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
+          const response = await fetch(`${baseUrl}/api/products`);
           const products = await response.json();
           const options = products.map(product => ({
             label: `${product.hsCode}${product.description ? ` - ${product.description}` : ''}`,
@@ -72,12 +77,6 @@ export default function AdminPage() {
       setErrors([]);
     }
   };
-  const handleImporterChange = (option) => {
-    setForm({ ...form, importer: option });
-    if (errors.length > 0) {
-      setErrors([]);
-    }
-  };
   const handleProductChange = (option) => {
     setForm({ ...form, product: option });
     if (errors.length > 0) {
@@ -91,9 +90,6 @@ export default function AdminPage() {
 
     if (!form.exporter) {
       validationErrors.push("Please select an exporter country");
-    }
-    if (!form.importer) {
-      validationErrors.push("Please select an importer country");
     }
     if (!form.product) {
       validationErrors.push("Please select a product");
@@ -111,7 +107,7 @@ export default function AdminPage() {
     }
 
     // Check if exporter and importer are the same
-    if (form.exporter && form.importer && form.exporter.value === form.importer.value) {
+    if (form.exporter && form.exporter.value === "USA") {
       validationErrors.push("Exporter and importer cannot be the same country");
     }
 
@@ -191,7 +187,6 @@ export default function AdminPage() {
     try {
         const requestData = {
           exporter: form.exporter.value,
-          importer: form.importer.value,
           HSCode: Number(form.product.value),
           rate: parseFloat(form.rate) / 100, // Convert percentage to decimal
           effectiveDate: new Date(form.effectiveDate).toISOString(),
@@ -201,8 +196,8 @@ export default function AdminPage() {
         
         console.log("Sending request data:", requestData);
         
-        const base_url = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
-        const response = await fetch(`${base_url}/api/tariffs`, {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
+        const response = await fetch(`${baseUrl}/api/tariffs`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -210,10 +205,9 @@ export default function AdminPage() {
       });
       
       if (response.ok) {
-        setSuccessMessage("✅ Tariff added successfully!");
+        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup,"Tariff added successfully!");
         setForm({ 
           exporter: null, 
-          importer: null, 
           product: null, 
           rate: "", 
           effectiveDate: "", 
@@ -241,7 +235,7 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-white to-blue-200 flex flex-col items-center justify-start p-8">
+    <main className="min-h-screen bg-gradient-to-br from-white to-blue-400 flex flex-col items-center justify-start p-8">
       <h1 className="text-3xl font-bold mb-6 text-black">Admin: Add Tariff</h1>
       <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
         <p className="text-sm text-gray-600 mb-4">
@@ -251,40 +245,22 @@ export default function AdminPage() {
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Exporter <span className="text-red-500">*</span>
           </label>
-          <Select
+          <FieldSelector
             options={countryOptions}
             value={form.exporter}
             onChange={handleExporterChange}
-            className="text-blue"
             placeholder="Select exporter country"
-            isClearable
           />
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Importer <span className="text-red-500">*</span>
-          </label>
-          <Select
-            options={countryOptions}
-            value={form.importer}
-            onChange={handleImporterChange}
-            className="text-black"
-            placeholder="Select importer country"
-            isClearable
-          />
-        </div>
-
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Product <span className="text-red-500">*</span>
           </label>
-          <Select
+          <FieldSelector
             options={productOptions}
             value={form.product}
             onChange={handleProductChange}
-            className="text-black"
             placeholder="Select Product HSCode"
-            isClearable
           />
         </div>
         
@@ -313,32 +289,24 @@ export default function AdminPage() {
             type="date" 
             value={form.effectiveDate} 
             onChange={handleChange} 
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+            className={`shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${form.effectiveDate ? " text-gray-700" : "text-white"}`} 
           />
         </div>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="expiryDate">Expiry Date</label>
-          <input name="expiryDate" type="date" value={form.expiryDate} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+          <input name="expiryDate" type="date" value={form.expiryDate} onChange={handleChange} className={`shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${form.expiryDate ? " text-gray-700" : "text-white"}`} />
         </div>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="reference">Reference</label>
           <input name="reference" type="text" value={form.reference} onChange={handleChange} placeholder="Source URL" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
         </div>
-        <button 
-          type="submit" 
-          disabled={isLoading}
-          className={`w-full font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center justify-center ${
-            isLoading 
-              ? 'bg-gray-400 cursor-not-allowed text-white' 
-              : 'bg-blue-500 hover:bg-blue-700 text-white'
-          }`}
+        <Button 
+          type='submit'
         >
-          {isLoading && <LoadingSpinner />}
-          {isLoading ? 'Adding Tariff...' : 'Add Tariff'}
-        </button>
-        
-        {/* Success Message */}
-        <SuccessDisplay message={successMessage} />
+          {isLoading && <LoadingSpinner />} 
+          {isLoading ? "Adding Tariff..." : "Add Tariff"}
+        </Button>
+        {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
         
         {/* Error Messages */}
         <ErrorDisplay errors={errors} />

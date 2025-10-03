@@ -8,4 +8,8 @@ public class ResourceAlreadyExistsException extends BusinessException {
     public ResourceAlreadyExistsException(String resourceType, Object identifier) {
         super("RESOURCE_ALREADY_EXISTS", String.format("%s with identifier '%s' already exists", resourceType, identifier));
     }
+
+    public ResourceAlreadyExistsException(String message) {
+        super("RESOURCE_ALREADY_EXISTS", message);
+    }
 }

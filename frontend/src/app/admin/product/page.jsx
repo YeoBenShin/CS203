@@ -1,5 +1,7 @@
 "use client";
 import React, { useState } from "react";
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "@/app/components/messages/SuccessMessageDisplay";
+import Button from '../../components/Button';
 
 export default function AddProductPage() {
   const [form, setForm] = useState({
@@ -8,6 +10,8 @@ export default function AddProductPage() {
   });
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -39,7 +43,7 @@ export default function AddProductPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setMessage(`Product created successfully! HS Code: ${data.hsCode}`);
+        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Product created successfully!\nHS Code: " + data.hsCode);
         setForm({ hsCode: "", description: "" }); // Reset form
       } else {
         const errorData = await response.json();
@@ -53,7 +57,7 @@ export default function AddProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-blue-200 flex flex-col items-center justify-start p-8">
+    <div className="min-h-screen bg-gradient-to-br from-white to-blue-400 flex flex-col items-center justify-start p-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -97,18 +101,14 @@ export default function AddProductPage() {
             </div>
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Adding Product..." : "Add Product"}
-            </button>
-          </div>
+          <Button onClick={handleSubmit} type="submit" isLoading={isLoading}>
+            {isLoading ? "Adding Product..." : "Add Product"}
+          </Button>
+
+          {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
 
           {message && (
-            <div className={`mt-4 p-4 rounded-md ${message.includes("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+            <div className={"mt-4 p-4 rounded-md bg-red-100 text-red-700"}>
               {message}
             </div>
           )}

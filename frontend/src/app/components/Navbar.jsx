@@ -1,14 +1,24 @@
 "use client";
 import Link from "next/link";
-import React, { useState, useRef } from "react";
-import { UserButton } from "@clerk/nextjs";
-import { useUser } from "@clerk/nextjs";
+import React, { useState, useRef, useEffect } from "react";
+import { UserButton, useUser } from "@clerk/nextjs";
 
 export default function Navbar() {
   const [userDropDown, setUserDropDown] = useState(false);
   const timeoutRef = useRef();
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
   const role = user?.publicMetadata?.role;
+
+  useEffect(() => {
+    if (!isSignedIn && !user) {
+      // User has signed out, clear localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('recentCalculations');
+        // Clear any other localStorage items you need
+        // localStorage.clear(); // Or clear everything
+      }
+    }
+  }, [isSignedIn, user]);
 
   const handleUserMouseEnter = () => {
     clearTimeout(timeoutRef.current);
@@ -35,12 +45,9 @@ export default function Navbar() {
             <Link href="/" className="block px-4 py-2 text-black hover:bg-blue-100">Home</Link>
             <Link href="/calculator" className="block px-4 py-2 text-black hover:bg-blue-100">Tariff Calculator</Link>
             <Link href="/view-tariffs" className="block px-4 py-2 text-black hover:bg-blue-100">View All Tariffs</Link>
-            {role === "admin" ? (
-              <Link href="/admin" className="block px-4 py-2 text-black hover:bg-blue-100">Add Tariff</Link>
-            ) : <div></div>}
-            {role === "admin" ? (
-              <Link href="/admin/product" className="block px-4 py-2 text-black hover:bg-blue-100">Add Product</Link>
-            ) : <div></div>}
+            <Link href="/watchlist" className="block px-4 py-2 text-black hover:bg-blue-100">My Watchlist</Link>
+            {role === "admin" && <Link href="/admin" className="block px-4 py-2 text-black hover:bg-blue-100">Add Tariff</Link>}
+            {role === "admin" && <Link href="/admin/product" className="block px-4 py-2 text-black hover:bg-blue-100">Add Product</Link>}
           </div>
         </li>
         <li>
