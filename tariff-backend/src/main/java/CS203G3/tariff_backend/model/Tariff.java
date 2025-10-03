@@ -1,14 +1,16 @@
 package CS203G3.tariff_backend.model;
 
 import java.sql.Date;
-import java.math.BigDecimal;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 
@@ -22,11 +24,15 @@ public class Tariff {
     private Long tariffID;
 
     @ManyToOne
-    @JoinColumn(name = "tariff_mapping_id")
-    private TariffMapping tariffMapping;
+    @JoinColumn(name = "hs_code", referencedColumnName = "hs_code")
+    private Product product;
 
-    @Column(name = "rate", precision = 10, scale = 4)
-    private BigDecimal rate;
+    @Column(name = "tariff_name")
+    private String tariffName;
+
+    @ManyToOne
+    @JoinColumn(name = "exporter", referencedColumnName = "iso_code")
+    private Country exporter;
 
     @Column(name = "effective_date")
     private Date effectiveDate;
@@ -37,12 +43,17 @@ public class Tariff {
     @Column(name = "reference", length = 255)
     private String reference;
 
+    @OneToMany(mappedBy = "tariff", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TariffRate> tariffRates;
+
     // Constructors
     public Tariff() {}
 
-    public Tariff(TariffMapping tariffMapping, BigDecimal rate, Date effectiveDate, Date expiryDate, String reference) {
-        this.tariffMapping = tariffMapping;
-        this.rate = rate;
+    public Tariff(Long tariffID, Product product, String tariffName, Country exporter, Date effectiveDate, Date expiryDate, String reference) {
+        this.tariffID = tariffID;
+        this.product = product;
+        this.tariffName = tariffName;
+        this.exporter = exporter;
         this.effectiveDate = effectiveDate;
         this.expiryDate = expiryDate;
         this.reference = reference;
@@ -55,22 +66,6 @@ public class Tariff {
 
     public void setTariffID(Long tariffID) {
         this.tariffID = tariffID;
-    }
-
-    public TariffMapping getTariffMapping() {
-        return tariffMapping;
-    }
-
-    public void setTariffMapping(TariffMapping tariffMapping) {
-        this.tariffMapping = tariffMapping;
-    }
-
-    public BigDecimal getRate() {
-        return rate;
-    }
-
-    public void setRate(BigDecimal rate) {
-        this.rate = rate;
     }
 
     public Date getEffectiveDate() {
@@ -89,6 +84,31 @@ public class Tariff {
         this.expiryDate = expiryDate;
     }
 
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public String getTariffName() {
+        return tariffName;
+    }
+
+    public void setTariffName(String tariffName) {
+        this.tariffName = tariffName;
+    }
+
+    public Country getExporter() {
+        return exporter;
+    }
+
+    public void setExporter(Country exporter) {
+        this.exporter = exporter;
+    }
+
+
     public String getReference() {
         return reference;
     }
@@ -99,13 +119,9 @@ public class Tariff {
 
     @Override
     public String toString() {
-        return "Tariff{" +
-                "tariffID=" + tariffID +
-                ", tariffMapping=" + tariffMapping +
-                ", rate=" + rate +
-                ", effectiveDate=" + effectiveDate +
-                ", expiryDate=" + expiryDate +
-                ", reference='" + reference + '\'' +
-                '}';
+        return "Tariff [tariffID=" + tariffID + ", product=" + product + ", tariffName=" + tariffName + ", exporter="
+                + exporter + ", effectiveDate=" + effectiveDate + ", expiryDate=" + expiryDate + ", reference="
+                + reference + "]";
     }
+
 }

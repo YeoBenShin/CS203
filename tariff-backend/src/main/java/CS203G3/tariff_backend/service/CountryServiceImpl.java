@@ -7,11 +7,12 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
 public class CountryServiceImpl implements CountryService {
-    @Autowired
+    
     private final CountryRepository countryRepository;     
 
     public CountryServiceImpl(CountryRepository countryRepository) {
@@ -19,12 +20,13 @@ public class CountryServiceImpl implements CountryService {
     }
 
     @Override
+    @Transactional
     public Country createCountry(Country country) {
-    
         return countryRepository.save(country);
     }
 
     @Override
+    @Transactional
     public void deleteCountry(String id) {
         if (!countryRepository.existsById(id)) {
             throw new ResourceNotFoundException("Country", id);
@@ -44,6 +46,7 @@ public class CountryServiceImpl implements CountryService {
     }
 
     @Override
+    @Transactional
     public Country updateCountry(String id, Country country) {
         return countryRepository.findById(id)
             .map(existingCountry -> {

@@ -2,60 +2,55 @@ package CS203G3.tariff_backend.dto;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.util.Map;
+
+import CS203G3.tariff_backend.model.UnitOfCalculation;
 
 /**
  * DTO for calculation request
  * Input for tariff cost calculations
  */
 public class CalculationRequest {
-    private int hsCode;
-    private String country;
-    private String tradeDirection;
-    private BigDecimal shippingCost;
+    private String hSCode;
+    private String exporter;
+    private BigDecimal productValue;
+    private Map<UnitOfCalculation, BigDecimal> quantityValues;
     private Date tradeDate;
 
     // Constructors
     public CalculationRequest() {}
 
-    public CalculationRequest(BigDecimal shippingCost, int hsCode, String country, Date tradeDate) {
-        this.shippingCost = shippingCost;
-        this.hsCode = hsCode;
-        this.country = country;
+    public CalculationRequest(String hSCode, String exporter, BigDecimal productValue, Map<UnitOfCalculation, BigDecimal> quantityValues,
+            Date tradeDate) {
+        this.hSCode = hSCode;
+        this.exporter = exporter;
+        this.productValue = productValue;
+        this.quantityValues = quantityValues;
         this.tradeDate = tradeDate;
     }
 
-    // Getters and Setters
-    public BigDecimal getShippingCost() {
-        return shippingCost; 
-    }
-    
-    public void setShippingCost(BigDecimal shippingCost) { 
-        this.shippingCost = shippingCost; 
-    }
-    
-    public int gethsCode() { 
-        return hsCode; 
-    }
-    
-    public void sethsCode(int hsCode) { 
-        this.hsCode = hsCode; 
-    }
-    
-
-    public String getCountry() {
-        return country;
+    public String getHSCode() {
+        return hSCode;
     }
 
-    public void setCountry(String country) {
-        this.country = country;
+    public void setHSCode(String hSCode) {
+        this.hSCode = hSCode;
     }
 
-    public String getTradeDirection() {
-        return tradeDirection;
+    public String getExporter() {
+        return exporter;
     }
 
-    public void setTradeDirection(String tradeDirection) {
-        this.tradeDirection = tradeDirection;
+    public void setExporter(String exporter) {
+        this.exporter = exporter;
+    }
+
+    public BigDecimal getProductValue() {
+        return productValue;
+    }
+
+    public void setProductValue(BigDecimal productValue) {
+        this.productValue = productValue;
     }
 
     public Date getTradeDate() {
@@ -66,14 +61,13 @@ public class CalculationRequest {
         this.tradeDate = tradeDate;
     }
 
-    @Override
-    public String toString() {
-        return "CalculationRequest{" +
-                "shippingCost=" + shippingCost +
-                ", hsCode=" + hsCode +
-                ", country='" + country + '\'' +
-                ", tradeDirection='" + tradeDirection + '\'' +
-                ", tradeDate=" + tradeDate +
-                '}';
+    public Map<UnitOfCalculation, BigDecimal> getQuantityValues() {
+        return quantityValues;
     }
+
+    public void setQuantityValues(Map<UnitOfCalculation, BigDecimal> quantityValues) {
+        this.quantityValues = quantityValues;
+    }
+
+
 }

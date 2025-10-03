@@ -5,6 +5,14 @@ import java.util.List;
 import CS203G3.tariff_backend.model.Product;
 
 public interface ProductService {
+
+    /**
+     * Find product by description
+     * @param description The product description
+     * @return The product
+     */
+    Product findByDescription(String description);
+
     /**
      * Get all products
      * @return List of all products
@@ -13,10 +21,10 @@ public interface ProductService {
 
     /**
      * Get product by HS code
-     * @param hsCode The product HS code
+     * @param hSCode The product HS code
      * @return The product
      */
-    Product getProductByHsCode(Integer hsCode);
+    Product getProductByhSCode(String hSCode);
 
     /**
      * Create a new product with business validation
@@ -27,15 +35,16 @@ public interface ProductService {
 
     /**
      * Update an existing product
-     * @param hsCode The product HS code
+     * @param hSCode The product HS code
      * @param product The product data to update
      * @return The updated product
      */
-    Product updateProduct(Integer hsCode, Product product);
+    Product updateProduct(String hSCode, Product product);
 
     /**
      * Delete a product
-     * @param hsCode The product HS code to delete
+     * @param hSCode The product HS code to delete
      */
-    void deleteProduct(Integer hsCode);
+    void deleteProduct(String hSCode);
+    
 }

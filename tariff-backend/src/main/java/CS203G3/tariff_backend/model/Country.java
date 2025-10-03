@@ -5,7 +5,6 @@ import java.util.*;
 
 
 @Entity
-@Table(name = "country")
 public class Country {
     
     @Id
@@ -19,10 +18,7 @@ public class Country {
     private String region;
 
     @OneToMany(mappedBy = "exporter", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TariffMapping> exportedTariffMappings;
-
-    @OneToMany(mappedBy = "importer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TariffMapping> importedTariffMappings;
+    private List<Tariff> tariffs;
 
     // Constructors
     public Country() {}

@@ -1,7 +1,10 @@
 package CS203G3.tariff_backend.controller;
 
 import CS203G3.tariff_backend.dto.TariffDto;
+import CS203G3.tariff_backend.dto.CalculationRequest;
+import CS203G3.tariff_backend.dto.CalculationResult;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
+import CS203G3.tariff_backend.dto.TariffUpdateDto;
 import CS203G3.tariff_backend.service.TariffService;
 
 
@@ -13,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 
 /**
@@ -25,7 +31,6 @@ public class TariffController {
 
     private final TariffService tariffService;
 
-    @Autowired
     public TariffController(TariffService tariffService) {
         this.tariffService = tariffService;
     }
@@ -35,8 +40,8 @@ public class TariffController {
      * GET /api/tariffs
      */
     @GetMapping
-    public ResponseEntity<List<TariffDto>> getAllTariffs() {
-        List<TariffDto> tariffs = tariffService.getAllTariffs();
+    public ResponseEntity<List<List<TariffDto>>> getAllTariffRates() {
+        List<List<TariffDto>> tariffs = tariffService.getAllTariffRates();
         return ResponseEntity.ok(tariffs);
     }
 
@@ -53,9 +58,9 @@ public class TariffController {
      * GET /api/tariffs/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<TariffDto> getTariffById(@PathVariable Long id) {
-        TariffDto tariff = tariffService.getTariffById(id);
-        return ResponseEntity.ok(tariff);
+    public ResponseEntity<List<TariffDto>> getTariffById(@PathVariable Long id) {
+        List<TariffDto> tariffs = tariffService.getTariffById(id);
+        return ResponseEntity.ok(tariffs);
     }
 
     /**
@@ -67,7 +72,6 @@ public class TariffController {
         System.out.println("Received TariffCreateDto:");
         System.out.println("Exporter: " + createDto.getExporter());
         System.out.println("HSCode: " + createDto.getHSCode());
-        System.out.println("Rate: " + createDto.getRate());
         System.out.println("EffectiveDate: " + createDto.getEffectiveDate());
         System.out.println("ExpiryDate: " + createDto.getExpiryDate());
         System.out.println("Reference: " + createDto.getReference());
@@ -78,11 +82,11 @@ public class TariffController {
 
     /**
      * Update an existing tariff
-     * PUT /api/tariffs/{id}
+     * PUT /api/tariffs/{tariffRateId}
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<TariffDto> updateTariff(@PathVariable Long id, @RequestBody TariffCreateDto createDto) {
-        TariffDto updatedTariff = tariffService.updateTariff(id, createDto);
+    @PutMapping("/{tariffRateId}")
+    public ResponseEntity<TariffDto> updateTariff(@PathVariable Long tariffRateId, @RequestBody TariffUpdateDto updateDto) {
+        TariffDto updatedTariff = tariffService.updateTariffRate(tariffRateId, updateDto);
         return ResponseEntity.ok(updatedTariff);
     }
 
@@ -97,12 +101,19 @@ public class TariffController {
     }
 
     /**
-     * Get tariffs by mapping ID
-     * GET /api/tariffs/mapping/{mappingId}
+     * Get tariffs by HS Code
+     * GET /api/tariffs/hSCode/{hSCode}
      */
-    @GetMapping("/mapping/{mappingId}")
-    public ResponseEntity<List<TariffDto>> getTariffsByMappingId(@PathVariable Long mappingId) {
-        List<TariffDto> tariffs = tariffService.getTariffsByMappingId(mappingId);
+    @GetMapping("/hSCode/{hSCode}")
+    public ResponseEntity<List<TariffDto>> getTariffsByHSCode(@PathVariable String hSCode) {
+        List<TariffDto> tariffs = tariffService.getTariffsByHSCode(hSCode);
         return ResponseEntity.ok(tariffs);
     }
+
+    @PostMapping("/calculate")
+    public ResponseEntity<CalculationResult> calculateTariff(@RequestBody CalculationRequest calculationDto) {
+        CalculationResult calculationResult = tariffService.calculateTariff(calculationDto);
+        return ResponseEntity.ok(calculationResult);
+    }
+    
 }

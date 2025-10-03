@@ -1,20 +1,31 @@
 package CS203G3.tariff_backend.service;
 
+import CS203G3.tariff_backend.exception.ResourceNotFoundException;
 import CS203G3.tariff_backend.model.Product;
 import CS203G3.tariff_backend.repository.ProductRepository;
-import CS203G3.tariff_backend.exception.ResourceNotFoundException;
+
 import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+
 
 @Service
 public class ProductServiceImpl implements ProductService {
-    @Autowired
     private final ProductRepository productRepository;
 
     public ProductServiceImpl(ProductRepository productRepository) {
         this.productRepository = productRepository;
+    }
+
+    @Override
+    public Product findByDescription(String description) {
+        Product product = productRepository.findByDescription(description);
+        
+        if (product == null) {
+            throw new ResourceNotFoundException("Product", description);
+        }
+        return product;
     }
 
     @Override
@@ -23,8 +34,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product getProductByHsCode(Integer hsCode) {
-        return productRepository.findById(hsCode).orElseThrow(() -> new ResourceNotFoundException("Product", hsCode.toString()));
+    public Product getProductByhSCode(String hSCode) {
+        return productRepository.findById(hSCode).orElseThrow(() -> new ResourceNotFoundException("Product", hSCode.toString()));
     }
 
     @Override
@@ -35,20 +46,20 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public Product updateProduct(Integer hsCode, Product product) {
-        if (!productRepository.existsById(hsCode)) {
-            throw new ResourceNotFoundException("Product", hsCode.toString());
+    public Product updateProduct(String hSCode, Product product) {
+        if (!productRepository.existsById(hSCode)) {
+            throw new ResourceNotFoundException("Product", hSCode.toString());
         }
-        product.setHsCode(hsCode);
+        product.setHSCode(hSCode);
         return productRepository.save(product);
     }
 
     @Override
     @Transactional
-    public void deleteProduct(Integer hsCode) {
-        if (!productRepository.existsById(hsCode)) {
-            throw new ResourceNotFoundException("Product", hsCode.toString());
+    public void deleteProduct(String hSCode) {
+        if (!productRepository.existsById(hSCode)) {
+            throw new ResourceNotFoundException("Product", hSCode.toString());
         }
-        productRepository.deleteById(hsCode);
+        productRepository.deleteById(hSCode);
     }
 }

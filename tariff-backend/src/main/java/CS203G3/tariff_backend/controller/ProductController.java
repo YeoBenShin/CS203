@@ -1,24 +1,37 @@
 package CS203G3.tariff_backend.controller;
 
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import CS203G3.tariff_backend.service.ProductService;
 import CS203G3.tariff_backend.model.Product;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:3000")
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.beans.factory.annotation.Autowired;
+
+
+@CrossOrigin(origins = "http://localhost:8080")
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
-    @Autowired
-    private ProductService productService;
-
+    private final ProductService productService;
 
     public ProductController(ProductService productService) {
         this.productService = productService;
+    }
+
+    @GetMapping("/{description}")
+    public Product gethSCode(@PathVariable String description) {
+        return productService.findByDescription(description);
     }
     
     /**
@@ -34,11 +47,11 @@ public class ProductController {
 
     /**
      * Get product by HS Code
-     * GET /api/products/{hsCode}
+     * GET /api/products/{hSCode}
      */
-    @GetMapping("/{hsCode}")
-    public ResponseEntity<Product> getProductByHsCode(@PathVariable Integer hsCode) {
-        Product product = productService.getProductByHsCode(hsCode);
+    @GetMapping("/hsCode/{hSCode}")
+    public ResponseEntity<Product> getProductByhSCode(@PathVariable String hSCode) {
+        Product product = productService.getProductByhSCode(hSCode);
         if (product == null) {
             return ResponseEntity.notFound().build();
         }
@@ -58,11 +71,11 @@ public class ProductController {
 
     /**
      * Update an existing product
-     * PUT /api/products/{hsCode}
+     * PUT /api/products/{hSCode}
      */
-    @PutMapping("/{hsCode}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Integer hsCode, @RequestBody Product product) {
-        Product updatedProduct = productService.updateProduct(hsCode, product);
+    @PutMapping("/{hSCode}")
+    public ResponseEntity<Product> updateProduct(@PathVariable String hSCode, @RequestBody Product product) {
+        Product updatedProduct = productService.updateProduct(hSCode, product);
         if (updatedProduct == null) {
             return ResponseEntity.notFound().build();
         }
@@ -71,11 +84,12 @@ public class ProductController {
 
     /**
      * Delete a product
-     * DELETE /api/products/{hsCode}
+     * DELETE /api/products/{hSCode}
      */
-    @DeleteMapping("/{hsCode}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Integer hsCode) {
-        productService.deleteProduct(hsCode);
+    @DeleteMapping("/{hSCode}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable String hSCode) {
+        productService.deleteProduct(hSCode);
         return ResponseEntity.noContent().build();
     }
+
 }

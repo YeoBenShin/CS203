@@ -1,8 +1,10 @@
 package CS203G3.tariff_backend.dto;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import CS203G3.tariff_backend.model.UnitOfCalculation;
+import java.math.BigDecimal;
 
 /**
  * DTO for Tariff responses - includes all tariff data plus mapping details for frontend
@@ -10,101 +12,122 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TariffDto {
     private Long tariffID;
-    private Long tariffMappingID;
+    private Long tariffRateID;
+    private String tariffName;
     
     // Core tariff fields
-    private BigDecimal rate;
     private Date effectiveDate;  // JavaScript Date object
     private Date expiryDate;     // JavaScript Date object
     private String reference;
     
-    // fields for frontend display from tariff mapping
+    // fields for frontend display from exporter country
     private String exporterCode;
     private String exporterName;
-    private String importerCode;
-    private String importerName;
-    @JsonProperty("HSCode")
-    private Integer HSCode;
+
+    // fields for frontend display from product
+    @JsonProperty("hSCode")
+    private String hSCode;
     private String productDescription;
+
+    private UnitOfCalculation unitOfCalculation;
+    private BigDecimal tariffRate;
 
     // Constructors
     public TariffDto() {}
 
-    // Getters and Setters
     public Long getTariffID() {
         return tariffID;
     }
+
     public void setTariffID(Long tariffID) {
         this.tariffID = tariffID;
     }
-    public Long getTariffMappingID() {
-        return tariffMappingID;
+
+    public Long getTariffRateID() {
+        return tariffRateID;
     }
-    public void setTariffMappingID(Long tariffMappingID) {
-        this.tariffMappingID = tariffMappingID;
+
+    public void setTariffRateID(Long tariffRateID) {
+        this.tariffRateID = tariffRateID;
     }
-    public BigDecimal getRate() {
-        return rate;
+    
+    public String getTariffName() {
+        return tariffName;
     }
-    public void setRate(BigDecimal rate) {
-        this.rate = rate;
+
+    public void setTariffName(String tariffName) {
+        this.tariffName = tariffName;
     }
+
     public Date getEffectiveDate() {
         return effectiveDate;
     }
+
     public void setEffectiveDate(Date effectiveDate) {
         this.effectiveDate = effectiveDate;
     }
+
     public Date getExpiryDate() {
         return expiryDate;
     }
+
     public void setExpiryDate(Date expiryDate) {
         this.expiryDate = expiryDate;
     }
+
     public String getReference() {
         return reference;
     }
+
     public void setReference(String reference) {
         this.reference = reference;
     }
-    
-    // Additional getters/setters for frontend display
+
     public String getExporterCode() {
         return exporterCode;
     }
+
     public void setExporterCode(String exporterCode) {
         this.exporterCode = exporterCode;
     }
+
     public String getExporterName() {
         return exporterName;
     }
+
     public void setExporterName(String exporterName) {
         this.exporterName = exporterName;
     }
-    public String getImporterName() {
-        return importerName;
+
+    public String getHSCode() {
+        return hSCode;
     }
-    public void setImporterName(String importerName) {
-        this.importerName = importerName;
+
+    public void setHSCode(String hSCode) {
+        this.hSCode = hSCode;
     }
-    public String getImporterCode() {
-        return importerCode;
-    }
-    public void setImporterCode(String importerCode) {
-        this.importerCode = importerCode;
-    }
-    public Integer getHSCode() {
-        return HSCode;
-    }
-    public void setHSCode(Integer HSCode) {
-        this.HSCode = HSCode;
-    }
+
     public String getProductDescription() {
         return productDescription;
     }
+
     public void setProductDescription(String productDescription) {
         this.productDescription = productDescription;
     }
 
+    public UnitOfCalculation getUnitOfCalculation() {
+        return unitOfCalculation;
+    }
+
+    public void setUnitOfCalculation(UnitOfCalculation unitOfCalculation) {
+        this.unitOfCalculation = unitOfCalculation;
+    }
     
+    public BigDecimal getTariffRate() {
+        return tariffRate;
+    }
+
+    public void setTariffRate(BigDecimal tariffRate) {
+        this.tariffRate = tariffRate;
+    }
 }

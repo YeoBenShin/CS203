@@ -23,7 +23,7 @@ public class WatchlistRequestDto {
     private String importerCode;
     private String importerName;
     @JsonProperty("HSCode")
-    private Integer HSCode;
+    private String hSCode;
     private String productDescription;
 
     // Constructors
@@ -125,12 +125,12 @@ public class WatchlistRequestDto {
         this.importerName = importerName;
     }
 
-    public Integer getHSCode() {
-        return HSCode;
+    public String getHSCode() {
+        return hSCode;
     }
 
-    public void setHSCode(Integer hSCode) {
-        HSCode = hSCode;
+    public void setHSCode(String hSCode) {
+        this.hSCode = hSCode;
     }
 
     public String getProductDescription() {

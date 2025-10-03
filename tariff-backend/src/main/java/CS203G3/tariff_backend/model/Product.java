@@ -2,51 +2,44 @@ package CS203G3.tariff_backend.model;
 
 import jakarta.persistence.*;
 
-import java.util.List;
-
 @Entity
-@Table(name = "product")
 public class Product {
-    
     @Id
     @Column(name = "hs_code")
-    private Integer hsCode;
+    private String hSCode;
     
-    @Column(name = "description", length = 255)
+    @Column(length = 255)
     private String description;
-    
-    @OneToMany(mappedBy = "product")
-    private List<TariffMapping> tariffMappings;
 
     // Constructors
     public Product() {}
     
-    public Product(Integer hsCode, String description) {
-        this.hsCode = hsCode;
+    public Product(String hSCode, String description) {
+        this.hSCode = hSCode;
         this.description = description;
     }
-    
+
     // Getters and Setters
-    public Integer getHsCode() {
-        return hsCode;
+    public String getHSCode() {
+        return hSCode;
     }
-    
-    public void setHsCode(Integer hsCode) {
-        this.hsCode = hsCode;
+
+    public void setHSCode(String hSCode) {
+        this.hSCode = hSCode;
     }
-    
+
     public String getDescription() {
         return description;
     }
-    
+
     public void setDescription(String description) {
         this.description = description;
     }
-    
+
     @Override
     public String toString() {
         return "Product{" +
-                "hsCode='" + hsCode + '\'' +
+                "HSCode='" + hSCode + '\'' +
                 ", description='" + description + '\'' +
                 '}';
     }
