@@ -1,11 +1,20 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useUser } from '@clerk/nextjs';
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
+import ReactTable from "../components/ReactTable";
+import Button from "../components/Button";
+import PopUpWrapper from "../components/popUps/PopUpWrapper";
+import TariffDetailPopUp from "../components/popUps/TariffDetailPopUp";
+import DeleteTariffPopUp from "../components/popUps/DeleteTariffPopUp";
+import LoadingPage from "../components/LoadingPage";
 
 export default function ViewTariffsPage() {
 
   // loading tariffs
   const [tariffs, setTariffs] = useState([]);
+  const [filteredTariffs, setFilteredTariffs] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [fetchingError, setFetchingError] = useState("");
 
@@ -49,11 +58,13 @@ export default function ViewTariffsPage() {
 
   const fetchTariffs = async () => {
     try {
+      setLoading(true)
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs`);
       if (response.ok) {
         const data = await response.json();
         console.log("Fetched tariffs:", data);
         setTariffs(data);
+        setFilteredTariffs(data); // Initialize filtered tariffs with all data
       } else {
         setFetchingError("Failed to fetch tariffs");
       }
@@ -62,6 +73,30 @@ export default function ViewTariffsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Search functionality
+  const handleSearchChange = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+
+    if (query === "") {
+      setFilteredTariffs(tariffs);
+    } else {
+      const filtered = tariffs.filter(tariff =>
+        tariff.exporterName?.toLowerCase().includes(query) ||
+        tariff.importerName?.toLowerCase().includes(query) ||
+        tariff.HSCode?.toString().toLowerCase().includes(query) ||
+        tariff.productDescription?.toLowerCase().includes(query) ||
+        (parseFloat(tariff.rate) * 100).toFixed(2).includes(query)
+      );
+      setFilteredTariffs(filtered);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setFilteredTariffs(tariffs);
   };
 
   const handleShowDetails = (tariff) => {
@@ -97,8 +132,11 @@ export default function ViewTariffsPage() {
       });
 
       if (response.ok) {
-        setTariffs(tariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID));
-        showSuccessPopupMessage("Tariff deleted successfully!");
+        const updatedTariffs = tariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID);
+        setTariffs(updatedTariffs);
+        // Update filtered tariffs to reflect the deletion
+        setFilteredTariffs(filteredTariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID));
+        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff deleted successfully!");
 
       } else {
         const errorData = await response.json();
@@ -220,9 +258,12 @@ export default function ViewTariffsPage() {
 
       if (response.ok) {
         const updatedTariff = await response.json();
-        setTariffs(tariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff)); // show the updated tariff
+        const updatedTariffs = tariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff);
+        setTariffs(updatedTariffs); // show the updated tariff
+        // Update filtered tariffs to reflect the edit
+        setFilteredTariffs(filteredTariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff));
         handleCancelEdit();
-        showSuccessPopupMessage("Tariff updated successfully!");
+        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff updated successfully!");
       } else {
         const errorData = await response.json();
         setEditErrors([`Error: ${errorData.message || "Failed to update tariff"}`]);
@@ -234,33 +275,52 @@ export default function ViewTariffsPage() {
     }
   };
 
-  const showSuccessPopupMessage = (message) => {
-    setSuccessMessage(message);
-    setShowSuccessPopup(true);
-    setTimeout(() => {
-      setShowSuccessPopup(false);
-      setSuccessMessage("");
-    }, 5000);
-  };
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading tariffs...</p>
-        </div>
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-extrabold text-gray-900">All Tariffs</h1>
           <p className="mt-2 text-sm text-gray-600"> View all tariff entries in the system</p>
           <p className="mt-1 text-sm text-gray-600"> Click on a tariff to view more details</p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search tariffs by country, HS code, product, or rate..."
+              className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+            {searchQuery && (
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                  onClick={clearSearch}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="mt-2 text-sm text-gray-600">
+              Showing {filteredTariffs.length} of {tariffs.length} tariffs
+            </p>
+          )}
         </div>
 
         {deleteMessage && deleteMessage.includes("Error") && (
@@ -275,189 +335,110 @@ export default function ViewTariffsPage() {
           </div>
         )}
 
-        {tariffs.length === 0 ? (
+        {filteredTariffs.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No tariffs found</p>
+            {searchQuery ? (
+              <div>
+                <p className="text-gray-500 text-lg">No tariffs found matching "{searchQuery}"</p>
+                <button
+                  onClick={clearSearch}
+                  className="mt-2 text-blue-600 hover:text-blue-800 text-sm underline"
+                >
+                  Clear search to show all tariffs
+                </button>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-lg">No tariffs found</p>
+            )}
           </div>
         ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            <div className="overflow-hidden">
-              <table className="w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-                      Exporting Country
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-                      Destination Country
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">
-                      HS Code
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                      Product Description
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">
-                      Rate (%)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {tariffs.map((tariff) => (
-                    <React.Fragment key={tariff.tariffID}>
-                      <tr
-                        className="hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handleShowDetails(tariff)}
-                      >
-                        <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                          {tariff.exporterName}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500">
-                          {tariff.importerName}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500">
-                          {tariff.HSCode}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500" title={tariff.productDescription || "N/A"}>
-                          {tariff.productDescription ? (tariff.productDescription.length > 40 ? tariff.productDescription.substring(0, 40) + "..." : tariff.productDescription) : "N/A"}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-900 font-medium">
-                          {(parseFloat(tariff.rate) * 100).toFixed(2)}%
-                        </td>
-                      </tr>
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <ReactTable
+            columns={[
+              {
+                header: "Exporting Country", accessorKey: "exporterName",
+                cell: info => <span className="text-gray-900 font-medium">{info.getValue() || "N/A"}</span>
+              },
+              { header: "Destination Country", accessorKey: "importerName" },
+              { header: "HS Code", accessorKey: "HSCode" },
+              {
+                header: "Product Description", accessorKey: "productDescription",
+                cell: info => info.getValue() ? (info.getValue().length > 40 ? info.getValue().substring(0, 40) + "..." : info.getValue()) : "N/A"
+              },
+              {
+                header: "Rate (%)", accessorKey: "rate",
+                cell: info => <span className="text-gray-900 font-medium">{(parseFloat(info.getValue()) * 100).toFixed(2)}%</span>
+              },
+            ]}
+            data={filteredTariffs}
+            rowLevelFunction={handleShowDetails}
+          />
         )}
 
-        <div className="mt-8 text-center">
-          <button
+        <div className="mt-6 text-center">
+          <Button
             onClick={fetchTariffs}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+            isLoading={loading}
+            className="inline-flex items-center"
+            width=""
           >
             Refresh
-          </button>
+          </Button>
         </div>
 
         {/* Success Popup */}
-        {showSuccessPopup && (
-          <div className="fixed top-4 right-4 z-50">
-            <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200 max-w-sm animate-fade-in">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">{successMessage}</p>
-                </div>
-                <div className="ml-auto pl-3">
-                  <button
-                    onClick={() => setShowSuccessPopup(false)}
-                    className="inline-flex text-gray-400 hover:text-gray-500"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+        {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
+
+        {/* Tariff Details Popup */}
+        {showDetailsPopup && selectedTariff && (
+          <PopUpWrapper OnClick={closeDetailsPopup}>
+            <TariffDetailPopUp
+              selectedTariff={selectedTariff}
+              OnClick={closeDetailsPopup}
+              openEditPopup={openEditPopup}
+              openDeletePopup={handleDelete}
+              hasPermissionToEdit={role === "admin"}
+              hasPermissionToDelete={role === "admin"}
+            />
+          </PopUpWrapper>
         )}
 
         {/* Delete Confirmation Popup */}
         {showDeletePopup && tariffToDelete && (
-          <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="fixed inset-0 bg-white/50 backdrop-blur-sm" onClick={cancelDelete}></div>
-            <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 max-w-md w-full mx-4 animate-fade-in relative">
-              <div className="flex items-center mb-4">
-                <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-medium text-gray-900">Delete Tariff</h3>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-sm text-gray-500 mb-3">
-                  Are you sure you want to delete this tariff?
-                  <br /> This action cannot be undone.
-                </p>
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <p className="text-sm font-medium text-gray-900">
-                    {tariffToDelete.exporterName} → {tariffToDelete.importerName}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Rate: {(parseFloat(tariffToDelete.rate) * 100).toFixed(2)}%
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Product: {tariffToDelete.productDescription} ({tariffToDelete.HSCode})
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Expiry Date: {formatDate(tariffToDelete.expiryDate)}
-                  </p>
-
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={cancelDelete}
-                  className="cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-                >
-                  Delete Tariff
-                </button>
-              </div>
-            </div>
-          </div>
+          <PopUpWrapper OnClick={cancelDelete}>
+            <DeleteTariffPopUp
+              tariffToDelete={tariffToDelete}
+              handleCancelDelete={cancelDelete}
+              handleConfirmDelete={confirmDelete}
+            />
+          </PopUpWrapper>
         )}
 
         {/* Edit Confirmation Popup */}
         {showEditPopup && tariffToEdit && (
-          <div className="fixed inset-0 flex items-center justify-center z-50" >
-            <div className="fixed inset-0 bg-white/50 backdrop-blur-sm" onClick={handleCancelEdit}></div>
-            <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md animate-fade-in relative">
-              <div className="mb-6 bg-blue-50 p-4 rounded-md">
-                <h2 className="text-lg font-semibold text-gray-800 mb-2">Tariff Information</h2>
-                <div className="grid grid-cols-1 gap-2 text-sm">
-                  <div>
-                    <p className="font-medium text-gray-600">Exporter: {tariffToEdit.exporterName}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-600">Importer: {tariffToEdit.importerName}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-600">Rate: {(parseFloat(tariffToEdit.rate) * 100).toFixed(2)}%</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-600">Product: {tariffToEdit.productDescription || "N/A"} ({tariffToEdit.HSCode})</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-600">Effective Date: {formatDate(tariffToEdit.effectiveDate)}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-600">Expiry Date: {formatDate(tariffToEdit.expiryDate)}</p>
-                  </div>
+          <PopUpWrapper OnClick={handleCancelEdit}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-800">Edit Tariff</h3>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="mb-3 bg-blue-50 p-2 rounded-md">
+                <p className="text-sm font-medium text-gray-700 mb-1">Current Tariff</p>
+                <div className="text-xs text-gray-600 space-y-1">
+                  <p><span className="font-medium">Route:</span> {tariffToEdit.exporterName} → {tariffToEdit.importerName}</p>
+                  <p><span className="font-medium">Product:</span> {tariffToEdit.productDescription || "N/A"} ({tariffToEdit.HSCode})</p>
+                  <p><span className="font-medium">Current Rate:</span> {(parseFloat(tariffToEdit.rate) * 100).toFixed(2)}%</p>
                 </div>
               </div>
 
-              <form onSubmit={handleEditSubmit}>
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="rate">
+              <form onSubmit={handleEditSubmit} className="space-y-2">
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-1" htmlFor="rate">
                     Rate (%)
                   </label>
                   <input
@@ -467,12 +448,12 @@ export default function ViewTariffsPage() {
                     step="0.01"
                     value={editForm.rate}
                     onChange={handleEditFormChange}
-                    className="cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="effectiveDate">
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="effectiveDate">
                     Effective Date
                   </label>
                   <input
@@ -480,12 +461,12 @@ export default function ViewTariffsPage() {
                     type="date"
                     value={editForm.effectiveDate}
                     onChange={handleEditFormChange}
-                    className={`cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${editForm.effectiveDate ? " text-gray-700" : "text-white"}`}
+                    className={`cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${editForm.effectiveDate ? " text-gray-700" : "text-white"}`}
                   />
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="expiryDate">
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="expiryDate">
                     Expiry Date
                   </label>
                   <input
@@ -493,12 +474,12 @@ export default function ViewTariffsPage() {
                     type="date"
                     value={editForm.expiryDate}
                     onChange={handleEditFormChange}
-                    className={`cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${editForm.expiryDate ? " text-gray-700" : "text-white"}`}
+                    className={`cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${editForm.expiryDate ? " text-gray-700" : "text-white"}`}
                   />
                 </div>
 
-                <div className="mb-2">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="reference">
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="reference">
                     Reference
                   </label>
                   <input
@@ -507,127 +488,40 @@ export default function ViewTariffsPage() {
                     value={editForm.reference}
                     onChange={handleEditFormChange}
                     placeholder="Source URL"
-                    className="cursor-pointer shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-                {editErrors.length > 0 && (
-                    <div className="mb-2 text-sm text-red-600">
-                      {editErrors.map((error, index) => (
-                        <p key={index}>{error}</p>
-                      ))}
-                    </div>
-                  )}
 
-                <div className="flex items-center justify-between">
+                {editErrors.length > 0 && (
+                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+                    {editErrors.map((error, index) => (
+                      <p key={index}>{error}</p>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex justify-end space-x-3 mt-4 pt-3">
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer"
+                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
-                  
+
                   <button
                     type="submit"
                     disabled={isUpdating}
-                    className={`flex items-center justify-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isUpdating
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isUpdating
                       ? 'bg-gray-400 cursor-not-allowed text-white'
-                      : 'bg-blue-500 hover:bg-blue-700 text-white cursor-pointer'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
                       }`}
                   >
-                    {isUpdating ? 'Updating...' : 'Update Tariff'}
+                    {isUpdating ? 'Updating...' : 'Update'}
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        )}
-
-        {/* Tariff Details Popup */}
-        {showDetailsPopup && selectedTariff && (
-          <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="fixed inset-0 bg-white/50 backdrop-blur-sm" onClick={closeDetailsPopup}></div>
-            <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 max-w-2xl w-full mx-4 animate-fade-in relative">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Tariff Details</h3>
-                <button
-                  onClick={closeDetailsPopup}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Exporting Country</label>
-                    <p className="text-sm text-gray-900">{selectedTariff.exporterName}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Destination Country</label>
-                    <p className="text-sm text-gray-900">{selectedTariff.importerName}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">HS Code</label>
-                    <p className="text-sm text-gray-900">{selectedTariff.HSCode}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tariff Rate</label>
-                    <p className="text-sm text-gray-900">{(parseFloat(selectedTariff.rate) * 100).toFixed(2)}%</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Effective Date</label>
-                    <p className="text-sm text-gray-900">{formatDate(selectedTariff.effectiveDate)}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                    <p className="text-sm text-gray-900">{formatDate(selectedTariff.expiryDate)}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Reference</label>
-                    <p className="text-sm text-gray-900 break-all">{selectedTariff.reference || "N/A"}</p>
-                  </div>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Product Description</label>
-                  <p className="text-sm text-gray-900">{selectedTariff.productDescription || "N/A"}</p>
-                </div>
-              </div>
-
-              {role === 'admin' && <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => {
-                    closeDetailsPopup();
-                    openEditPopup();
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors cursor-pointer"
-                >
-                  Update Tariff
-                </button>
-                <button
-                  onClick={() => {
-                    closeDetailsPopup();
-                    handleDelete();
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors cursor-pointer"
-                >
-                  Delete Tariff
-                </button>
-              </div>}
-            </div>
-          </div>
+          </PopUpWrapper>
         )}
       </div>
     </div>

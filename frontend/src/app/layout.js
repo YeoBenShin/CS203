@@ -4,8 +4,6 @@ import Navbar from "./components/Navbar";
 import {
   ClerkProvider,
   SignedIn,
-  SignedOut,
-  SignIn,
 } from '@clerk/nextjs'
 
 const geistSans = Geist({
@@ -22,7 +20,7 @@ export const metadata = {
   title: "Tariffy",
   description: "One stop solution for your tariff tracking",
   icons: {
-    icon: "images/favicon.ico",
+    icon: "/favicon.ico",
   }
 };
 
@@ -30,7 +28,10 @@ export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <head>
+          <link rel="icon" href="/favicon.ico" />
+        </head>
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gradient-to-br from-white to-blue-400`}>
           <SignedIn>
             <Navbar />
           </SignedIn>

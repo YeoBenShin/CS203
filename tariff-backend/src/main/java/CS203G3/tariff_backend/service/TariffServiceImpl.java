@@ -147,9 +147,9 @@ public class TariffServiceImpl implements TariffService {
     }
 
     // @Override
-    // public List<Tariff> getTariffRatesByCountries(String country, String tradeDirection, Integer hsCode, Date tradeDate) {
-    //     String importer = tradeDirection.equals("import") ? country : "USA";
-    //     String exporter = tradeDirection.equals("export") ? country : "USA";
+    // public List<Tariff> getTariffRatesByCountries(String country, Integer hsCode, Date tradeDate) {
+    //     String importer = "USA";
+    //     String exporter = country;
     //     TariffMapping tariffMapping = tariffMappingRepository.findByProduct_HsCodeAndImporter_IsoCodeAndExporter_IsoCode(hsCode, importer, exporter);
         
     //     if (tariffMapping == null) {
@@ -181,8 +181,31 @@ public class TariffServiceImpl implements TariffService {
     /**
      * Validates business rules for tariff creation
      */
-    private void validateTariffBusinessRules(TariffCreateDto createDto) {    
-        // Rule 1: Expiry date must be after effective date
+    private void validateTariffBusinessRules(TariffCreateDto createDto) {
+        // Rule 1: Exporter and importer cannot be the same
+        if (createDto.getExporter() != null && 
+            createDto.getExporter().equals("USA")) {
+            throw new SameCountryException(createDto.getExporter());
+        }
+        
+        // Rule 2: Rate cannot be negative
+        if (createDto.getRate() != null && createDto.getRate().compareTo(BigDecimal.ZERO) < 0) {
+            throw new NegativeTariffRateException("Tariff rate cannot be negative: " + createDto.getRate());
+        }
+        
+        // Rule 3: Rate validation removed - allowing any positive rate
+        // (No upper limit on tariff rates as they can vary widely in real-world scenarios)
+        
+        // // Rule 4: Effective date cannot be in the past (optional - depends on business needs)
+        // if (createDto.getEffectiveDate() != null) {
+        //     LocalDate effectiveDate = new java.sql.Date(createDto.getEffectiveDate().getTime()).toLocalDate();
+        //     LocalDate today = LocalDate.now();
+        //     if (effectiveDate.isBefore(today)) {
+        //         throw new PastEffectiveDateException("Effective date cannot be in the past: " + effectiveDate);
+        //     }
+        // }
+        
+        // Rule 5: Expiry date must be after effective date
         if (createDto.getEffectiveDate() != null && createDto.getExpiryDate() != null) {
             if (createDto.getExpiryDate().before(createDto.getEffectiveDate())) {
                 throw new ExpiryBeforeEffectiveException("Expiry date must be after effective date");

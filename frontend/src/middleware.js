@@ -7,8 +7,6 @@ const isSignInRoute = createRouteMatcher('/sign-in(.*)');
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionId } = await auth();
 
-  // console.log(`Middleware: userId=${userId}, sessionId=${sessionId}, url=${req.url}`);
-
   if (!userId || !sessionId) {
     if (isSignInRoute(req)) { // prevent redirect loop
       return NextResponse.next();
@@ -38,7 +36,7 @@ export default clerkMiddleware(async (auth, req) => {
     }
   }
 
-  if (isSignInRoute(req)) { // cannot go to sign in page if already signed in
+  if (userId && isSignInRoute(req)) { // cannot go to sign in page if already signed in
     // console.log("meta", user.publicMetadata.role);
     return NextResponse.redirect(new URL('/', req.url));
   }
@@ -55,8 +53,8 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Skip Next.js internals, static files, and favicon
+    '/((?!_next|public|favicon.ico|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
