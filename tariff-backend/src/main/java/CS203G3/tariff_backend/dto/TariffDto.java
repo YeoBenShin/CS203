@@ -23,6 +23,8 @@ public class TariffDto {
     // fields for frontend display from exporter country
     private String exporterCode;
     private String exporterName;
+    private String importerCode;
+    private String importerName;
 
     // fields for frontend display from product
     @JsonProperty("hSCode")
@@ -91,12 +93,28 @@ public class TariffDto {
         this.exporterCode = exporterCode;
     }
 
+    public String getImporterCode() {
+        return importerCode;
+    }
+
+    public void setImporterCode (String importerCode) {
+        this.importerCode = importerCode;
+    }
+
     public String getExporterName() {
         return exporterName;
     }
 
     public void setExporterName(String exporterName) {
         this.exporterName = exporterName;
+    }
+
+    public String getImporterName() {
+        return importerName;
+    }
+
+    public void setImporterName(String importerName) {
+        this.importerName = importerName;
     }
 
     public String gethSCode() {
