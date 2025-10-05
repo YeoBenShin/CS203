@@ -43,7 +43,7 @@ on:
 
 env:
   AWS_REGION: ap-southeast-1
-  CR_REPOSITORY: tariffy/backend
+  ECR_REPOSITORY: tariffy/backend
   ECS_SERVICE: tarrify-backend-task-service-py2e1huw
   ECS_CLUSTER: quick-turtle-o5o4px
   ECS_TASK_DEFINITION: tarrify-backend-task
