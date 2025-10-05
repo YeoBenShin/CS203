@@ -13,6 +13,7 @@ import CS203G3.tariff_backend.model.UnitOfCalculation;
 public class CalculationRequest {
     private String hSCode;
     private String exporter;
+    private String importer;
     private BigDecimal productValue;
     private Map<UnitOfCalculation, BigDecimal> quantityValues;
     private Date tradeDate;
@@ -23,6 +24,7 @@ public class CalculationRequest {
     public CalculationRequest(String hSCode, String exporter, BigDecimal productValue, Map<UnitOfCalculation, BigDecimal> quantityValues,
             Date tradeDate) {
         this.hSCode = hSCode;
+        this.importer = importer;
         this.exporter = exporter;
         this.productValue = productValue;
         this.quantityValues = quantityValues;
@@ -43,6 +45,14 @@ public class CalculationRequest {
 
     public void setExporter(String exporter) {
         this.exporter = exporter;
+    }
+
+    public String getImporter() {
+        return importer;
+    }
+
+    public void setImporter(String importer) {
+        this.importer = importer;
     }
 
     public BigDecimal getProductValue() {

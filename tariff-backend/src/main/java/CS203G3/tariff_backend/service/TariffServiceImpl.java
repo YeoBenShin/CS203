@@ -26,19 +26,19 @@ public class TariffServiceImpl implements TariffService {
     private final TariffRepository tariffRepository;
     private final CountryRepository countryRepository;
     private final ProductRepository productRepository;  
-    private final ProductMetricRepository productMetricRepository;
+    private final CountryPairRepository countryPairRepository;
     private final TariffCalculationService tariffCalculationService; 
 
     public TariffServiceImpl(TariffRepository tariffRepository, TariffRateRepository tariffRateRepository, 
     CountryRepository countryRepository, ProductRepository productRepository, TariffCalculationService tariffCalculationService, 
-    BusinessExceptionHandler businessExceptionHandler, ProductMetricRepository productMetricRepository) {
+    BusinessExceptionHandler businessExceptionHandler, CountryPairRepository countryPairRepository) {
         this.tariffRepository = tariffRepository;
         this.tariffRateRepository = tariffRateRepository;
         this.countryRepository = countryRepository;
         this.productRepository = productRepository;
         this.tariffCalculationService = tariffCalculationService;
         this.businessExceptionHandler = businessExceptionHandler;
-        this.productMetricRepository = productMetricRepository;
+        this.countryPairRepository = countryPairRepository;
     }
 
     private TariffDto convertToDto(TariffRate tariffRate) {
@@ -48,17 +48,16 @@ public class TariffServiceImpl implements TariffService {
         Tariff tariff = tariffRate.getTariff();
 
         dto.setTariffID(tariff.getTariffID());
-        dto.setTariffName(tariff.getTariffName());
 
         // product details
         dto.setHSCode(tariff.getProduct().getHSCode());
         dto.setProductDescription(tariff.getProduct().getDescription());
         // exporter details
-        dto.setExporterCode(tariff.getExporter().getIsoCode());
-        dto.setExporterName(tariff.getExporter().getName());
+        dto.setExporterCode(tariff.getCountryPair().getExporter().getIsoCode());
+        dto.setExporterName(tariff.getCountryPair().getExporter().getName());
         // importer details
-        dto.setImporterCode(tariff.getImporter().getIsoCode());
-        dto.setImporterName(tariff.getImporter().getName());
+        dto.setImporterCode(tariff.getCountryPair().getImporter().getIsoCode());
+        dto.setImporterName(tariff.getCountryPair().getImporter().getName());
 
         // tariff details
         dto.setEffectiveDate(tariff.getEffectiveDate());
@@ -67,23 +66,36 @@ public class TariffServiceImpl implements TariffService {
 
         // tariff rate details - assume only one rate per tariff for now
         dto.setTariffRateID(tariffRate.getTariffRateID());
-        dto.setUnitOfCalculation(tariffRate.getProductMetric().getUnitOfCalculation());
+        dto.setUnitOfCalculation(tariffRate.getUnitOfCalculation());
         dto.setTariffRate(tariffRate.getTariffRate());
         return dto;
     }
 
     private TariffRate convertToEntity(TariffCreateDto createDto) {
 
-        String name = createDto.getName();
-
         Product product = productRepository.findById(createDto.getHSCode())
             .orElseThrow(() -> new ResourceNotFoundException("Product", createDto.getHSCode()));
 
-        Country exporter = countryRepository.findById(createDto.getExporter())
-            .orElseThrow(() -> new ResourceNotFoundException("Country", createDto.getExporter()));
-        
-        Country importer = countryRepository.findById(createDto.getImporter())
-            .orElseThrow(() -> new ResourceNotFoundException("Country", createDto.getImporter()));
+        String exporterCode = createDto.getExporter();
+        String importerCode = createDto.getImporter();
+
+        CountryPair countryPair = countryPairRepository.findByExporterAndImporter(exporterCode, importerCode);
+
+        if (countryPair == null) {
+            countryPair = new CountryPair();
+            countryPair.setExporter(countryRepository.findById(exporterCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Country", exporterCode)));
+            countryPair.setImporter(countryRepository.findById(importerCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Country", importerCode)));
+
+            countryPairRepository.save(countryPair);
+        }
+
+        UnitOfCalculation unitOfCalculation = createDto.getUnitOfCalculation();
+
+        if (unitOfCalculation == null) {
+            unitOfCalculation = UnitOfCalculation.AV; // default to Ad Valorem if not specified
+        }
 
         String reference = createDto.getReference();
 
@@ -93,12 +105,11 @@ public class TariffServiceImpl implements TariffService {
         Date expiryDate = createDto.getExpiryDate() != null ? 
             new Date(createDto.getExpiryDate().getTime()) : null;
 
+        
         Tariff newTariff = new Tariff();
 
-        newTariff.setTariffName(name);
         newTariff.setProduct(product);
-        newTariff.setExporter(exporter);
-        newTariff.setImporter(importer);
+        newTariff.setCountryPair(countryPair);
         newTariff.setEffectiveDate(effectiveDate);
         newTariff.setExpiryDate(expiryDate);
         newTariff.setReference(reference);
@@ -110,18 +121,7 @@ public class TariffServiceImpl implements TariffService {
         tariffRate.setTariff(newTariff);
 
         // check whether product metric exists before setting tariff rate to it
-        ProductMetric existingMetric = productMetricRepository.findByProductAndUnitOfCalculation(product, createDto.getUnitOfCalculation());
-        if (existingMetric != null) {
-            tariffRate.setProductMetric(existingMetric);
-        } else {
-            ProductMetric productMetric = new ProductMetric();
-            productMetric.setProduct(product);
-            productMetric.setUnitOfCalculation(createDto.getUnitOfCalculation());
-            
-            // save new product metric
-            productMetricRepository.save(productMetric);
-            tariffRate.setProductMetric(productMetric);
-        }
+        tariffRate.setUnitOfCalculation(unitOfCalculation);
         
         // update tariff rate
         tariffRate.setTariffRate(createDto.getTariffRate());
@@ -132,17 +132,10 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
-    public List<List<TariffDto>> getAllTariffRates() {
-
-        // group tariffrates by tariffID
-        List<Long> tariffIds = tariffRateRepository.findAll().stream()
-                .map(tr -> tr.getTariff().getTariffID())
-                .distinct()
-                .collect(Collectors.toList());
-        return tariffIds.stream()
-                .map(id -> tariffRateRepository.findAllByTariff_TariffID(id).stream()
-                        .map(this::convertToDto)
-                        .collect(Collectors.toList()))
+    public List<TariffDto> getAllTariffRates() {
+        // group tariffrates by country pair and product
+        return tariffRateRepository.findAll().stream()
+                .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
@@ -251,9 +244,6 @@ public class TariffServiceImpl implements TariffService {
         Tariff tariff = tariffRepository.findById(updateDto.getTariffID())
             .orElseThrow(() -> new ResourceNotFoundException("Tariff", updateDto.getTariffID().toString()));
 
-        if (updateDto.getTariffCreateDto().getName() != null) {
-            tariff.setTariffName(updateDto.getTariffCreateDto().getName());
-        }
 
         if (updateDto.getTariffCreateDto().getHSCode() != null) {
             Product product = productRepository.findById(updateDto.getTariffCreateDto().getHSCode())
@@ -261,16 +251,24 @@ public class TariffServiceImpl implements TariffService {
             tariff.setProduct(product);
         }
 
-        if (updateDto.getTariffCreateDto().getExporter() != null) {
-            Country exporter = countryRepository.findById(updateDto.getTariffCreateDto().getExporter())
-                .orElseThrow(() -> new ResourceNotFoundException("Country", updateDto.getTariffCreateDto().getExporter()));
-            tariff.setExporter(exporter);
-        }
+        // update country pair by checking importer and exporter
+        if (updateDto.getTariffCreateDto().getExporter() != null && updateDto.getTariffCreateDto().getImporter() != null) {
+            String exporterCode = updateDto.getTariffCreateDto().getExporter();
+            String importerCode = updateDto.getTariffCreateDto().getImporter();
 
-        if (updateDto.getTariffCreateDto().getImporter() != null) {
-            Country importer = countryRepository.findById(updateDto.getTariffCreateDto().getImporter())
-                .orElseThrow(() -> new ResourceNotFoundException("Country", updateDto.getTariffCreateDto().getImporter()));
-            tariff.setImporter(importer);
+            CountryPair countryPair = countryPairRepository.findByExporterAndImporter(exporterCode, importerCode);
+
+            if (countryPair == null) {
+                countryPair = new CountryPair();
+                countryPair.setExporter(countryRepository.findById(exporterCode)
+                    .orElseThrow(() -> new ResourceNotFoundException("Country", exporterCode)));
+                countryPair.setImporter(countryRepository.findById(importerCode)
+                    .orElseThrow(() -> new ResourceNotFoundException("Country", importerCode)));
+
+                countryPairRepository.save(countryPair);
+            }
+
+            tariff.setCountryPair(countryPair);
         }
 
         if (updateDto.getTariffCreateDto().getEffectiveDate() != null) {
@@ -302,11 +300,7 @@ public class TariffServiceImpl implements TariffService {
         }
 
         if (updateDto.getTariffCreateDto().getUnitOfCalculation() != null) {
-            ProductMetric productMetric = productMetricRepository.findByProductAndUnitOfCalculation(
-                updatedTariff.getProduct(), updateDto.getTariffCreateDto().getUnitOfCalculation());
-            if (productMetric != null) {
-                existing.setProductMetric(productMetric);
-            }
+            existing.setUnitOfCalculation(updateDto.getTariffCreateDto().getUnitOfCalculation());
         }
 
         TariffRate updated = tariffRateRepository.save(existing);
@@ -326,16 +320,20 @@ public class TariffServiceImpl implements TariffService {
     @Override
     public List<TariffDto> getTariffsByHSCode(String hsCode) {
         return tariffRateRepository.findAll().stream()
-                .filter(tariffRate -> tariffRate.getProductMetric().getProduct().getHSCode().equals(hsCode))
+                .filter(tariffRate -> tariffRate.getTariff().getProduct().getHSCode().equals(hsCode))
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     public CalculationResult calculateTariff(CalculationRequest calculationDto) {
         // fetch tariff
+
+        CountryPair countryPair = countryPairRepository.findByExporterAndImporter(
+            calculationDto.getExporter(), calculationDto.getImporter()); 
+        
         Optional<Tariff> tariffOpt = tariffRepository.findValidTariff(
             calculationDto.getHSCode(),
-            calculationDto.getExporter(),
+            countryPair,
             calculationDto.getTradeDate()
         );
         Tariff tariff = tariffOpt.orElseThrow(() ->
@@ -349,7 +347,7 @@ public class TariffServiceImpl implements TariffService {
         // format mapping of qty - rate - value
         List<TariffCalculationMap> tariffList = new ArrayList<>();
         for (TariffRate tRate : tariffRates) {
-            UnitOfCalculation unitOfCalculation = tRate.getProductMetric().getUnitOfCalculation();
+            UnitOfCalculation unitOfCalculation = tRate.getUnitOfCalculation();
             BigDecimal rate = tRate.getTariffRate();
             BigDecimal value = calculationDto.getQuantityValues().get(unitOfCalculation);
 

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,9 +22,9 @@ public class TariffRate {
     @JoinColumn(name = "tariff_id", referencedColumnName = "tariff_id")
     private Tariff tariff;
 
-    @ManyToOne
-    @JoinColumn(name = "unit_of_calculation", referencedColumnName = "unit_of_calculation")
-    private ProductMetric productMetric;
+    @Enumerated
+    @Column(name = "unit_of_calculation")
+    private UnitOfCalculation unitOfCalculation;
 
     @Column(name = "tariff_rate", precision = 38, scale = 6)
     private BigDecimal tariffRate;
@@ -59,11 +60,11 @@ public class TariffRate {
         this.tariffRate = tariffRate;
     }
 
-    public ProductMetric getProductMetric() {
-        return productMetric;
+    public UnitOfCalculation getUnitOfCalculation() {
+        return unitOfCalculation;
     }
 
-    public void setProductMetric(ProductMetric productMetric) {
-        this.productMetric = productMetric;
+    public void setUnitOfCalculation(UnitOfCalculation unitOfCalculation) {
+        this.unitOfCalculation = unitOfCalculation;
     }
 }

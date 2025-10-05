@@ -24,19 +24,15 @@ public class Tariff {
     private Long tariffID;
 
     @ManyToOne
+    @JoinColumn(name = "country_pair_id", referencedColumnName = "id")
+    private CountryPair countryPair;
+
+    @ManyToOne
     @JoinColumn(name = "hs_code", referencedColumnName = "hs_code")
     private Product product;
 
     @Column(name = "tariff_name")
     private String tariffName;
-
-    @ManyToOne
-    @JoinColumn(name = "exporter", referencedColumnName = "iso_code")
-    private Country exporter;
-
-    @ManyToOne
-    @JoinColumn(name = "importer", referencedColumnName = "iso_code")
-    private Country importer;
 
     @Column(name = "effective_date")
     private Date effectiveDate;
@@ -53,15 +49,15 @@ public class Tariff {
     // Constructors
     public Tariff() {}
 
-    public Tariff(Long tariffID, Product product, String tariffName, Country exporter, Country importer, Date effectiveDate, Date expiryDate, String reference) {
+    public Tariff(Long tariffID, Product product, String tariffName, CountryPair countryPair, Date effectiveDate, Date expiryDate, String reference) {
         this.tariffID = tariffID;
         this.product = product;
         this.tariffName = tariffName;
-        this.exporter = exporter;
+        this.countryPair = countryPair;
         this.effectiveDate = effectiveDate;
         this.expiryDate = expiryDate;
         this.reference = reference;
-        this.importer = importer;
+
     }
 
     // Getters and Setters
@@ -105,12 +101,12 @@ public class Tariff {
         this.tariffName = tariffName;
     }
 
-    public Country getExporter() {
-        return exporter;
+    public CountryPair getCountryPair() {
+        return countryPair;
     }
 
-    public void setExporter(Country exporter) {
-        this.exporter = exporter;
+    public void setCountryPair(CountryPair countryPair) {
+        this.countryPair = countryPair;
     }
 
 
@@ -122,18 +118,11 @@ public class Tariff {
         this.reference = reference;
     }
 
-    public Country getImporter() {
-        return importer;
-    }
 
-    public void setImporter(Country importer) {
-        this.importer = importer;
-    }
-    
     @Override
     public String toString() {
-        return "Tariff [tariffID=" + tariffID + ", product=" + product + ", tariffName=" + tariffName + ", exporter="
-                + exporter + ", effectiveDate=" + effectiveDate + ", expiryDate=" + expiryDate + ", reference="
+        return "Tariff [tariffID=" + tariffID + ", product=" + product + ", tariffName=" + tariffName + ", countryPair="
+                + countryPair + ", effectiveDate=" + effectiveDate + ", expiryDate=" + expiryDate + ", reference="
                 + reference + "]";
     }
 
