@@ -48,7 +48,7 @@ env:
   ECS_CLUSTER: quick-turtle-o5o4px
   ECS_TASK_DEFINITION_FAMILY: tarrify-backend-task
 
-  CONTAINER_NAME: tariffy-backend
+  CONTAINER_NAME: tarrify-backend
 
 jobs:
   build:
