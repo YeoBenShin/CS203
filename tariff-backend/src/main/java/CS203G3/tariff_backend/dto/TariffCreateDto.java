@@ -74,7 +74,7 @@ public class TariffCreateDto {
         this.importer = importer;
     }
     
-    public String gethSCode() {
+    public String getHSCode() {
         return hSCode;
     }
 
