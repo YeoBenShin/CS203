@@ -13,10 +13,6 @@ import jakarta.validation.constraints.Size;
 
 
 public class TariffCreateDto {
-    
-    @NotNull(message = "Name is required")
-    private String name;
-
     @NotNull(message = "Exporter is required")
     private String exporter;
 
@@ -24,7 +20,6 @@ public class TariffCreateDto {
     private String importer;
 
     @NotNull(message = "HS Code is required")
-    @JsonProperty("hSCode")
     private String hSCode;
 
     @NotNull(message = "Rate is required")
@@ -50,14 +45,6 @@ public class TariffCreateDto {
     // Constructors
     public TariffCreateDto() {}
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getExporter() {
         return exporter;
     }
@@ -74,7 +61,7 @@ public class TariffCreateDto {
         this.importer = importer;
     }
     
-    public String gethSCode() {
+    public String getHSCode() {
         return hSCode;
     }
 

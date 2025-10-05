@@ -13,8 +13,7 @@ import java.math.BigDecimal;
 public class TariffDto {
     private Long tariffID;
     private Long tariffRateID;
-    private String tariffName;
-    
+
     // Core tariff fields
     private Date effectiveDate;  // JavaScript Date object
     private Date expiryDate;     // JavaScript Date object
@@ -52,15 +51,7 @@ public class TariffDto {
     public void setTariffRateID(Long tariffRateID) {
         this.tariffRateID = tariffRateID;
     }
-    
-    public String getTariffName() {
-        return tariffName;
-    }
-
-    public void setTariffName(String tariffName) {
-        this.tariffName = tariffName;
-    }
-
+     
     public Date getEffectiveDate() {
         return effectiveDate;
     }
