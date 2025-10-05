@@ -3,8 +3,6 @@ package CS203G3.tariff_backend.dto;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import CS203G3.tariff_backend.model.UnitOfCalculation;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Future;

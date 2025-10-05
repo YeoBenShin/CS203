@@ -21,7 +21,7 @@ public class CalculationRequest {
     // Constructors
     public CalculationRequest() {}
 
-    public CalculationRequest(String hSCode, String exporter, BigDecimal productValue, Map<UnitOfCalculation, BigDecimal> quantityValues,
+    public CalculationRequest(String hSCode, String importer, String exporter, BigDecimal productValue, Map<UnitOfCalculation, BigDecimal> quantityValues,
             Date tradeDate) {
         this.hSCode = hSCode;
         this.importer = importer;

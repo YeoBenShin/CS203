@@ -5,7 +5,6 @@ import CS203G3.tariff_backend.repository.CountryRepository;
 import CS203G3.tariff_backend.exception.ResourceNotFoundException;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
