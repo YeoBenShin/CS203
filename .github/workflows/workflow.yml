@@ -46,7 +46,7 @@ env:
   ECR_REPOSITORY: tariffy/backend
   ECS_SERVICE: tarrify-backend-task-service-py2e1huw
   ECS_CLUSTER: quick-turtle-o5o4px
-  ECS_TASK_DEFINITION: tarrify-backend-task
+  ECS_TASK_DEFINITION_FAMILY: tarrify-backend-task
 
   CONTAINER_NAME: tariffy-backend
 
@@ -110,7 +110,7 @@ jobs:
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          task-definition-family: ${{ env.ECS_TASK_DEFINITION_FAMILY }}
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 
