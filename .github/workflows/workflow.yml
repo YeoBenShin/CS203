@@ -44,11 +44,11 @@ on:
 env:
   AWS_REGION: ap-southeast-1
   ECR_REPOSITORY: tariffy/backend
-  ECS_SERVICE: tarrify-backend-task-service-py2e1huw
+  ECS_SERVICE: tariffy-backend-task-2-service-ogkl1300
   ECS_CLUSTER: quick-turtle-o5o4px
-  ECS_TASK_DEFINITION_FAMILY: tarrify-backend-task
+  ECS_TASK_DEFINITION_FAMILY: tariffy-backend-task-2
 
-  CONTAINER_NAME: tarrify-backend
+  CONTAINER_NAME: tariffy-backend
 
 jobs:
   build:
