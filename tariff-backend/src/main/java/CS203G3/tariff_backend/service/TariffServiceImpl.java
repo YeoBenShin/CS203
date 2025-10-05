@@ -105,7 +105,7 @@ public class TariffServiceImpl implements TariffService {
         Date expiryDate = createDto.getExpiryDate() != null ? 
             new Date(createDto.getExpiryDate().getTime()) : null;
 
-        // find whether tariff witih same 
+        
         Tariff newTariff = new Tariff();
 
         newTariff.setProduct(product);
