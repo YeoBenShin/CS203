@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -22,7 +23,7 @@ public class TariffRate {
     @JoinColumn(name = "tariff_id", referencedColumnName = "tariff_id")
     private Tariff tariff;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     @Column(name = "unit_of_calculation")
     private UnitOfCalculation unitOfCalculation;
 

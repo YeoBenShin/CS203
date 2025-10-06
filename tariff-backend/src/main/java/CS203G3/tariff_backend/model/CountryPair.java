@@ -20,9 +20,6 @@ public class CountryPair {
     @JoinColumn(name = "importer_id", nullable = false)
     private Country importer;
 
-    @OneToMany(mappedBy = "countryPair", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Tariff> tariffs;
-
     // Constructors
     public CountryPair() {}
 

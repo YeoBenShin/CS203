@@ -49,4 +49,12 @@ public interface TariffRepository extends JpaRepository<Tariff, Long> {
         @Param("countryPair") CountryPair countryPair,
         @Param("tradeDate") Date tradeDate
     );
+
+    @Query("SELECT t FROM Tariff t WHERE t.product = :product AND t.countryPair = :countryPair AND ((:expiryDate IS NULL AND t.expiryDate IS NULL) OR t.expiryDate = :expiryDate) AND t.effectiveDate = :effectiveDate")
+    Optional<Tariff> findByProductAndCountryPairAndEffectiveDateAndExpiryDate(
+        @Param("product") CS203G3.tariff_backend.model.Product product,
+        @Param("countryPair") CountryPair countryPair,
+        @Param("effectiveDate") Date effectiveDate,
+        @Param("expiryDate") Date expiryDate
+    );
 }

@@ -7,6 +7,8 @@ import CS203G3.tariff_backend.exception.tariff.PastEffectiveDateException;
 import CS203G3.tariff_backend.exception.tariff.ExpiryBeforeEffectiveException;
 import CS203G3.tariff_backend.exception.tariff.OverlappingTariffPeriodException;
 import CS203G3.tariff_backend.exception.tariff.DuplicateTariffMappingException;
+import CS203G3.tariff_backend.exception.tariff.ImmutableFieldChangeException;
+import CS203G3.tariff_backend.exception.tariff.WrongNumberOfArgumentsException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,6 +66,18 @@ public class BusinessExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleDuplicateTariffMappingException(
             DuplicateTariffMappingException ex, WebRequest request) {
         return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
+    }
+
+    @ExceptionHandler(ImmutableFieldChangeException.class)
+    public ResponseEntity<Map<String, Object>> handleImmutableFieldChangeException(
+            ImmutableFieldChangeException ex, WebRequest request) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(WrongNumberOfArgumentsException.class)
+    public ResponseEntity<Map<String, Object>> handleWrongNumberOfArgumentsException(
+            WrongNumberOfArgumentsException ex, WebRequest request) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
     }
 
     @ExceptionHandler(BusinessException.class)
