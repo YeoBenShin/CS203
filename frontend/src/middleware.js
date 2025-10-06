@@ -21,7 +21,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (user.publicMetadata.role === undefined) { // use this method in the event that webhook doesn't work
     try {
       const base_url = process.env.BASE_URL
-      const response = await fetch(`${base_url}/user/${userId}`, {
+      const response = await fetch(`${base_url}/api/user/${userId}`, {
         method: "GET",
       });
       if (response.ok) {

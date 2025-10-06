@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
+@RequestMapping("/api/user")
 class UserController {
     // private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
@@ -29,7 +31,7 @@ class UserController {
     // @Autowired
     // private ClerkWebhookVerifier verifier;
 
-    @PostMapping("/clerk/webhook/user") // Map ONLY POST Requests
+    @PostMapping("/clerk/webhook") // Map ONLY POST Requests
     public @ResponseBody ResponseEntity<String> addNewUser (@RequestHeader Map<String, String> headers,
             @RequestBody Map<String, Object> body) {
             
@@ -47,22 +49,12 @@ class UserController {
         return ResponseEntity.ok("Webhook processed. New user added");
     }
 
-    @GetMapping("/user")
-    public @ResponseBody Iterable<User> getAllUsers() {
-        return userRepository.findAll();
-    }
-
-    @GetMapping("/user/{uuid}")
+    @GetMapping("/{uuid}")
     public @ResponseBody ResponseEntity<User> getUser(@PathVariable String uuid) {
         User user = userRepository.findByUuid(uuid);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
         return ResponseEntity.ok(user);
-    }
-
-    @GetMapping("/")
-    public @ResponseBody String healthCheck() {
-        return "all is good";
     }
 }
