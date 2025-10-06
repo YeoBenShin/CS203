@@ -1,6 +1,7 @@
 package CS203G3.tariff_backend.dto;
 
 import java.util.Date;
+import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import CS203G3.tariff_backend.model.UnitOfCalculation;
@@ -30,9 +31,7 @@ public class TariffDto {
     private String hSCode;
     private String productDescription;
 
-    private UnitOfCalculation unitOfCalculation;
-    private BigDecimal tariffRate;
-
+    Map<UnitOfCalculation, BigDecimal> tariffRates;
     // Constructors
     public TariffDto() {}
 
@@ -124,19 +123,11 @@ public class TariffDto {
         this.productDescription = productDescription;
     }
 
-    public UnitOfCalculation getUnitOfCalculation() {
-        return unitOfCalculation;
+    public Map<UnitOfCalculation, BigDecimal> getTariffRates() {
+        return tariffRates;
     }
 
-    public void setUnitOfCalculation(UnitOfCalculation unitOfCalculation) {
-        this.unitOfCalculation = unitOfCalculation;
-    }
-    
-    public BigDecimal getTariffRate() {
-        return tariffRate;
-    }
-
-    public void setTariffRate(BigDecimal tariffRate) {
-        this.tariffRate = tariffRate;
+    public void setTariffRates(Map<UnitOfCalculation, BigDecimal> tariffRates) {
+        this.tariffRates = tariffRates;
     }
 }

@@ -9,7 +9,9 @@ import CS203G3.tariff_backend.exception.tariff.*;
 import java.sql.Date;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.Optional;
 
@@ -21,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class TariffServiceImpl implements TariffService {
-    private final BusinessExceptionHandler businessExceptionHandler;
     private final TariffRateRepository tariffRateRepository;
     private final TariffRepository tariffRepository;
     private final CountryRepository countryRepository;
@@ -31,21 +32,22 @@ public class TariffServiceImpl implements TariffService {
 
     public TariffServiceImpl(TariffRepository tariffRepository, TariffRateRepository tariffRateRepository, 
     CountryRepository countryRepository, ProductRepository productRepository, TariffCalculationService tariffCalculationService, 
-    BusinessExceptionHandler businessExceptionHandler, CountryPairRepository countryPairRepository) {
+ CountryPairRepository countryPairRepository) {
         this.tariffRepository = tariffRepository;
         this.tariffRateRepository = tariffRateRepository;
         this.countryRepository = countryRepository;
         this.productRepository = productRepository;
         this.tariffCalculationService = tariffCalculationService;
-        this.businessExceptionHandler = businessExceptionHandler;
         this.countryPairRepository = countryPairRepository;
     }
 
-    private TariffDto convertToDto(TariffRate tariffRate) {
+    private TariffDto convertToDto(List<TariffRate> tariffRates) {
+        if (tariffRates == null || tariffRates.isEmpty()) {
+            throw new IllegalArgumentException("TariffRate list cannot be null or empty");
+        }
         
         TariffDto dto = new TariffDto();
-
-        Tariff tariff = tariffRate.getTariff();
+        Tariff tariff = tariffRates.get(0).getTariff();
 
         dto.setTariffID(tariff.getTariffID());
 
@@ -64,22 +66,31 @@ public class TariffServiceImpl implements TariffService {
         dto.setExpiryDate(tariff.getExpiryDate());
         dto.setReference(tariff.getReference());  
 
-        // tariff rate details - assume only one rate per tariff for now
-        dto.setTariffRateID(tariffRate.getTariffRateID());
-        dto.setUnitOfCalculation(tariffRate.getUnitOfCalculation());
-        dto.setTariffRate(tariffRate.getTariffRate());
+        // put the list of tariffrates into a map with unitofcalculation and bigdecimal
+        Map<UnitOfCalculation, BigDecimal> rates = tariffRates.stream()
+            .collect(Collectors.toMap(TariffRate::getUnitOfCalculation, TariffRate::getTariffRate));
+        
+        dto.setTariffRates(rates);
         return dto;
     }
 
-    private TariffRate convertToEntity(TariffCreateDto createDto) {
+    private TariffDto convertToDto(TariffRate tariffRate) {
+        if (tariffRate == null) {
+            throw new IllegalArgumentException("TariffRate cannot be null");
+        }
+        return convertToDto(Collections.singletonList(tariffRate));
+    }
 
+    private List<TariffRate> convertToEntity(TariffCreateDto createDto) {
+
+        Tariff newTariff = new Tariff();
         Product product = productRepository.findById(createDto.getHSCode())
             .orElseThrow(() -> new ResourceNotFoundException("Product", createDto.getHSCode()));
 
         String exporterCode = createDto.getExporter();
         String importerCode = createDto.getImporter();
 
-        CountryPair countryPair = countryPairRepository.findByExporterAndImporter(exporterCode, importerCode);
+        CountryPair countryPair = countryPairRepository.findSingleByExporterAndImporter(exporterCode, importerCode);
 
         if (countryPair == null) {
             countryPair = new CountryPair();
@@ -87,15 +98,9 @@ public class TariffServiceImpl implements TariffService {
                 .orElseThrow(() -> new ResourceNotFoundException("Country", exporterCode)));
             countryPair.setImporter(countryRepository.findById(importerCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Country", importerCode)));
-
             countryPairRepository.save(countryPair);
         }
 
-        UnitOfCalculation unitOfCalculation = createDto.getUnitOfCalculation();
-
-        if (unitOfCalculation == null) {
-            unitOfCalculation = UnitOfCalculation.AV; // default to Ad Valorem if not specified
-        }
 
         String reference = createDto.getReference();
 
@@ -105,8 +110,18 @@ public class TariffServiceImpl implements TariffService {
         Date expiryDate = createDto.getExpiryDate() != null ? 
             new Date(createDto.getExpiryDate().getTime()) : null;
 
-        
-        Tariff newTariff = new Tariff();
+        // Check for existing tariff with same product, country pair, effective date, and expiry date
+        Optional<Tariff> searchTariffOpt = tariffRepository.findByProductAndCountryPairAndEffectiveDateAndExpiryDate(
+            product, countryPair, effectiveDate, expiryDate);
+
+        if (searchTariffOpt.isPresent()) {
+            throw new ResourceAlreadyExistsException("A tariff with the same product, country pair, effective date, and expiry date already exists.");
+        }
+
+        // ensure that there is no overlapping tariff, new effective date cannot be more than current effective date and less than expiry date
+        if (searchTariffOpt.get().getEffectiveDate().after(effectiveDate) && searchTariffOpt.get().getExpiryDate().before(expiryDate)) {
+            throw new OverlappingTariffPeriodException("New tariff overlaps with existing tariff.");
+        }
 
         newTariff.setProduct(product);
         newTariff.setCountryPair(countryPair);
@@ -114,36 +129,54 @@ public class TariffServiceImpl implements TariffService {
         newTariff.setExpiryDate(expiryDate);
         newTariff.setReference(reference);
 
-        // create and set TariffRate
-        TariffRate tariffRate = new TariffRate();
-
-        // map tariffid
-        tariffRate.setTariff(newTariff);
-
-        // check whether product metric exists before setting tariff rate to it
-        tariffRate.setUnitOfCalculation(unitOfCalculation);
-        
-        // update tariff rate
-        tariffRate.setTariffRate(createDto.getTariffRate());
-
         // save tariff
         tariffRepository.save(newTariff);
-        return tariffRate;
+
+        // validate if theres too many tariffrates, <= 3
+        if (createDto.getTariffRates().size() > 3) {
+            throw new WrongNumberOfArgumentsException("Cannot have more than 3 tariff rates.");
+        }
+
+
+        // create and set TariffRates
+        List<TariffRate> tariffRateList = new ArrayList<>();
+        for (Map.Entry<UnitOfCalculation, BigDecimal> entry : createDto.getTariffRates().entrySet()) {
+            UnitOfCalculation unitOfCalculation = entry.getKey();
+            BigDecimal rate = entry.getValue();
+
+            TariffRate tariffRate = new TariffRate();
+
+            // map tariffid
+            tariffRate.setTariff(newTariff);
+
+            tariffRate.setUnitOfCalculation(unitOfCalculation);
+
+            tariffRate.setTariffRate(rate);
+
+            tariffRateRepository.save(tariffRate);
+            tariffRateList.add(tariffRate);
+        }
+        return tariffRateList;
     }
 
     @Override
     public List<TariffDto> getAllTariffRates() {
-        // group tariffrates by country pair and product
-        return tariffRateRepository.findAll().stream()
+        // group tariffrates by tariff ID
+        Map<Long, List<TariffRate>> groupedRates = tariffRateRepository.findAll().stream()
+                .collect(Collectors.groupingBy(tr -> tr.getTariff().getTariffID()));
+        
+        return groupedRates.values().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<TariffDto> getTariffById(Long id) {
-        return tariffRateRepository.findAllByTariff_TariffID(id).stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        List<TariffRate> tariffRates = tariffRateRepository.findAllByTariff_TariffID(id);
+        if (tariffRates.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Collections.singletonList(convertToDto(tariffRates));
     }
 
     // @Override
@@ -160,7 +193,10 @@ public class TariffServiceImpl implements TariffService {
 
     @Override
     public List<TariffDto> getTariffsByPage(int page, int pageSize) {
-        return tariffRateRepository.findAll().stream()
+        Map<Long, List<TariffRate>> groupedRates = tariffRateRepository.findAll().stream()
+                .collect(Collectors.groupingBy(tr -> tr.getTariff().getTariffID()));
+        
+        return groupedRates.values().stream()
                 .skip((long) page * pageSize)
                 .limit(pageSize)
                 .map(this::convertToDto)
@@ -173,9 +209,8 @@ public class TariffServiceImpl implements TariffService {
         // Validate business rules
         validateTariffBusinessRules(createDto);
 
-        TariffRate entity = convertToEntity(createDto);
-        TariffRate saved = tariffRateRepository.save(entity);
-        return convertToDto(saved);
+        List<TariffRate> entities = convertToEntity(createDto);
+        return convertToDto(entities);
     }
     
     /**
@@ -183,61 +218,30 @@ public class TariffServiceImpl implements TariffService {
      */
     private void validateTariffBusinessRules(TariffCreateDto createDto) {
         // Rule 1: Exporter and importer cannot be the same
-        if (createDto.getExporter() != null && 
-            createDto.getExporter().equals("USA")) {
+        if (createDto.getExporter().equals(createDto.getImporter())) {
             throw new SameCountryException(createDto.getExporter());
         }
+
+        // Rule 2: At least one tariff rate is required
+        if (createDto.getTariffRates() == null || createDto.getTariffRates().isEmpty()) {
+            throw new IllegalArgumentException("At least one tariff rate is required");
+        }
+
+        // Rule 3: Rate cannot be negative
+        createDto.getTariffRates().forEach((unit, rate) -> {
+            if (rate.compareTo(BigDecimal.ZERO) < 0) {
+                throw new NegativeTariffRateException("Tariff rate cannot be negative: " + rate);
+            }
+        });
         
-        // Rule 2: Rate cannot be negative
-        // if (createDto.getRate() != null && createDto.getRate().compareTo(BigDecimal.ZERO) < 0) {
-        //     throw new NegativeTariffRateException("Tariff rate cannot be negative: " + createDto.getRate());
-        // }
-        
-        // Rule 3: Rate validation removed - allowing any positive rate
-        // (No upper limit on tariff rates as they can vary widely in real-world scenarios)
-        
-        // // Rule 4: Effective date cannot be in the past (optional - depends on business needs)
-        // if (createDto.getEffectiveDate() != null) {
-        //     LocalDate effectiveDate = new java.sql.Date(createDto.getEffectiveDate().getTime()).toLocalDate();
-        //     LocalDate today = LocalDate.now();
-        //     if (effectiveDate.isBefore(today)) {
-        //         throw new PastEffectiveDateException("Effective date cannot be in the past: " + effectiveDate);
-        //     }
-        // }
-        
-        // Rule 5: Expiry date must be after effective date
+        // Rule 4: Expiry date must be after effective date
         if (createDto.getEffectiveDate() != null && createDto.getExpiryDate() != null) {
             if (createDto.getExpiryDate().before(createDto.getEffectiveDate())) {
                 throw new ExpiryBeforeEffectiveException("Expiry date must be after effective date");
             }
         }
-        
-        // Rule 6: Check for overlapping tariff periods (same mapping, overlapping dates)
-        // validateNoOverlappingTariffs(createDto);
     }
     
-    /**
-     * Validates that no overlapping tariffs exist for the same tariff mapping
-     */
-    // private void validateNoOverlappingTariffs(TariffCreateDto createDto) {
-    //     // Find existing tariff mapping
-    
-    //         // Check for overlapping tariffs
-    //         List<Tariff> overlappingTariffs = tariffRepository
-    //             .findOverlappingTariffs(
-    //                 existingMapping,
-    //                 new Date(createDto.getEffectiveDate().getTime()),
-    //                 createDto.getExpiryDate() != null ? new Date(createDto.getExpiryDate().getTime()) : null
-    //             );
-            
-    //         if (!overlappingTariffs.isEmpty()) {
-    //             throw new OverlappingTariffPeriodException(
-    //                 String.format("Overlapping tariff period found for %s -> %s, HSCode: %d", 
-    //                     createDto.getExporter(), createDto.getImporter(), createDto.getHSCode())
-    //             );
-    //         }
-    //     }
-    // }
 
 
     private Tariff updateTariff(TariffUpdateDto updateDto) {
@@ -245,30 +249,11 @@ public class TariffServiceImpl implements TariffService {
             .orElseThrow(() -> new ResourceNotFoundException("Tariff", updateDto.getTariffID().toString()));
 
 
-        if (updateDto.getTariffCreateDto().getHSCode() != null) {
-            Product product = productRepository.findById(updateDto.getTariffCreateDto().getHSCode())
-                .orElseThrow(() -> new ResourceNotFoundException("Product", updateDto.getTariffCreateDto().getHSCode()));
-            tariff.setProduct(product);
-        }
-
-        // update country pair by checking importer and exporter
-        if (updateDto.getTariffCreateDto().getExporter() != null && updateDto.getTariffCreateDto().getImporter() != null) {
-            String exporterCode = updateDto.getTariffCreateDto().getExporter();
-            String importerCode = updateDto.getTariffCreateDto().getImporter();
-
-            CountryPair countryPair = countryPairRepository.findByExporterAndImporter(exporterCode, importerCode);
-
-            if (countryPair == null) {
-                countryPair = new CountryPair();
-                countryPair.setExporter(countryRepository.findById(exporterCode)
-                    .orElseThrow(() -> new ResourceNotFoundException("Country", exporterCode)));
-                countryPair.setImporter(countryRepository.findById(importerCode)
-                    .orElseThrow(() -> new ResourceNotFoundException("Country", importerCode)));
-
-                countryPairRepository.save(countryPair);
-            }
-
-            tariff.setCountryPair(countryPair);
+        // ensure that exporter, importer, product cannot be changed, only dates and reference
+        if (!tariff.getCountryPair().getExporter().getIsoCode().equals(updateDto.getTariffCreateDto().getExporter()) ||
+            !tariff.getCountryPair().getImporter().getIsoCode().equals(updateDto.getTariffCreateDto().getImporter()) ||
+            !tariff.getProduct().getHSCode().equals(updateDto.getTariffCreateDto().getHSCode())) {
+            throw new ImmutableFieldChangeException("Exporter, Importer, and Product cannot be changed, please create a new tariff instead.");
         }
 
         if (updateDto.getTariffCreateDto().getEffectiveDate() != null) {
@@ -283,6 +268,7 @@ public class TariffServiceImpl implements TariffService {
             tariff.setReference(updateDto.getTariffCreateDto().getReference());
         }
 
+        // save and cascade to all tariff rates
         return tariffRepository.save(tariff);
     }
 
@@ -295,14 +281,18 @@ public class TariffServiceImpl implements TariffService {
         Tariff updatedTariff = updateTariff(updateDto);
         existing.setTariff(updatedTariff);
 
-        if (updateDto.getTariffCreateDto().getTariffRate() != null) {
-            existing.setTariffRate(updateDto.getTariffCreateDto().getTariffRate());
-        }
+        // update tariff rate if provided, only allow to change one
+        Map<UnitOfCalculation, BigDecimal> newRates = updateDto.getTariffCreateDto().getTariffRates();
 
-        if (updateDto.getTariffCreateDto().getUnitOfCalculation() != null) {
-            existing.setUnitOfCalculation(updateDto.getTariffCreateDto().getUnitOfCalculation());
+        if (newRates != null && !newRates.isEmpty()) {
+            if (newRates.size() > 1) {
+                throw new WrongNumberOfArgumentsException("Can only update one tariff rate at a time.");
+            }
+            Map.Entry<UnitOfCalculation, BigDecimal> entry = newRates.entrySet().iterator().next();
+            existing.setUnitOfCalculation(entry.getKey());
+            existing.setTariffRate(entry.getValue());
         }
-
+        
         TariffRate updated = tariffRateRepository.save(existing);
         return convertToDto(updated);
     }
@@ -317,10 +307,15 @@ public class TariffServiceImpl implements TariffService {
         tariffRepository.deleteById(id);
     }
 
+    
+
     @Override
     public List<TariffDto> getTariffsByHSCode(String hsCode) {
-        return tariffRateRepository.findAll().stream()
+        Map<Long, List<TariffRate>> groupedRates = tariffRateRepository.findAll().stream()
                 .filter(tariffRate -> tariffRate.getTariff().getProduct().getHSCode().equals(hsCode))
+                .collect(Collectors.groupingBy(tr -> tr.getTariff().getTariffID()));
+        
+        return groupedRates.values().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -328,7 +323,7 @@ public class TariffServiceImpl implements TariffService {
     public CalculationResult calculateTariff(CalculationRequest calculationDto) {
         // fetch tariff
 
-        CountryPair countryPair = countryPairRepository.findByExporterAndImporter(
+        CountryPair countryPair = countryPairRepository.findSingleByExporterAndImporter(
             calculationDto.getExporter(), calculationDto.getImporter()); 
         
         Optional<Tariff> tariffOpt = tariffRepository.findValidTariff(

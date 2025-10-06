@@ -2,6 +2,7 @@ package CS203G3.tariff_backend.dto;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Map;
 
 import CS203G3.tariff_backend.model.UnitOfCalculation;
 import jakarta.validation.constraints.FutureOrPresent;
@@ -20,9 +21,6 @@ public class TariffCreateDto {
     @NotNull(message = "HS Code is required")
     private String hSCode;
 
-    @NotNull(message = "Rate is required")
-    private BigDecimal rate;
-
     @NotNull(message = "EffectiveDate is required")
     @FutureOrPresent(message = "EffectiveDate must be today or in the future")
     private Date effectiveDate;  // JavaScript Date object
@@ -33,11 +31,8 @@ public class TariffCreateDto {
     @Size(max = 255, message = "Reference cannot exceed 255 characters")
     private String reference;
 
-    @NotNull(message = "UnitOfCalculation is required")
-    private UnitOfCalculation unitOfCalculation;
-
-    @NotNull(message = "TariffRate is required")
-    private BigDecimal tariffRate;
+    @NotNull(message = "At least one rate is required")
+    Map<UnitOfCalculation, BigDecimal> tariffRates;
 
     
     // Constructors
@@ -91,20 +86,11 @@ public class TariffCreateDto {
         this.reference = reference;
     }
 
-    public UnitOfCalculation getUnitOfCalculation() {
-        return unitOfCalculation;
+    public Map<UnitOfCalculation, BigDecimal> getTariffRates() {
+        return tariffRates;
     }
 
-    public void setUnitOfCalculation(UnitOfCalculation unitOfCalculation) {
-        this.unitOfCalculation = unitOfCalculation;
+    public void setTariffRates(Map<UnitOfCalculation, BigDecimal> tariffRates) {
+        this.tariffRates = tariffRates;
     }
-
-    public BigDecimal getTariffRate() {
-        return rate;
-    }
-
-    public void setTariffRate(BigDecimal rate) {
-        this.rate = rate;
-    }
-
 }
