@@ -1,11 +1,9 @@
 package CS203G3.tariff_backend.dto;
 
 import java.util.Date;
-import java.util.Map;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import CS203G3.tariff_backend.model.UnitOfCalculation;
-import java.math.BigDecimal;
 
 /**
  * DTO for Tariff responses - includes all tariff data plus mapping details for frontend
@@ -13,7 +11,6 @@ import java.math.BigDecimal;
 
 public class TariffDto {
     private Long tariffID;
-    private Long tariffRateID;
 
     // Core tariff fields
     private Date effectiveDate;  // JavaScript Date object
@@ -31,7 +28,7 @@ public class TariffDto {
     private String hSCode;
     private String productDescription;
 
-    Map<UnitOfCalculation, BigDecimal> tariffRates;
+    List <TariffRateBreakdownDto> tariffRates;
     // Constructors
     public TariffDto() {}
 
@@ -41,14 +38,6 @@ public class TariffDto {
 
     public void setTariffID(Long tariffID) {
         this.tariffID = tariffID;
-    }
-
-    public Long getTariffRateID() {
-        return tariffRateID;
-    }
-
-    public void setTariffRateID(Long tariffRateID) {
-        this.tariffRateID = tariffRateID;
     }
      
     public Date getEffectiveDate() {
@@ -123,11 +112,11 @@ public class TariffDto {
         this.productDescription = productDescription;
     }
 
-    public Map<UnitOfCalculation, BigDecimal> getTariffRates() {
+    public List<TariffRateBreakdownDto> getTariffRates() {
         return tariffRates;
     }
 
-    public void setTariffRates(Map<UnitOfCalculation, BigDecimal> tariffRates) {
+    public void setTariffRates(List<TariffRateBreakdownDto> tariffRates) {
         this.tariffRates = tariffRates;
     }
 }
