@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import FieldSelector from "../components/FieldSelector";
-import Button from '../components/Button';
-import LoadingSpinner from "../components/messages/LoadingSpinner";
-import ErrorMessageDisplay from "../components/messages/ErrorMessageDisplay";
-import LoadingPage from "../components/LoadingPage";
+import FieldSelector from "../../components/FieldSelector";
+import Button from '../../components/Button';
+import LoadingSpinner from "../../components/messages/LoadingSpinner";
+import ErrorMessageDisplay from "../../components/messages/ErrorMessageDisplay";
+import LoadingPage from "../../components/LoadingPage";
 import { useUser } from '@clerk/nextjs';
-import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "../../components/messages/SuccessMessageDisplay";
 
 export default function CalculatorPage() {
   const [pageLoading, setPageLoading] = useState(false);

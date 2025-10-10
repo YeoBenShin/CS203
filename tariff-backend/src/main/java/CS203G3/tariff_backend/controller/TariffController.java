@@ -85,6 +85,8 @@ public class TariffController {
      */
     @PutMapping("/{tariffId}")
     public ResponseEntity<TariffDto> updateTariff(@PathVariable Long tariffId, @RequestBody TariffCreateDto updateDto) {
+        // System.out.println("Received update for Tariff ID: " + tariffId);
+        // System.out.println("UpdateDTO: " + updateDto);
         TariffDto updatedTariff = tariffService.updateTariffRate(tariffId, updateDto);
         return ResponseEntity.ok(updatedTariff);
     }

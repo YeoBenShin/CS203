@@ -1,8 +1,10 @@
- export default function DeleteTariffPopUp({ 
-    tariffToDelete, 
+import { formatRate, formatUnitOfCalculation } from "@/utils/formatDisplayHelpers";
+
+export default function DeleteTariffPopUp({
+    tariffToDelete,
     handleCancelDelete,
     handleConfirmDelete
- }) {
+}) {
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";
         return new Date(dateString).toLocaleDateString();
@@ -26,19 +28,32 @@
                     Are you sure you want to delete this tariff?
                     <br /> This action cannot be undone.
                 </p>
-                <div className="bg-gray-50 p-3 rounded-md">
-                    <p className="text-sm font-medium text-gray-900">
-                        {tariffToDelete.exporterName} → {tariffToDelete.importerName}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                        Rate: {(parseFloat(tariffToDelete.rate) * 100).toFixed(2)}%
-                    </p>
-                    <p className="text-sm text-gray-600">
-                        Product: {tariffToDelete.productDescription} ({tariffToDelete.HSCode})
-                    </p>
-                    <p className="text-sm text-gray-600">
-                        Expiry Date: {formatDate(tariffToDelete.expiryDate)}
-                    </p>
+                <div className="bg-gray-50 p-3 rounded-md grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <p className="text-sm font-medium text-gray-900">
+                            {tariffToDelete.exporterName} → {tariffToDelete.importerName}
+                        </p>
+                        {tariffToDelete.tariffRates.map((tariffRate, index) => (
+                            <p key={index} className="text-sm font-medium text-gray-900">
+                                {tariffRate.unitOfCalculation === "AV" ? `Rate ${index + 1}: ${formatRate(tariffRate.rate)}` :
+                                    `Rate ${index + 1}: $${tariffRate.rate.toFixed(2)}${formatUnitOfCalculation(tariffRate.unitOfCalculation)}`}
+                            </p>
+                        ))}
+                        
+                    </div>
+
+                    <div className="space-y-2">
+                        
+                        <p className="text-sm font-medium text-gray-900">
+                            Product: {tariffToDelete.productDescription} ({tariffToDelete.hSCode})
+                        </p>
+                        <p className="text-sm font-medium text-gray-900">
+                            Effective Date: {formatDate(tariffToDelete.effectiveDate)}
+                        </p>
+                        <p className="text-sm font-medium text-gray-900">
+                            Expiry Date: {formatDate(tariffToDelete.expiryDate)}
+                        </p>
+                    </div>
 
                 </div>
             </div>

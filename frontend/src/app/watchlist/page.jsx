@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
-import ReactTable from "../components/ReactTable";
-import Button from "../components/Button";
-import PopUpWrapper from "../components/popUps/PopUpWrapper";
-import TariffDetailPopUp from "../components/popUps/TariffDetailPopUp";
-import DeleteTariffPopUp from "../components/popUps/DeleteTariffPopUp";
-import LoadingPage from "../components/LoadingPage";
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "../../components/messages/SuccessMessageDisplay";
+import ReactTable from "../../components/ReactTable";
+import Button from "../../components/Button";
+import PopUpWrapper from "../../components/popUps/PopUpWrapper";
+import TariffDetailPopUp from "../../components/popUps/TariffDetailPopUp";
+import DeleteTariffPopUp from "../../components/popUps/DeleteTariffPopUp";
+import LoadingPage from "../../components/LoadingPage";
 
 export default function ViewWatchListPage() {
     // loading tariffs
