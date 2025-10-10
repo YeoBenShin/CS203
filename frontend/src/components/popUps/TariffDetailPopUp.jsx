@@ -1,8 +1,10 @@
+import { formatRate, formatUnitOfCalculation } from "@/utils/formatDisplayHelpers";
+
 export default function TariffDetailPopUp({
     selectedTariff,
     OnClick,
-    openEditPopup = () => {},
-    openDeletePopup = () => {},
+    openEditPopup = () => { },
+    openDeletePopup = () => { },
     hasPermissionToEdit = false,
     hasPermissionToDelete = false,
 }) {
@@ -39,12 +41,17 @@ export default function TariffDetailPopUp({
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">HS Code</label>
-                        <p className="text-sm text-gray-900">{selectedTariff.HSCode}</p>
+                        <p className="text-sm text-gray-900">{selectedTariff.hSCode}</p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Tariff Rate</label>
-                        <p className="text-sm text-gray-900">{(parseFloat(selectedTariff.rate) * 100).toFixed(2)}%</p>
+                        <label className="block text-sm font-bold text-gray-700">Tariff Rates:</label>
+                        {selectedTariff.tariffRates.map((tariffRate, index) => (
+                            <div key={index} className="text-sm font-medium text-gray-700">
+                                {tariffRate.unitOfCalculation === "AV" ? `Rate ${index + 1}: ${formatRate(tariffRate.rate)}` :
+                                    `Rate ${index + 1}: $${tariffRate.rate.toFixed(2)}${formatUnitOfCalculation(tariffRate.unitOfCalculation)}`}
+                            </div>
+                        ))}
                     </div>
                 </div>
 
@@ -63,12 +70,14 @@ export default function TariffDetailPopUp({
                         <label className="block text-sm font-medium text-gray-700 mb-1">Reference</label>
                         <p className="text-sm text-gray-900 break-all">{selectedTariff.reference || "N/A"}</p>
                     </div>
+
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Product Description</label>
+                        <p className="text-sm text-gray-900">{selectedTariff.productDescription || "N/A"}</p>
+                    </div>
                 </div>
 
-                <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Description</label>
-                    <p className="text-sm text-gray-900">{selectedTariff.productDescription || "N/A"}</p>
-                </div>
+
             </div>
 
             {(hasPermissionToEdit || hasPermissionToDelete) && <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">

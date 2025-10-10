@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import { SuccessMessageDisplay, showSuccessPopupMessage } from "@/app/components/messages/SuccessMessageDisplay";
-import Button from '../../components/Button';
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "@/components/messages/SuccessMessageDisplay";
+import Button from '../../../components/Button';
 
 export default function AddProductPage() {
   const [form, setForm] = useState({

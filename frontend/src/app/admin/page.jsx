@@ -1,10 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import ErrorDisplay from "../components/messages/ErrorMessageDisplay";
-import LoadingSpinner from "../components/messages/LoadingSpinner";
-import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
-import FieldSelector from "../components/FieldSelector";
-import Button from "../components/Button";
+import ErrorDisplay from "../../components/messages/ErrorMessageDisplay";
+import LoadingSpinner from "../../components/messages/LoadingSpinner";
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "../../components/messages/SuccessMessageDisplay";
+import FieldSelector from "../../components/FieldSelector";
+import Button from "../../components/Button";
 
 export default function AdminPage() {
   const [form, setForm] = useState({

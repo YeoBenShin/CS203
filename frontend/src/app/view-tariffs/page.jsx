@@ -1,13 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useUser } from '@clerk/nextjs';
-import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
-import ReactTable from "../components/ReactTable";
-import Button from "../components/Button";
-import PopUpWrapper from "../components/popUps/PopUpWrapper";
-import TariffDetailPopUp from "../components/popUps/TariffDetailPopUp";
-import DeleteTariffPopUp from "../components/popUps/DeleteTariffPopUp";
-import LoadingPage from "../components/LoadingPage";
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "../../components/messages/SuccessMessageDisplay";
+import ReactTable from "../../components/ReactTable";
+import Button from "../../components/Button";
+import PopUpWrapper from "../../components/popUps/PopUpWrapper";
+import TariffDetailPopUp from "../../components/popUps/TariffDetailPopUp";
+import DeleteTariffPopUp from "../../components/popUps/DeleteTariffPopUp";
+import LoadingPage from "../../components/LoadingPage";
+import { formatRate, formatUnitOfCalculation, formatDateForInput } from "@/utils/formatDisplayHelpers";
 
 export default function ViewTariffsPage() {
 
@@ -33,7 +34,10 @@ export default function ViewTariffsPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [editErrors, setEditErrors] = useState([]);
   const [editForm, setEditForm] = useState({
-    rate: "",
+    exporter: "",
+    importer: "",
+    hSCode: "",
+    tariffRates: [],
     effectiveDate: "",
     expiryDate: "",
     reference: ""
@@ -43,11 +47,33 @@ export default function ViewTariffsPage() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-
   // user role
   const { user } = useUser();
   const role = user?.publicMetadata?.role || "user";
 
+
+  const formatTariffRatesDisplay = (tariffRates) => {
+    if (!tariffRates || tariffRates.length === 0) {
+      return "N/A";
+    }
+
+    return tariffRates.map(tariffRate => {
+      const rate = tariffRate.rate;
+      const unit = tariffRate.unitOfCalculation;
+
+      if (unit === 'AV') {
+        // Ad Valorem - display as percentage
+        return `${(parseFloat(rate) * 100).toFixed(2)}%`;
+      } else {
+        // Other units - display with unit symbol
+        return `$${parseFloat(rate).toFixed(2)}${formatUnitOfCalculation(unit)}`;
+      }
+    }).join(" + ");
+  };
+
+  /*
+  * Use Effects 
+  */
   useEffect(() => {
     fetchTariffs();
     // Cleanup effect to restore scrolling when component unmounts
@@ -62,7 +88,7 @@ export default function ViewTariffsPage() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs`);
       if (response.ok) {
         const data = await response.json();
-        console.log("Fetched tariffs:", data);
+        // console.log("Fetched tariffs:", data);
         setTariffs(data);
         setFilteredTariffs(data); // Initialize filtered tariffs with all data
       } else {
@@ -83,13 +109,21 @@ export default function ViewTariffsPage() {
     if (query === "") {
       setFilteredTariffs(tariffs);
     } else {
-      const filtered = tariffs.filter(tariff =>
-        tariff.exporterName?.toLowerCase().includes(query) ||
-        tariff.importerName?.toLowerCase().includes(query) ||
-        tariff.HSCode?.toString().toLowerCase().includes(query) ||
-        tariff.productDescription?.toLowerCase().includes(query) ||
-        (parseFloat(tariff.rate) * 100).toFixed(2).includes(query)
-      );
+      const filtered = tariffs.filter(tariff => {
+        // Search in existing fields
+        const basicMatch = tariff.exporterName?.toLowerCase().includes(query) ||
+          tariff.importerName?.toLowerCase().includes(query) ||
+          tariff.hSCode?.toString().toLowerCase().includes(query) ||
+          tariff.productDescription?.toLowerCase().includes(query);
+
+        // Search in tariff rates
+        const rateMatch = tariff.tariffRates?.some(tariffRate => {
+          const rateString = formatRate(tariffRate.rate, tariffRate.unitOfCalculation).toLowerCase();
+          return rateString.includes(query);
+        });
+
+        return basicMatch || rateMatch;
+      });
       setFilteredTariffs(filtered);
     }
   };
@@ -99,6 +133,9 @@ export default function ViewTariffsPage() {
     setFilteredTariffs(tariffs);
   };
 
+  /*
+    * View Tariff Detail Functions
+    */
   const handleShowDetails = (tariff) => {
     setSelectedTariff(tariff);
     setTariffToEdit(tariff);
@@ -114,6 +151,9 @@ export default function ViewTariffsPage() {
     document.body.style.overflow = 'unset';
   };
 
+  /*
+  * Delete Functions
+  */
   const handleDelete = () => {
     setTariffToDelete(selectedTariff);
     setShowDeletePopup(true);
@@ -155,22 +195,24 @@ export default function ViewTariffsPage() {
     document.body.style.overflow = 'unset';
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return "";
-    return new Date(dateString).toISOString().split('T')[0];
-  };
-
+  /*
+  * Edit Functions
+  */
   const openEditPopup = () => {
     setEditForm({
-      rate: (parseFloat(tariffToEdit.rate) * 100).toFixed(2), // Convert from decimal to percentage
+      exporter: tariffToEdit.exporterCode,
+      importer: tariffToEdit.importerCode,
+      hSCode: tariffToEdit.hSCode,
       effectiveDate: formatDateForInput(tariffToEdit.effectiveDate),
       expiryDate: formatDateForInput(tariffToEdit.expiryDate),
-      reference: tariffToEdit.reference || ""
+      reference: tariffToEdit.reference || "",
+      tariffRates: tariffToEdit.tariffRates?.map(rate => ({
+        tariffRateID: rate.tariffRateID,
+        unitOfCalculation: rate.unitOfCalculation,
+        rate: rate.unitOfCalculation === 'AV'
+          ? (parseFloat(rate.rate) * 100).toFixed(2)
+          : parseFloat(rate.rate).toFixed(2)
+      })) || [],
     });
     setEditErrors([]);
     setShowEditPopup(true);
@@ -181,7 +223,10 @@ export default function ViewTariffsPage() {
     setShowEditPopup(false);
     setTariffToEdit(null);
     setEditForm({
-      rate: "",
+      exporter: "",
+      importer: "",
+      hSCode: "",
+      tariffRates: [],
       effectiveDate: "",
       expiryDate: "",
       reference: ""
@@ -193,6 +238,16 @@ export default function ViewTariffsPage() {
 
   const handleEditFormChange = (e) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
+    // Clear errors when user starts typing
+    if (editErrors.length > 0) {
+      setEditErrors([]);
+    }
+  };
+
+  const handleTariffRateChange = (index, field, value) => {
+    const updatedRates = [...editForm.tariffRates];
+    updatedRates[index] = { ...updatedRates[index], [field]: value };
+    setEditForm({ ...editForm, tariffRates: updatedRates });
     // Clear errors when user starts typing
     if (editErrors.length > 0) {
       setEditErrors([]);
@@ -243,7 +298,7 @@ export default function ViewTariffsPage() {
       const requestData = {
         exporter: tariffToEdit.exporterCode,
         importer: tariffToEdit.importerCode,
-        HSCode: tariffToEdit.HSCode,
+        hSCode: tariffToEdit.hSCode,
         rate: parseFloat(editForm.rate) / 100, // Convert percentage back to decimal
         effectiveDate: new Date(editForm.effectiveDate).toISOString(),
         expiryDate: editForm.expiryDate ? new Date(editForm.expiryDate).toISOString() : null,
@@ -359,14 +414,18 @@ export default function ViewTariffsPage() {
                 cell: info => <span className="text-gray-900 font-medium">{info.getValue() || "N/A"}</span>
               },
               { header: "Destination Country", accessorKey: "importerName" },
-              { header: "HS Code", accessorKey: "HSCode" },
+              { header: "HS Code", accessorKey: "hSCode" },
               {
                 header: "Product Description", accessorKey: "productDescription",
                 cell: info => info.getValue() ? (info.getValue().length > 40 ? info.getValue().substring(0, 40) + "..." : info.getValue()) : "N/A"
               },
               {
-                header: "Rate (%)", accessorKey: "rate",
-                cell: info => <span className="text-gray-900 font-medium">{(parseFloat(info.getValue()) * 100).toFixed(2)}%</span>
+                header: "Tariff Rates", accessorKey: "tariffRates",
+                cell: info => (
+                  <div className="text-gray-900 font-medium">
+                    {formatTariffRatesDisplay(info.getValue())}
+                  </div>
+                )
               },
             ]}
             data={filteredTariffs}
@@ -416,114 +475,128 @@ export default function ViewTariffsPage() {
         {/* Edit Confirmation Popup */}
         {showEditPopup && tariffToEdit && (
           <PopUpWrapper OnClick={handleCancelEdit}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-gray-800">Edit Tariff</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-gray-800">Edit Tariff</h3>
+              <button
+                onClick={handleCancelEdit}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="mb-3 bg-blue-50 p-2 rounded-md">
+              <p className="text-sm font-medium text-gray-700 mb-1">Current Tariff</p>
+              <div className="text-xs text-gray-600 space-y-1">
+                <p><span className="font-medium">Route:</span> {tariffToEdit.exporterName} → {tariffToEdit.importerName}</p>
+                <p><span className="font-medium">Product:</span> {tariffToEdit.productDescription || "N/A"} ({tariffToEdit.hSCode})</p>
+                <p><span className="font-medium">Current Rates:</span> {formatTariffRatesDisplay(tariffToEdit.tariffRates)}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-2">
+              {/* Tariff Rates Section */}
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Tariff Rates
+                </label>
+                {editForm.tariffRates.map((tariffRate, index) => (
+                  <div key={index} className="mb-3 p-3 rounded border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">
+                        Rate {index + 1}: ${tariffRate.rate}{formatUnitOfCalculation(tariffRate.unitOfCalculation)}
+                      </span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <input
+                        name="rate"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={tariffRate.rate}
+                        onChange={(e) => handleTariffRateChange(index, e.target.name, e.target.value)}
+                        className="flex-1 cursor-pointer shadow-sm border border-gray-300 rounded py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder={`Rate in ${formatUnitOfCalculation(tariffRate.unitOfCalculation)}`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Rest of the form fields remain the same */}
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="effectiveDate">
+                  Effective Date
+                </label>
+                <input
+                  name="effectiveDate"
+                  type="date"
+                  value={editForm.effectiveDate}
+                  onChange={handleEditFormChange}
+                  className={`cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${editForm.effectiveDate ? " text-gray-700" : "text-white"}`}
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="expiryDate">
+                  Expiry Date
+                </label>
+                <input
+                  name="expiryDate"
+                  type="date"
+                  value={editForm.expiryDate}
+                  onChange={handleEditFormChange}
+                  className={`cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${editForm.expiryDate ? " text-gray-700" : "text-white"}`}
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="reference">
+                  Reference
+                </label>
+                <input
+                  name="reference"
+                  type="text"
+                  value={editForm.reference}
+                  onChange={handleEditFormChange}
+                  placeholder="Source URL"
+                  className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {editErrors.length > 0 && (
+                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+                  {editErrors.map((error, index) => (
+                    <p key={index}>{error}</p>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-3 mt-4 pt-3">
                 <button
+                  type="button"
                   onClick={handleCancelEdit}
-                  className="text-gray-400 hover:text-gray-500"
+                  className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors cursor-pointer"
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isUpdating
+                    ? 'bg-gray-400 cursor-not-allowed text-white'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+                    }`}
+                >
+                  {isUpdating ? 'Updating...' : 'Update'}
                 </button>
               </div>
-              <div className="mb-3 bg-blue-50 p-2 rounded-md">
-                <p className="text-sm font-medium text-gray-700 mb-1">Current Tariff</p>
-                <div className="text-xs text-gray-600 space-y-1">
-                  <p><span className="font-medium">Route:</span> {tariffToEdit.exporterName} → {tariffToEdit.importerName}</p>
-                  <p><span className="font-medium">Product:</span> {tariffToEdit.productDescription || "N/A"} ({tariffToEdit.HSCode})</p>
-                  <p><span className="font-medium">Current Rate:</span> {(parseFloat(tariffToEdit.rate) * 100).toFixed(2)}%</p>
-                </div>
-              </div>
-
-              <form onSubmit={handleEditSubmit} className="space-y-2">
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1" htmlFor="rate">
-                    Rate (%)
-                  </label>
-                  <input
-                    name="rate"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={editForm.rate}
-                    onChange={handleEditFormChange}
-                    className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="effectiveDate">
-                    Effective Date
-                  </label>
-                  <input
-                    name="effectiveDate"
-                    type="date"
-                    value={editForm.effectiveDate}
-                    onChange={handleEditFormChange}
-                    className={`cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${editForm.effectiveDate ? " text-gray-700" : "text-white"}`}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="expiryDate">
-                    Expiry Date
-                  </label>
-                  <input
-                    name="expiryDate"
-                    type="date"
-                    value={editForm.expiryDate}
-                    onChange={handleEditFormChange}
-                    className={`cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${editForm.expiryDate ? " text-gray-700" : "text-white"}`}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1 mt-1" htmlFor="reference">
-                    Reference
-                  </label>
-                  <input
-                    name="reference"
-                    type="text"
-                    value={editForm.reference}
-                    onChange={handleEditFormChange}
-                    placeholder="Source URL"
-                    className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                {editErrors.length > 0 && (
-                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
-                    {editErrors.map((error, index) => (
-                      <p key={index}>{error}</p>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex justify-end space-x-3 mt-4 pt-3">
-                  <button
-                    type="button"
-                    onClick={handleCancelEdit}
-                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={isUpdating}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${isUpdating
-                      ? 'bg-gray-400 cursor-not-allowed text-white'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-                      }`}
-                  >
-                    {isUpdating ? 'Updating...' : 'Update'}
-                  </button>
-                </div>
-              </form>
+            </form>
           </PopUpWrapper>
         )}
       </div>
-    </div>
+    </div >
   );
 }
