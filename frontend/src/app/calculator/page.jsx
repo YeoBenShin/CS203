@@ -21,6 +21,9 @@ export default function CalculatorPage() {
   const [importCountryOptions, setImportCountryOptions] = useState([]);
   const [selectedImportCountry, setImportSelectedCountry] = useState(null);
   
+  // Quantity of goods states
+  const [productQuantity, setProductQuantity] = useState('');
+
   // Other form states
   const [shippingCost, setShippingCost] = useState('');
   const [tradeDate, setTradeDate] = useState("");
@@ -151,6 +154,13 @@ export default function CalculatorPage() {
     setCalcResult(null);
     setErrorMessage([]);
   }
+
+  const handleProductQuantity = (e) => {
+    setProductQuantity(e.target.value);
+    setCalcResult(null);
+    setErrorMessage([]);
+  }
+
   const handleTradeDate = (e) => {
     setTradeDate(e.target.value);
     setCalcResult(null);
@@ -386,7 +396,7 @@ export default function CalculatorPage() {
           <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 mb-6">
             <h2 className="text-xl font-bold text-black mb-4">Cost Details</h2>
             <div className="w-full md:w-1/2">
-              <label className="font-bold mb-2 text-black block">Total Shipping Cost:</label>
+              <label className="font-bold mb-2 text-black block">Product Cost:</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                 <input
@@ -398,6 +408,20 @@ export default function CalculatorPage() {
                   onChange={handleShippingCost}
                   placeholder="0.00"
                 />
+              </div>
+              <div className="mt-4">
+                <label className="font-bold mb-2 text-black block">Product Quantity:</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    step="1"
+                    className="text-black border border-gray-300 rounded px-3 py-2 w-90 pl-8 bg-white"
+                    value={productQuantity}
+                    onChange={handleProductQuantity}
+                    placeholder="0"
+                  />
+                </div>
               </div>
             </div>
           </div>
