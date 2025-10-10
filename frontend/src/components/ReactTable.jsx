@@ -2,17 +2,32 @@ import {
   useReactTable,
   getCoreRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
 import Button from "./Button";
+import { useState } from "react";
 
 export default function ReactTable({ columns, data, rowLevelFunction }) {
+  const [globalFilter, setGlobalFilter] = useState(""); // State for global filter (overall search)
+  const [columnVisibility, setColumnVisibility] = useState({}); // State for column visibility (which columns to show)
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageIndex: 0, pageSize: 10 } },
+    getSortedRowModel: getSortedRowModel(), // Enables sorting
+    getFilteredRowModel: getFilteredRowModel(), // Enables filtering
+    onGlobalFilterChange: setGlobalFilter, // For global search
+    onColumnVisibilityChange: setColumnVisibility, // For column toggles
+    globalFilterFn: "includesString", // Default global filter (case-insensitive includes)
+    initialState: {
+      pagination: { pageIndex: 0, pageSize: 10 },
+      globalFilter: "",
+    },
+    state: { globalFilter }, 
   });
 
 return (

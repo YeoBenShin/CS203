@@ -416,22 +416,138 @@ export default function ViewTariffsPage() {
           <ReactTable
             columns={[
               {
-                header: "Exporting Country", accessorKey: "exporterName",
-                cell: info => <span className="text-gray-900 font-medium">{info.getValue() || "N/A"}</span>
+                header: "Exporting Country",
+                accessorKey: "exporterName",
+                enableSorting: true, // Enable sorting
+                filterFn: "includesString", // Filter function (case-insensitive includes)
+                cell: info => <span className="text-gray-900 font-medium">{info.getValue() || "N/A"}</span>,
+                header: ({ column }) => (
+                  <div>
+                    <div
+                      className="cursor-pointer select-none flex items-center"
+                      onClick={column.getToggleSortingHandler()}
+                    >
+                      Exporting Country
+                      {column.getIsSorted() === false && <span>&nbsp;↕️</span>}
+                      {column.getIsSorted() === "asc" && <span>&nbsp;🔼</span>}
+                      {column.getIsSorted() === "desc" && <span>&nbsp;🔽</span>}
+                    </div>
+                    <input
+                      type="text"
+                      value={column.getFilterValue() || ""}
+                      onChange={(e) => column.setFilterValue(e.target.value)}
+                      placeholder="Search countries..."
+                      className="mt-1 w-full px-2 py-1 text-xs border rounded"
+                    />
+                  </div>
+                )
               },
-              { header: "Destination Country", accessorKey: "importerName" },
-              { header: "HS Code", accessorKey: "hSCode" },
               {
-                header: "Product Description", accessorKey: "productDescription",
-                cell: info => info.getValue() ? (info.getValue().length > 40 ? info.getValue().substring(0, 40) + "..." : info.getValue()) : "N/A"
+                header: "Destination Country",
+                accessorKey: "importerName",
+                enableSorting: true,
+                filterFn: "includesString",
+                header: ({ column }) => (
+                  <div>
+                    <div
+                      className="cursor-pointer select-none flex items-center"
+                      onClick={column.getToggleSortingHandler()}
+                    >
+                      Destination Country
+                      {column.getIsSorted() === false && <span>&nbsp;↕️</span>}
+                      {column.getIsSorted() === "asc" && <span>&nbsp;🔼</span>}
+                      {column.getIsSorted() === "desc" && <span>&nbsp;🔽</span>}
+                    </div>
+                    <input
+                      type="text"
+                      value={column.getFilterValue() || ""}
+                      onChange={(e) => column.setFilterValue(e.target.value)}
+                      placeholder="Search countries..."
+                      className="mt-1 w-full px-2 py-1 text-xs border rounded"
+                    />
+                  </div>
+                ),
               },
               {
-                header: "Tariff Rates", accessorKey: "tariffRates",
+                header: "HS Code",
+                accessorKey: "hSCode",
+                enableSorting: true,
+                filterFn: "includesString", // Or use a number filter if needed
+                header: ({ column }) => (
+                  <div>
+                    <div
+                      className="cursor-pointer select-none flex items-center"
+                      onClick={column.getToggleSortingHandler()}
+                    >
+                      HS Code
+                      {column.getIsSorted() === false && <span>&nbsp;↕️</span>}
+                      {column.getIsSorted() === "asc" && <span>&nbsp;🔼</span>}
+                      {column.getIsSorted() === "desc" && <span>&nbsp;🔽</span>}
+                    </div>
+                    <input
+                      type="text"
+                      value={column.getFilterValue() || ""}
+                      onChange={(e) => column.setFilterValue(e.target.value)}
+                      placeholder="Search HS codes..."
+                      className="mt-1 w-full px-2 py-1 text-xs border rounded"
+                    />
+                  </div>
+                ),
+              },
+              {
+                header: "Product Description",
+                accessorKey: "productDescription",
+                enableSorting: true,
+                filterFn: "includesString",
+                cell: info => info.getValue() ? (info.getValue().length > 40 ? info.getValue().substring(0, 40) + "..." : info.getValue()) : "N/A",
+                header: ({ column }) => (
+                  <div>
+                    <div
+                      className="cursor-pointer select-none flex items-center"
+                      onClick={column.getToggleSortingHandler()}
+                    >
+                      Product Description
+                      {column.getIsSorted() === false && <span>&nbsp;↕️</span>}
+                      {column.getIsSorted() === "asc" && <span>&nbsp;🔼</span>}
+                      {column.getIsSorted() === "desc" && <span>&nbsp;🔽</span>}
+                    </div>
+                    <input
+                      type="text"
+                      value={column.getFilterValue() || ""}
+                      onChange={(e) => column.setFilterValue(e.target.value)}
+                      placeholder="Search products..."
+                      className="mt-1 w-full px-2 py-1 text-xs border rounded"
+                    />
+                  </div>
+                ),
+              },
+              {
+                header: "Tariff Rates",
+                accessorKey: "tariffRates",
+                enableSorting: false, // Disable if sorting complex data doesn't make sense
+                enableColumnFilter: true,
+                filterFn: (row, columnId, filterValue) => {
+                  // Custom filter for tariff rates (search within the formatted string)
+                  const formattedRates = formatTariffRatesDisplay(row.getValue(columnId));
+                  return formattedRates.toLowerCase().includes(filterValue.toLowerCase());
+                },
                 cell: info => (
                   <div className="text-gray-900 font-medium">
                     {formatTariffRatesDisplay(info.getValue())}
                   </div>
-                )
+                ),
+                header: ({ column }) => (
+                  <div>
+                    <div>Tariff Rates</div> {/* No sorting for now */}
+                    <input
+                      type="text"
+                      value={column.getFilterValue() || ""}
+                      onChange={(e) => column.setFilterValue(e.target.value)}
+                      placeholder="Search rates..."
+                      className="mt-1 w-full px-2 py-1 text-xs border rounded"
+                    />
+                  </div>
+                ),
               },
             ]}
             data={filteredTariffs}

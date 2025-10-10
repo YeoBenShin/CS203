@@ -31,9 +31,6 @@ public class Tariff {
     @JoinColumn(name = "hs_code", referencedColumnName = "hs_code")
     private Product product;
 
-    @Column(name = "tariff_name")
-    private String tariffName;
-
     @Column(name = "effective_date")
     private Date effectiveDate;
 
@@ -49,10 +46,9 @@ public class Tariff {
     // Constructors
     public Tariff() {}
 
-    public Tariff(Long tariffID, Product product, String tariffName, CountryPair countryPair, Date effectiveDate, Date expiryDate, String reference) {
+    public Tariff(Long tariffID, Product product, CountryPair countryPair, Date effectiveDate, Date expiryDate, String reference) {
         this.tariffID = tariffID;
         this.product = product;
-        this.tariffName = tariffName;
         this.countryPair = countryPair;
         this.effectiveDate = effectiveDate;
         this.expiryDate = expiryDate;
@@ -93,14 +89,6 @@ public class Tariff {
         this.product = product;
     }
 
-    public String getTariffName() {
-        return tariffName;
-    }
-
-    public void setTariffName(String tariffName) {
-        this.tariffName = tariffName;
-    }
-
     public CountryPair getCountryPair() {
         return countryPair;
     }
@@ -121,11 +109,9 @@ public class Tariff {
 
     @Override
     public String toString() {
-        return "Tariff [tariffID=" + tariffID + ", product=" + product + ", tariffName=" + tariffName + ", countryPair="
+        return "Tariff [tariffID=" + tariffID + ", product=" + product + ", countryPair="
                 + countryPair + ", effectiveDate=" + effectiveDate + ", expiryDate=" + expiryDate + ", reference="
                 + reference + "]";
     }
-
-
 
 }
