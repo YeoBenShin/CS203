@@ -8,7 +8,7 @@ import PopUpWrapper from "../../components/popUps/PopUpWrapper";
 import TariffDetailPopUp from "../../components/popUps/TariffDetailPopUp";
 import DeleteTariffPopUp from "../../components/popUps/DeleteTariffPopUp";
 import LoadingPage from "../../components/LoadingPage";
-import { formatRate, formatUnitOfCalculation, formatDateForInput } from "@/utils/formatDisplayHelpers";
+import { formatRate, formatUnitOfCalculation, formatDateForInput, formatDate } from "@/utils/formatDisplayHelpers";
 
 export default function ViewTariffsPage() {
 
@@ -231,6 +231,7 @@ export default function ViewTariffsPage() {
   };
 
   const handleEditFormChange = (e) => {
+    console.log("Edit form change:", e.target.name, e.target.value);
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
     // Clear errors when user starts typing
     if (editErrors.length > 0) {
@@ -258,15 +259,15 @@ export default function ViewTariffsPage() {
 
     // Check date logic
     if (editForm.effectiveDate && editForm.expiryDate) {
-      const effectiveDate = new Date(editForm.effectiveDate);
-      const expiryDate = new Date(editForm.expiryDate);
+      const effectiveDate = formatDateForInput(editForm.effectiveDate);
+      const expiryDate = formatDateForInput(editForm.expiryDate);
       if (expiryDate <= effectiveDate) {
         validationErrors.push("Expiry date must be after the effective date");
       }
     } else if (editForm.effectiveDate && tariffToEdit.expiryDate) { // past data must have expiry, else don't even need to compare
-      const effectiveDate = new Date(editForm.effectiveDate);
+      const effectiveDate = formatDateForInput(editForm.effectiveDate);
       if (!tariffToEdit.expiryDate) {
-        const currentExpiryDate = new Date(tariffToEdit.expiryDate);
+        const currentExpiryDate = formatDateForInput(tariffToEdit.expiryDate);
         if (effectiveDate >= currentExpiryDate) {
           validationErrors.push("Effective date must be before the expiry date");
         }
@@ -304,8 +305,8 @@ export default function ViewTariffsPage() {
         importer: tariffToEdit.importerCode,
         hscode: tariffToEdit.hSCode,
         tariffRates: tariffRatesMap,
-        effectiveDate: new Date(editForm.effectiveDate).toISOString(),
-        expiryDate: new Date(editForm.expiryDate).toISOString(),
+        effectiveDate: formatDateForInput(editForm.effectiveDate),
+        expiryDate: formatDateForInput(editForm.expiryDate),
         reference: editForm.reference || null
       };
       console.log("Submitting edit with data:", requestData);
@@ -497,6 +498,9 @@ export default function ViewTariffsPage() {
                 <p><span className="font-medium">Route:</span> {tariffToEdit.exporterName} → {tariffToEdit.importerName}</p>
                 <p><span className="font-medium">Product:</span> {tariffToEdit.productDescription || "N/A"} ({tariffToEdit.hSCode})</p>
                 <p><span className="font-medium">Current Rates:</span> {formatTariffRatesDisplay(tariffToEdit.tariffRates)}</p>
+                <p><span className="font-medium">Effective Date:</span> {formatDate(tariffToEdit.effectiveDate)}</p>
+                <p><span className="font-medium">Expiry Date:</span> {formatDate(tariffToEdit.expiryDate)}</p>
+                <p><span className="font-medium">Reference:</span> {tariffToEdit.reference || "N/A"}</p>
               </div>
             </div>
 

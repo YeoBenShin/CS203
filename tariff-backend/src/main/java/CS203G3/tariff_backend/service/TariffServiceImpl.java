@@ -267,10 +267,8 @@ public class TariffServiceImpl implements TariffService {
         if (updateDto.getExpiryDate() != null) {
             tariff.setExpiryDate(new Date(updateDto.getExpiryDate().getTime()));
         }
-
-        if (updateDto.getReference() != null) {
-            tariff.setReference(updateDto.getReference());
-        }
+        // set reference regardless, because can be blank also
+        tariff.setReference(updateDto.getReference());
 
         // save and cascade to all tariff rates
         return tariffRepository.save(tariff);
