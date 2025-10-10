@@ -15,9 +15,12 @@ export default function CalculatorPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Country and trade direction states
-  const [countryOptions, setCountryOptions] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [exportCountryOptions, setExportCountryOptions] = useState([]);
+  const [selectedExportCountry, setExportSelectedCountry] = useState(null);
 
+  const [importCountryOptions, setImportCountryOptions] = useState([]);
+  const [selectedImportCountry, setImportSelectedCountry] = useState(null);
+  
   // Other form states
   const [shippingCost, setShippingCost] = useState('');
   const [tradeDate, setTradeDate] = useState("");
@@ -80,9 +83,9 @@ export default function CalculatorPage() {
       const data = await response.json();
 
       const products = data.map(item => ({
-        value: item.hsCode,
+        value: item.hscode,
         description: item.description,
-        label: `${item.hsCode} - ${item.description}`
+        label: `${item.hscode} - ${item.description}`
       }));
       setHsCodeOptions(products);
 
@@ -102,7 +105,8 @@ export default function CalculatorPage() {
         value: country.isoCode,
         label: country.isoCode + " - " + country.name
       }));
-      setCountryOptions(countries);
+      setExportCountryOptions(countries);
+      setImportCountryOptions(countries);
     } catch (error) {
       errorMessage.push("Error fetching countries: " + error);
       console.error('Error fetching countries:', error);
@@ -119,14 +123,24 @@ export default function CalculatorPage() {
     setSelectedProduct(option);
   };
 
-  const handleCountrySelection = (option) => {
+  const handleExportCountrySelection = (option) => {
     if (!option) {
-      setSelectedCountry(null);
+      setExportSelectedCountry(null);
       return;
     }
     setCalcResult(null);
     setErrorMessage([]);
-    setSelectedCountry(option);
+    setExportSelectedCountry(option);
+  };
+
+  const handleImportCountrySelection = (option) => {
+    if (!option) {
+      setImportSelectedCountry(null);
+      return;
+    }
+    setCalcResult(null);
+    setErrorMessage([]);
+    setImportSelectedCountry(option);
   };
 
   // Removed search and tariff selection related functions
@@ -155,8 +169,10 @@ export default function CalculatorPage() {
       newErrorMsg.push("HS Code must be a 10 digit number");
     }
 
-    if (!selectedCountry) {
-      newErrorMsg.push("Please select a valid Country");
+    if (!(selectedExportCountry && selectedImportCountry)) {
+      newErrorMsg.push("Please select both Exporting and Importing Countries");
+    } else if (selectedExportCountry.value === selectedImportCountry.value) {
+      newErrorMsg.push("Please select different Exporting and Importing Countries");
     }
 
     if (!shippingCost || !/^\d+(\.\d{1,2})?$/.test(shippingCost) || parseFloat(shippingCost) <= 0) {
@@ -322,6 +338,30 @@ export default function CalculatorPage() {
             <h2 className="text-xl font-bold text-black mb-4">Enter Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
+                <label className="font-bold mb-2 text-black block">Importing Country:</label>
+                <FieldSelector
+                  options={importCountryOptions}
+                  value={selectedImportCountry}
+                  onChange={handleImportCountrySelection}
+                  placeholder="Enter Country..."
+                  isClearable
+                />
+              </div>
+            <div>
+              <div>
+                <label className="font-bold mb-2 text-black block">Exporting Country:</label>
+                <FieldSelector
+                  options={exportCountryOptions}
+                  value={selectedExportCountry}
+                  onChange={handleExportCountrySelection}
+                  placeholder="Enter Country..."
+                  isClearable
+                />
+              </div>
+            </div>
+            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div className="w-full">
                 <label className="font-bold mb-2 text-black block">Search by HS Code / Description:</label>
                 <FieldSelector
                   options={hsCodeOptions}
@@ -329,28 +369,18 @@ export default function CalculatorPage() {
                   onChange={handleHsCodeSelection}
                   placeholder="Select HS Code..."
                 />
-              </div>
-              <div>
-                <label className="font-bold mb-2 text-black block">Exporting Country:</label>
-                <FieldSelector
-                  options={countryOptions}
-                  value={selectedCountry}
-                  onChange={handleCountrySelection}
-                  placeholder="Enter Country..."
-                  isClearable
-                />
-              </div>
             </div>
-            <div className="mt-4 w-full md:w-1/2">
+            <div>
               <label className="font-bold mb-2 text-black block">Date of Trade:</label>
               <input
                 type="date"
-                className="text-black border border-gray-300 rounded px-3 py-2 w-90 bg-white"
+                className="text-black border border-gray-300 rounded px-3 py-2 w-90 h-9.5 bg-white"
                 value={tradeDate}
                 onChange={handleTradeDate}
               />
             </div>
           </div>
+        </div>
 
           {/* Shipping Cost Section */}
           <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 mb-6">
