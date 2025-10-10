@@ -34,9 +34,6 @@ export default function ViewTariffsPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [editErrors, setEditErrors] = useState([]);
   const [editForm, setEditForm] = useState({
-    exporter: "",
-    importer: "",
-    hSCode: "",
     tariffRates: [],
     effectiveDate: "",
     expiryDate: "",
@@ -52,6 +49,9 @@ export default function ViewTariffsPage() {
   const role = user?.publicMetadata?.role || "user";
 
 
+  // ----------------------------------------------------------
+  // Helper Functions
+  // ----------------------------------------------------------
   const formatTariffRatesDisplay = (tariffRates) => {
     if (!tariffRates || tariffRates.length === 0) {
       return "N/A";
@@ -71,9 +71,9 @@ export default function ViewTariffsPage() {
     }).join(" + ");
   };
 
-  /*
-  * Use Effects 
-  */
+  // ----------------------------------------------------------
+  // Use Effects 
+  // ----------------------------------------------------------
   useEffect(() => {
     fetchTariffs();
     // Cleanup effect to restore scrolling when component unmounts
@@ -133,9 +133,9 @@ export default function ViewTariffsPage() {
     setFilteredTariffs(tariffs);
   };
 
-  /*
-    * View Tariff Detail Functions
-    */
+  // ----------------------------------------------------------
+  // View Tariff PopUp
+  // ----------------------------------------------------------
   const handleShowDetails = (tariff) => {
     setSelectedTariff(tariff);
     setTariffToEdit(tariff);
@@ -151,9 +151,9 @@ export default function ViewTariffsPage() {
     document.body.style.overflow = 'unset';
   };
 
-  /*
-  * Delete Functions
-  */
+  // ----------------------------------------------------------
+  // Delete Tariff
+  // ----------------------------------------------------------
   const handleDelete = () => {
     setTariffToDelete(selectedTariff);
     setShowDeletePopup(true);
@@ -195,14 +195,11 @@ export default function ViewTariffsPage() {
     document.body.style.overflow = 'unset';
   };
 
-  /*
-  * Edit Functions
-  */
+  // ----------------------------------------------------------
+  // Edit Tariff
+  // ----------------------------------------------------------
   const openEditPopup = () => {
     setEditForm({
-      exporter: tariffToEdit.exporterCode,
-      importer: tariffToEdit.importerCode,
-      hSCode: tariffToEdit.hSCode,
       effectiveDate: formatDateForInput(tariffToEdit.effectiveDate),
       expiryDate: formatDateForInput(tariffToEdit.expiryDate),
       reference: tariffToEdit.reference || "",
@@ -223,9 +220,6 @@ export default function ViewTariffsPage() {
     setShowEditPopup(false);
     setTariffToEdit(null);
     setEditForm({
-      exporter: "",
-      importer: "",
-      hSCode: "",
       tariffRates: [],
       effectiveDate: "",
       expiryDate: "",
@@ -256,9 +250,11 @@ export default function ViewTariffsPage() {
 
   const validateEditForm = () => {
     const validationErrors = [];
-    if (!/^\d+(\.\d{1,2})?$/.test(editForm.rate)) {
-      validationErrors.push("Tariff rate cannot be negative");
-    }
+    editForm.tariffRates.map(tariff => {
+      if (!/^\d+(\.\d{1,2})?$/.test(tariff.rate)) {
+        validationErrors.push(`Tariff Rate ${tariff.tariffRateID} must be a valid number`);
+      }
+    });
 
     // Check date logic
     if (editForm.effectiveDate && editForm.expiryDate) {
@@ -295,15 +291,24 @@ export default function ViewTariffsPage() {
         return;
       }
 
+      // Transform tariffRates array to Map format for backend
+      const tariffRatesMap = {};
+      editForm.tariffRates.forEach(rate => {
+        tariffRatesMap[rate.unitOfCalculation] = rate.unitOfCalculation === 'AV'
+          ? parseFloat(rate.rate) / 100
+          : parseFloat(rate.rate);
+      });
+
       const requestData = {
         exporter: tariffToEdit.exporterCode,
         importer: tariffToEdit.importerCode,
-        hSCode: tariffToEdit.hSCode,
-        rate: parseFloat(editForm.rate) / 100, // Convert percentage back to decimal
+        hscode: tariffToEdit.hSCode,
+        tariffRates: tariffRatesMap,
         effectiveDate: new Date(editForm.effectiveDate).toISOString(),
-        expiryDate: editForm.expiryDate ? new Date(editForm.expiryDate).toISOString() : null,
+        expiryDate: new Date(editForm.expiryDate).toISOString(),
         reference: editForm.reference || null
       };
+      console.log("Submitting edit with data:", requestData);
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs/${tariffToEdit.tariffID}`, {
         method: "PUT",
@@ -498,15 +503,13 @@ export default function ViewTariffsPage() {
             <form onSubmit={handleEditSubmit} className="space-y-2">
               {/* Tariff Rates Section */}
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
-                  Tariff Rates
-                </label>
                 {editForm.tariffRates.map((tariffRate, index) => (
-                  <div key={index} className="mb-3 p-3 rounded border">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        Rate {index + 1}: ${tariffRate.rate}{formatUnitOfCalculation(tariffRate.unitOfCalculation)}
-                      </span>
+                  <div key={index}>
+                    <div className="flex items-center justify-between mb-1 mt-1">
+                      <label className="block text-gray-700 text-sm font-medium">
+                        Tariff Rate {index + 1}:
+                        {tariffRate.unitOfCalculation === "AV" ? " (%)" : (" ($" + formatUnitOfCalculation(tariffRate.unitOfCalculation) + ")")}
+                      </label>
                     </div>
                     <div className="flex space-x-2">
                       <input
