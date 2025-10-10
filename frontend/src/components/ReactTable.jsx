@@ -7,12 +7,9 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import Button from "./Button";
-import { useState } from "react";
+import { useEffect } from "react";
 
-export default function ReactTable({ columns, data, rowLevelFunction }) {
-  const [globalFilter, setGlobalFilter] = useState(""); // State for global filter (overall search)
-  const [columnVisibility, setColumnVisibility] = useState({}); // State for column visibility (which columns to show)
-
+export default function ReactTable({ columns, data, rowLevelFunction, globalFilter, setGlobalFilter, onFilteredCountChange}) {
   const table = useReactTable({
     data,
     columns,
@@ -21,7 +18,6 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
     getSortedRowModel: getSortedRowModel(), // Enables sorting
     getFilteredRowModel: getFilteredRowModel(), // Enables filtering
     onGlobalFilterChange: setGlobalFilter, // For global search
-    onColumnVisibilityChange: setColumnVisibility, // For column toggles
     globalFilterFn: "includesString", // Default global filter (case-insensitive includes)
     initialState: {
       pagination: { pageIndex: 0, pageSize: 10 },
@@ -29,6 +25,14 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
     },
     state: { globalFilter }, 
   });
+
+  // Expose the filtered row count to the parent component
+  // useEffect(() => {
+  //   if (onFilteredCountChange) {
+  //     onFilteredCountChange(table.getFilteredRowModel().rows.length);
+  //   }
+  // }, [table.getFilteredRowModel().rows.length, onFilteredCountChange]);
+
 
 return (
     <div className="bg-white shadow overflow-hidden sm:rounded-md">

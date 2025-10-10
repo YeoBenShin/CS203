@@ -14,10 +14,12 @@ export default function ViewTariffsPage() {
 
   // loading tariffs
   const [tariffs, setTariffs] = useState([]);
-  const [filteredTariffs, setFilteredTariffs] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [fetchingError, setFetchingError] = useState("");
+  const [globalFilter, setGlobalFilter] = useState(""); // State for global filter (overall search)
+  // const [filteredCount, setFilteredCount] = useState(0); // To keep track of number of filtered rows
+  // const [filteredTariffs, setFilteredTariffs] = useState([]);
+  // const [searchQuery, setSearchQuery] = useState("");
 
   // clicking on a tariff to view details
   const [showDetailsPopup, setShowDetailsPopup] = useState(false);
@@ -90,7 +92,7 @@ export default function ViewTariffsPage() {
         const data = await response.json();
         // console.log("Fetched tariffs:", data);
         setTariffs(data);
-        setFilteredTariffs(data); // Initialize filtered tariffs with all data
+        // setFilteredTariffs(data); // Initialize filtered tariffs with all data
       } else {
         setFetchingError("Failed to fetch tariffs");
       }
@@ -102,35 +104,34 @@ export default function ViewTariffsPage() {
   };
 
   // Search functionality
-  const handleSearchChange = (e) => {
-    const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
+  // const handleSearchChange = (e) => {
+  //   const query = e.target.value.toLowerCase();
+  //   setSearchQuery(query);
 
-    if (query === "") {
-      setFilteredTariffs(tariffs);
-    } else {
-      const filtered = tariffs.filter(tariff => {
-        // Search in existing fields
-        const basicMatch = tariff.exporterName?.toLowerCase().includes(query) ||
-          tariff.importerName?.toLowerCase().includes(query) ||
-          tariff.hSCode?.toString().toLowerCase().includes(query) ||
-          tariff.productDescription?.toLowerCase().includes(query);
+  //   if (query === "") {
+  //     setFilteredTariffs(tariffs);
+  //   } else {
+  //     const filtered = tariffs.filter(tariff => {
+  //       // Search in existing fields
+  //       const basicMatch = tariff.exporterName?.toLowerCase().includes(query) ||
+  //         tariff.importerName?.toLowerCase().includes(query) ||
+  //         tariff.hSCode?.toString().toLowerCase().includes(query) ||
+  //         tariff.productDescription?.toLowerCase().includes(query);
 
-        // Search in tariff rates
-        const rateMatch = tariff.tariffRates?.some(tariffRate => {
-          const rateString = formatRate(tariffRate.rate, tariffRate.unitOfCalculation).toLowerCase();
-          return rateString.includes(query);
-        });
+  //       // Search in tariff rates
+  //       const rateMatch = tariff.tariffRates?.some(tariffRate => {
+  //         const rateString = formatRate(tariffRate.rate, tariffRate.unitOfCalculation).toLowerCase();
+  //         return rateString.includes(query);
+  //       });
 
-        return basicMatch || rateMatch;
-      });
-      setFilteredTariffs(filtered);
-    }
-  };
+  //       return basicMatch || rateMatch;
+  //     });
+  //     setFilteredTariffs(filtered);
+  //   }
+  // };
 
   const clearSearch = () => {
-    setSearchQuery("");
-    setFilteredTariffs(tariffs);
+    setGlobalFilter("");
   };
 
   // ----------------------------------------------------------
@@ -175,7 +176,7 @@ export default function ViewTariffsPage() {
         const updatedTariffs = tariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID);
         setTariffs(updatedTariffs);
         // Update filtered tariffs to reflect the deletion
-        setFilteredTariffs(filteredTariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID));
+        // setFilteredTariffs(filteredTariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID));
         showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff deleted successfully!");
 
       } else {
@@ -322,7 +323,7 @@ export default function ViewTariffsPage() {
         const updatedTariffs = tariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff);
         setTariffs(updatedTariffs); // show the updated tariff
         // Update filtered tariffs to reflect the edit
-        setFilteredTariffs(filteredTariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff));
+        // setFilteredTariffs(filteredTariffs.map(prevTariff => prevTariff.tariffID === tariffToEdit.tariffID ? updatedTariff : prevTariff));
         handleCancelEdit();
         showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff updated successfully!");
       } else {
@@ -350,8 +351,7 @@ export default function ViewTariffsPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
+          <div className="relative max-w-md mb-4">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -359,12 +359,12 @@ export default function ViewTariffsPage() {
             </div>
             <input
               type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Search tariffs by country, HS code, product, or rate..."
+              value={globalFilter}
+              onChange={(e) => { setGlobalFilter(e.target.value) }}
+              placeholder="Global search across all columns..."
               className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             />
-            {searchQuery && (
+            {globalFilter && (
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <button
                   onClick={clearSearch}
@@ -377,12 +377,11 @@ export default function ViewTariffsPage() {
               </div>
             )}
           </div>
-          {searchQuery && (
-            <p className="mt-2 text-sm text-gray-600">
-              Showing {filteredTariffs.length} of {tariffs.length} tariffs
-            </p>
-          )}
-        </div>
+        {/* {globalFilter && (
+          <div className="mb-4 text-sm text-gray-600">
+            Showing {filteredCount} of {tariffs.length} tariffs
+          </div>
+        )} */}
 
         {deleteMessage && deleteMessage.includes("Error") && (
           <div className="mb-4 p-4 rounded-md bg-red-100 text-red-700">
@@ -396,7 +395,7 @@ export default function ViewTariffsPage() {
           </div>
         )}
 
-        {filteredTariffs.length === 0 ? (
+        {/* {filteredTariffs.length === 0 ? (
           <div className="text-center py-12">
             {searchQuery ? (
               <div>
@@ -412,7 +411,7 @@ export default function ViewTariffsPage() {
               <p className="text-gray-500 text-lg">No tariffs found</p>
             )}
           </div>
-        ) : (
+        ) : ( */}
           <ReactTable
             columns={[
               {
@@ -550,10 +549,13 @@ export default function ViewTariffsPage() {
                 ),
               },
             ]}
-            data={filteredTariffs}
+            data={tariffs}
             rowLevelFunction={handleShowDetails}
+            globalFilter={globalFilter}
+            setGlobalFilter={setGlobalFilter}
+            // onFilteredCountChange={setFilteredCount}
           />
-        )}
+        {/* )} */}
 
         <div className="mt-6 text-center">
           <Button
@@ -627,7 +629,7 @@ export default function ViewTariffsPage() {
                   <div key={index}>
                     <div className="flex items-center justify-between mb-1 mt-1">
                       <label className="block text-gray-700 text-sm font-medium">
-                        Tariff Rate {index + 1}:
+                        Tariff Rate {index + 1}
                         {tariffRate.unitOfCalculation === "AV" ? " (%)" : (" ($" + formatUnitOfCalculation(tariffRate.unitOfCalculation) + ")")}
                       </label>
                     </div>

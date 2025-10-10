@@ -373,7 +373,6 @@ public class TariffServiceImpl implements TariffService {
         CalculationResult cr = tariffCalculationService.calculate(tariffList, calculationDto.getProductValue());
 
         // set other tariff info
-        cr.setTariffName(tariff.getTariffName());
         cr.setEffectiveDate(tariff.getEffectiveDate());
         cr.setExpiryDate(tariff.getExpiryDate());
         cr.setReference(tariff.getReference());
