@@ -6,7 +6,7 @@ import CS203G3.tariff_backend.dto.*;
 import CS203G3.tariff_backend.exception.*;
 import CS203G3.tariff_backend.exception.tariff.*;
 
-import java.sql.Date;
+import java.time.Instant;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -110,10 +110,8 @@ public class TariffServiceImpl implements TariffService {
         String reference = createDto.getReference();
 
         // Convert java.util.Date to java.sql.Date
-        Date effectiveDate = createDto.getEffectiveDate() != null ? 
-            new Date(createDto.getEffectiveDate().getTime()) : null;
-        Date expiryDate = createDto.getExpiryDate() != null ? 
-            new Date(createDto.getExpiryDate().getTime()) : null;
+        Instant effectiveDate = createDto.getEffectiveDate();
+        Instant expiryDate = createDto.getExpiryDate();
 
         // Check for existing tariff with same product, country pair, effective date, and expiry date
         Optional<Tariff> searchTariffOpt = tariffRepository.findByProductAndCountryPairAndEffectiveDateAndExpiryDate(
@@ -240,7 +238,7 @@ public class TariffServiceImpl implements TariffService {
         
         // Rule 4: Expiry date must be after effective date
         if (createDto.getEffectiveDate() != null && createDto.getExpiryDate() != null) {
-            if (createDto.getExpiryDate().before(createDto.getEffectiveDate())) {
+            if (createDto.getExpiryDate().isBefore(createDto.getEffectiveDate())) {
                 throw new ExpiryBeforeEffectiveException("Expiry date must be after effective date");
             }
         }
@@ -261,11 +259,11 @@ public class TariffServiceImpl implements TariffService {
         }
 
         if (updateDto.getEffectiveDate() != null) {
-            tariff.setEffectiveDate(new Date(updateDto.getEffectiveDate().getTime()));
+            tariff.setEffectiveDate(Instant.ofEpochMilli(updateDto.getEffectiveDate().toEpochMilli()));
         }
 
         if (updateDto.getExpiryDate() != null) {
-            tariff.setExpiryDate(new Date(updateDto.getExpiryDate().getTime()));
+            tariff.setExpiryDate(Instant.ofEpochMilli(updateDto.getExpiryDate().toEpochMilli()));
         }
 
         if (updateDto.getReference() != null) {

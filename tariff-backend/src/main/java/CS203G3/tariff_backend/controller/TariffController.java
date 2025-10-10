@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
 
 
 
@@ -67,7 +68,7 @@ public class TariffController {
      * POST /api/tariffs
      */
     @PostMapping
-    public ResponseEntity<TariffDto> createTariff(@RequestBody TariffCreateDto createDto) {
+    public ResponseEntity<TariffDto> createTariff(@Valid    @RequestBody TariffCreateDto createDto) {
         System.out.println("Received TariffCreateDto:");
         System.out.println("Exporter: " + createDto.getExporter());
         System.out.println("HSCode: " + createDto.getHSCode());
@@ -84,7 +85,7 @@ public class TariffController {
      * PUT /api/tariffs/{tariffRateId}
      */
     @PutMapping("/{tariffId}")
-    public ResponseEntity<TariffDto> updateTariff(@PathVariable Long tariffId, @RequestBody TariffCreateDto updateDto) {
+    public ResponseEntity<TariffDto> updateTariff(@PathVariable Long tariffId, @Valid   @RequestBody TariffCreateDto updateDto) {
         TariffDto updatedTariff = tariffService.updateTariffRate(tariffId, updateDto);
         return ResponseEntity.ok(updatedTariff);
     }
@@ -110,7 +111,7 @@ public class TariffController {
     }
 
     @PostMapping("/calculate")
-    public ResponseEntity<CalculationResult> calculateTariff(@RequestBody CalculationRequest calculationDto) {
+    public ResponseEntity<CalculationResult> calculateTariff(@Valid     @RequestBody CalculationRequest calculationDto) {
         CalculationResult calculationResult = tariffService.calculateTariff(calculationDto);
         return ResponseEntity.ok(calculationResult);
     }

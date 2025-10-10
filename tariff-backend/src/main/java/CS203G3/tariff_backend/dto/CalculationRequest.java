@@ -1,7 +1,7 @@
 package CS203G3.tariff_backend.dto;
 
 import java.math.BigDecimal;
-import java.sql.Date;
+import java.time.Instant;
 import java.util.Map;
 
 import CS203G3.tariff_backend.model.UnitOfCalculation;
@@ -16,13 +16,13 @@ public class CalculationRequest {
     private String importer;
     private BigDecimal productValue;
     private Map<UnitOfCalculation, BigDecimal> quantityValues;
-    private Date tradeDate;
+    private Instant tradeDate;
 
     // Constructors
     public CalculationRequest() {}
 
     public CalculationRequest(String hSCode, String importer, String exporter, BigDecimal productValue, Map<UnitOfCalculation, BigDecimal> quantityValues,
-            Date tradeDate) {
+            Instant tradeDate) {
         this.hSCode = hSCode;
         this.importer = importer;
         this.exporter = exporter;
@@ -63,11 +63,11 @@ public class CalculationRequest {
         this.productValue = productValue;
     }
 
-    public Date getTradeDate() {
+    public Instant getTradeDate() {
         return tradeDate;
     }
 
-    public void setTradeDate(Date tradeDate) {
+    public void setTradeDate(Instant tradeDate) {
         this.tradeDate = tradeDate;
     }
 

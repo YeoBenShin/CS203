@@ -1,7 +1,7 @@
 package CS203G3.tariff_backend.dto;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.Instant;
 import java.util.Map;
 
 import CS203G3.tariff_backend.model.UnitOfCalculation;
@@ -9,6 +9,7 @@ import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 public class TariffCreateDto {
@@ -19,14 +20,15 @@ public class TariffCreateDto {
     private String importer;
 
     @NotNull(message = "HS Code is required")
+    @JsonProperty("hscode")
     private String hSCode;
 
     @NotNull(message = "EffectiveDate is required")
-    @FutureOrPresent(message = "EffectiveDate must be today or in the future")
-    private Date effectiveDate;  // JavaScript Date object
+    //@FutureOrPresent(message = "EffectiveDate must be today or in the future")
+    private Instant effectiveDate;  // JavaScript Date object
 
-    @Future(message = "ExpiryDate must be in the future")
-    private Date expiryDate;     // JavaScript Date object
+    //@Future(message = "ExpiryDate must be in the future")
+    private Instant expiryDate;     // JavaScript Date object
 
     @Size(max = 255, message = "Reference cannot exceed 255 characters")
     private String reference;
@@ -61,20 +63,20 @@ public class TariffCreateDto {
     public void setHSCode(String hSCode) {
         this.hSCode = hSCode;
     }
-    
-    public Date getEffectiveDate() {
+
+    public Instant getEffectiveDate() {
         return effectiveDate;
     }
 
-    public void setEffectiveDate(Date effectiveDate) {
+    public void setEffectiveDate(Instant effectiveDate) {
         this.effectiveDate = effectiveDate;
     }
 
-    public Date getExpiryDate() {
+    public Instant getExpiryDate() {
         return expiryDate;
     }
 
-    public void setExpiryDate(Date expiryDate) {
+    public void setExpiryDate(Instant expiryDate) {
         this.expiryDate = expiryDate;
     }
 

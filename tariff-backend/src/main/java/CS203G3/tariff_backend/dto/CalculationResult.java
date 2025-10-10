@@ -1,7 +1,7 @@
 package CS203G3.tariff_backend.dto;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -11,8 +11,8 @@ import java.util.List;
 public class CalculationResult {
     private BigDecimal netTotal;
     private String tariffName;
-    private Date effectiveDate;  // JavaScript Date object
-    private Date expiryDate;     // JavaScript Date object
+    private Instant effectiveDate;  // JavaScript Date object
+    private Instant expiryDate;     // JavaScript Date object
     private String reference;
     private List<TariffBreakdown> tariffs;
 
@@ -20,7 +20,7 @@ public class CalculationResult {
     // Constructors
     public CalculationResult() {}
 
-    public CalculationResult(BigDecimal netTotal, String tariffName, Date effectiveDate, Date expiryDate,
+    public CalculationResult(BigDecimal netTotal, String tariffName, Instant effectiveDate, Instant expiryDate,
             String reference, List<TariffBreakdown> tariffs) {
         this.netTotal = netTotal;
         this.tariffName = tariffName;
@@ -55,19 +55,19 @@ public class CalculationResult {
         this.tariffName = tariffName;
     }
 
-    public Date getEffectiveDate() {
+    public Instant getEffectiveDate() {
         return effectiveDate;
     }
 
-    public void setEffectiveDate(Date effectiveDate) {
+    public void setEffectiveDate(Instant effectiveDate) {
         this.effectiveDate = effectiveDate;
     }
 
-    public Date getExpiryDate() {
+    public Instant getExpiryDate() {
         return expiryDate;
     }
 
-    public void setExpiryDate(Date expiryDate) {
+    public void setExpiryDate(Instant expiryDate) {
         this.expiryDate = expiryDate;
     }
 

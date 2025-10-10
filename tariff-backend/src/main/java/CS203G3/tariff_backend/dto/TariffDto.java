@@ -1,6 +1,6 @@
 package CS203G3.tariff_backend.dto;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -13,8 +13,8 @@ public class TariffDto {
     private Long tariffID;
 
     // Core tariff fields
-    private Date effectiveDate;  // JavaScript Date object
-    private Date expiryDate;     // JavaScript Date object
+    private Instant effectiveDate;  // JavaScript Date object
+    private Instant expiryDate;     // JavaScript Date object
     private String reference;
     
     // fields for frontend display from exporter country
@@ -39,20 +39,20 @@ public class TariffDto {
     public void setTariffID(Long tariffID) {
         this.tariffID = tariffID;
     }
-     
-    public Date getEffectiveDate() {
+
+    public Instant getEffectiveDate() {
         return effectiveDate;
     }
 
-    public void setEffectiveDate(Date effectiveDate) {
+    public void setEffectiveDate(Instant effectiveDate) {
         this.effectiveDate = effectiveDate;
     }
 
-    public Date getExpiryDate() {
+    public Instant getExpiryDate() {
         return expiryDate;
     }
 
-    public void setExpiryDate(Date expiryDate) {
+    public void setExpiryDate(Instant expiryDate) {
         this.expiryDate = expiryDate;
     }
 

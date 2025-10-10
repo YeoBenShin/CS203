@@ -1,5 +1,7 @@
 package CS203G3.tariff_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum UnitOfCalculation {
     BBL,
     C,
@@ -82,5 +84,18 @@ public enum UnitOfCalculation {
     W,
     WTS,
     X,
-    AV // Ad Valorem
+    AV; // Ad Valorem
+
+    @JsonCreator
+    public static UnitOfCalculation fromValue(String value) {
+        // This makes the mapping case-insensitive and robust
+        for (UnitOfCalculation unit : UnitOfCalculation.values()) {
+            if (unit.name().equalsIgnoreCase(value)) {
+                return unit;
+            }
+        }
+        throw new IllegalArgumentException("Unknown unit of calculation: " + value);
+    }
 }
+
+    

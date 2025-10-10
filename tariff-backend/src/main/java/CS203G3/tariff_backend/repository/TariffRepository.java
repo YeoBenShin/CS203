@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Date;
+import java.time.Instant;
 import java.util.Optional;
 
 @Repository
@@ -47,14 +47,14 @@ public interface TariffRepository extends JpaRepository<Tariff, Long> {
     Optional<Tariff> findValidTariff(
         @Param("hSCode") String hSCode,
         @Param("countryPair") CountryPair countryPair,
-        @Param("tradeDate") Date tradeDate
+        @Param("tradeDate") Instant tradeDate
     );
 
     @Query("SELECT t FROM Tariff t WHERE t.product = :product AND t.countryPair = :countryPair AND ((:expiryDate IS NULL AND t.expiryDate IS NULL) OR t.expiryDate = :expiryDate) AND t.effectiveDate = :effectiveDate")
     Optional<Tariff> findByProductAndCountryPairAndEffectiveDateAndExpiryDate(
         @Param("product") CS203G3.tariff_backend.model.Product product,
         @Param("countryPair") CountryPair countryPair,
-        @Param("effectiveDate") Date effectiveDate,
-        @Param("expiryDate") Date expiryDate
+        @Param("effectiveDate") Instant effectiveDate,
+        @Param("expiryDate") Instant expiryDate
     );
 }

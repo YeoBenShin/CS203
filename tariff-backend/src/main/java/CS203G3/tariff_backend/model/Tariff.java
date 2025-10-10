@@ -1,6 +1,6 @@
 package CS203G3.tariff_backend.model;
 
-import java.sql.Date;
+import java.time.Instant;
 import java.util.List;
 
 import jakarta.persistence.Entity;
@@ -35,10 +35,10 @@ public class Tariff {
     private String tariffName;
 
     @Column(name = "effective_date")
-    private Date effectiveDate;
+    private Instant effectiveDate;
 
     @Column(name = "expiry_date")
-    private Date expiryDate;
+    private Instant expiryDate;
 
     @Column(name = "reference", length = 255)
     private String reference;
@@ -49,7 +49,7 @@ public class Tariff {
     // Constructors
     public Tariff() {}
 
-    public Tariff(Long tariffID, Product product, String tariffName, CountryPair countryPair, Date effectiveDate, Date expiryDate, String reference) {
+    public Tariff(Long tariffID, Product product, String tariffName, CountryPair countryPair, Instant effectiveDate, Instant expiryDate, String reference) {
         this.tariffID = tariffID;
         this.product = product;
         this.tariffName = tariffName;
@@ -69,19 +69,19 @@ public class Tariff {
         this.tariffID = tariffID;
     }
 
-    public Date getEffectiveDate() {
+    public Instant getEffectiveDate() {
         return effectiveDate;
     }
 
-    public void setEffectiveDate(Date effectiveDate) {
+    public void setEffectiveDate(Instant effectiveDate) {
         this.effectiveDate = effectiveDate;
     }
 
-    public Date getExpiryDate() {
+    public Instant getExpiryDate() {
         return expiryDate;
     }
 
-    public void setExpiryDate(Date expiryDate) {
+    public void setExpiryDate(Instant expiryDate) {
         this.expiryDate = expiryDate;
     }
 
