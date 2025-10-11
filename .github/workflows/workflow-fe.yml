@@ -4,9 +4,11 @@ name: Frontend CD
 on:
     push:
         branches: ["main"]
-        paths: ["frontend"]
+        paths: 
+          - "frontend/**"
     pull_request:
-        paths: ["frontend"]
+        paths: 
+          - "frontend/**"
     workflow_dispatch:
 
 env:
