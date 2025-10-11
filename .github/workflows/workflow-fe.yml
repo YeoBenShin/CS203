@@ -1,5 +1,4 @@
-
-name: Frontend CD
+name: Frontend CI/CD
 
 on:
     push:
@@ -21,19 +20,27 @@ env:
   CONTAINER_NAME: tariffy-frontend
 
 jobs:
-    # build:
-    #     runs-on: ubuntu-latest
-    #     steps:
-    #     - uses: actions/checkout@v4
-    #     - name: Install deps & build
-    #       working-directory: ./frontend
-    #       run: |
-    #         npm ci
-    #         npm run build
+    build:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v4
+
+        - name: Create frontend .env from secrets
+          run: |
+            cat > frontend/.env <<EOF
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+            EOF
+
+        - name: Install deps & build
+          working-directory: ./frontend
+          run: |
+            npm ci
+            npm run build
 
     push-to-ecr:
         runs-on: ubuntu-latest
         environment: production
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         steps:
           - name: Checkout
             uses: actions/checkout@v4
