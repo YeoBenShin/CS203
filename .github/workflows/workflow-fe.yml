@@ -17,8 +17,8 @@ jobs:
         steps:
         - uses: actions/checkout@v4
         - name: Install deps & build
-        working-directory: ./frontend
-        run: |
+          working-directory: ./frontend
+          run: |
             npm ci
             npm run build
 
@@ -27,32 +27,31 @@ jobs:
         runs-on: ubuntu-latest
         environment: production
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
         steps:
-        - name: Checkout
-        uses: actions/checkout@v4
-        
-        - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-            aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
-            aws-region: ${{ env.AWS_REGION }}
+          - name: Checkout
+            uses: actions/checkout@v4
+            
+          - name: Configure AWS credentials
+            uses: aws-actions/configure-aws-credentials@v1
+            with:
+                aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+                aws-region: ${{ env.AWS_REGION }}
 
-        - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+          - name: Login to Amazon ECR
+            id: login-ecr
+            uses: aws-actions/amazon-ecr-login@v2
 
-        - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-        working-directory: ./frontend
-        run: |
-            # Build a docker container and
-            # push it to ECR so that it can
-            # be deployed to ECS.
-            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-            echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          - name: Build, tag, and push image to Amazon ECR
+            id: build-image
+            env:
+                ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                IMAGE_TAG: ${{ github.sha }}
+            working-directory: ./frontend
+            run: |
+                # Build a docker container and
+                # push it to ECR so that it can
+                # be deployed to ECS.
+                docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+                docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+                echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
