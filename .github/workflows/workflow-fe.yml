@@ -14,18 +14,17 @@ env:
   ECR_REPOSITORY: tariffy/frontend
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-        - uses: actions/checkout@v4
-        - name: Install deps & build
-          working-directory: ./frontend
-          run: |
-            npm ci
-            npm run build
+    # build:
+    #     runs-on: ubuntu-latest
+    #     steps:
+    #     - uses: actions/checkout@v4
+    #     - name: Install deps & build
+    #       working-directory: ./frontend
+    #       run: |
+    #         npm ci
+    #         npm run build
 
     push-to-ecr:
-        needs: build
         runs-on: ubuntu-latest
         environment: production
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
