@@ -20,7 +20,7 @@ export default function CalculatorPage() {
 
   const [importCountryOptions, setImportCountryOptions] = useState([]);
   const [selectedImportCountry, setImportSelectedCountry] = useState(null);
-  
+
   // Quantity of goods states
   const [productQuantity, setProductQuantity] = useState('');
 
@@ -203,7 +203,7 @@ export default function CalculatorPage() {
     setLoading(true);
     const data = {
       hsCode: selectedProduct.value,
-      country: selectedCountry.value,
+      country: selectedExportCountry.value,
       shippingCost: parseFloat(shippingCost),
       tradeDate: tradeDate
     };
@@ -230,7 +230,7 @@ export default function CalculatorPage() {
           id: crypto.randomUUID(),
           product: selectedProduct.description,
           hsCode: selectedProduct.value,
-          country: selectedCountry.label.split(' - ')[1], // Get country name
+          country: selectedExportCountry.label.split(' - ')[1], // Get country name
           totalCost: responseData.totalCost,
           totalTariffCost: responseData.totalTariffCost,
           totalTariffRate: responseData.totalTariffRate.toFixed(2),
@@ -340,7 +340,7 @@ export default function CalculatorPage() {
           <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
             <h2 className="text-lg font-semibold text-blue-900 mb-2">Calculate Tariff For A Product!</h2>
             <p className="text-sm text-gray-600">Calculate import tariffs for your international trade.
-            <br/> Enter your product details, shipping cost, and trade date below to get started. </p>
+              <br /> Enter your product details, shipping cost, and trade date below to get started. </p>
           </div>
 
           {/* Manual Input Section */}
@@ -357,21 +357,21 @@ export default function CalculatorPage() {
                   isClearable
                 />
               </div>
-            <div>
               <div>
-                <label className="font-bold mb-2 text-black block">Exporting Country:</label>
-                <FieldSelector
-                  options={exportCountryOptions}
-                  value={selectedExportCountry}
-                  onChange={handleExportCountrySelection}
-                  placeholder="Enter Country..."
-                  isClearable
-                />
+                <div>
+                  <label className="font-bold mb-2 text-black block">Exporting Country:</label>
+                  <FieldSelector
+                    options={exportCountryOptions}
+                    value={selectedExportCountry}
+                    onChange={handleExportCountrySelection}
+                    placeholder="Enter Country..."
+                    isClearable
+                  />
+                </div>
               </div>
             </div>
-            </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-            <div className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <div className="w-full">
                 <label className="font-bold mb-2 text-black block">Search by HS Code / Description:</label>
                 <FieldSelector
                   options={hsCodeOptions}
@@ -379,18 +379,18 @@ export default function CalculatorPage() {
                   onChange={handleHsCodeSelection}
                   placeholder="Select HS Code..."
                 />
-            </div>
-            <div>
-              <label className="font-bold mb-2 text-black block">Date of Trade:</label>
-              <input
-                type="date"
-                className="text-black border border-gray-300 rounded px-3 py-2 w-90 h-9.5 bg-white"
-                value={tradeDate}
-                onChange={handleTradeDate}
-              />
+              </div>
+              <div>
+                <label className="font-bold mb-2 text-black block">Date of Trade:</label>
+                <input
+                  type="date"
+                  className="text-black border border-gray-300 rounded px-3 py-2 w-90 h-9.5 bg-white"
+                  value={tradeDate}
+                  onChange={handleTradeDate}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
           {/* Shipping Cost Section */}
           <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 mb-6">
@@ -473,7 +473,7 @@ export default function CalculatorPage() {
                   </div>
                   <div>
                     <span className="font-semibold text-gray-700">Trade Partners: </span>
-                    <span className="text-black">{`${selectedCountry?.value ? selectedCountry.value : 'N/A'} → USA`} </span>
+                    <span className="text-black">{`${selectedExportCountry?.value ? selectedExportCountry.value : 'N/A'} → USA`} </span>
                   </div>
                   <div>
                     <span className="font-semibold text-gray-700">Trade Date: </span>

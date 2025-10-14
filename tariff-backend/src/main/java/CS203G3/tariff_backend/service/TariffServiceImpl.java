@@ -1,22 +1,40 @@
 package CS203G3.tariff_backend.service;
 
-import CS203G3.tariff_backend.model.*;
-import CS203G3.tariff_backend.repository.*;
-import CS203G3.tariff_backend.dto.*;
-import CS203G3.tariff_backend.exception.*;
-import CS203G3.tariff_backend.exception.tariff.*;
-
-import java.sql.Date;
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import CS203G3.tariff_backend.dto.CalculationRequest;
+import CS203G3.tariff_backend.dto.CalculationResult;
+import CS203G3.tariff_backend.dto.TariffCalculationMap;
+import CS203G3.tariff_backend.dto.TariffCreateDto;
+import CS203G3.tariff_backend.dto.TariffDto;
+import CS203G3.tariff_backend.dto.TariffRateBreakdownDto;
+import CS203G3.tariff_backend.exception.ResourceAlreadyExistsException;
+import CS203G3.tariff_backend.exception.ResourceNotFoundException;
+import CS203G3.tariff_backend.exception.tariff.ExpiryBeforeEffectiveException;
+import CS203G3.tariff_backend.exception.tariff.ImmutableFieldChangeException;
+import CS203G3.tariff_backend.exception.tariff.NegativeTariffRateException;
+import CS203G3.tariff_backend.exception.tariff.SameCountryException;
+import CS203G3.tariff_backend.exception.tariff.WrongNumberOfArgumentsException;
+import CS203G3.tariff_backend.model.CountryPair;
+import CS203G3.tariff_backend.model.Product;
+import CS203G3.tariff_backend.model.Tariff;
+import CS203G3.tariff_backend.model.TariffRate;
+import CS203G3.tariff_backend.model.UnitOfCalculation;
+import CS203G3.tariff_backend.repository.CountryPairRepository;
+import CS203G3.tariff_backend.repository.CountryRepository;
+import CS203G3.tariff_backend.repository.ProductRepository;
+import CS203G3.tariff_backend.repository.TariffRateRepository;
+import CS203G3.tariff_backend.repository.TariffRepository;
 
 /**
  * Implementation of TariffService with DTO support
@@ -346,7 +364,7 @@ public class TariffServiceImpl implements TariffService {
         Optional<Tariff> tariffOpt = tariffRepository.findValidTariff(
             calculationDto.getHSCode(),
             countryPair,
-            calculationDto.getTradeDate()
+            calculationDto.getTradeDataAsDate()
         );
         Tariff tariff = tariffOpt.orElseThrow(() ->
             new ResourceNotFoundException("No such tariff record found")

@@ -78,4 +78,29 @@ public class CalculationResult {
     public void setReference(String reference) {
         this.reference = reference;
     }
+
+    // Frontend expected fields
+    public BigDecimal getTotalCost() {
+        return netTotal;
+    }
+
+    public BigDecimal getTotalTariffCost() {
+        // Calculate total tariff cost by summing all tariff breakdown costs
+        if (tariffs != null) {
+            return tariffs.stream()
+                    .map(TariffBreakdown::getTariffCost)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        return BigDecimal.ZERO;
+    }
+
+    public BigDecimal getTotalTariffRate() {
+        // Calculate total tariff rate by summing all tariff rates
+        if (tariffs != null) {
+            return tariffs.stream()
+                    .map(TariffBreakdown::getTariffRate)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        return BigDecimal.ZERO;
+    }
 }
