@@ -111,7 +111,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
               value={globalFilter}
               onChange={(e) => { setGlobalFilter(e.target.value) }}
               placeholder="Search across all columns..."
-              className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+              className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
             />
             {globalFilter && <Cross onClick={clearSearch} />}
           </div>
@@ -230,7 +230,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                                       value={filterSearch[header.column.id] || ""}
                                       onChange={(e) => setFilterSearch(prev => ({ ...prev, [header.column.id]: e.target.value }))}
                                       placeholder="Search countries..."
-                                      className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      className="w-full pl-10 pr-3 py-2 text-s border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                     />
                                     {filterSearch[header.column.id] && (<Cross onClick={() => setFilterSearch(prev => ({ ...prev, [header.column.id]: "" }))} />)}
                                   </div>
@@ -239,7 +239,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                                   <button
                                     onClick={() => clearColFilter(header.column)}
                                     disabled={!header.column.getFilterValue()}
-                                    className={`w-full py-2 text-sm font-medium border rounded-lg transition-colors duration-200 ${header.column.getFilterValue()
+                                    className={`w-full py-2 text-s font-medium border rounded-lg transition-colors duration-200 ${header.column.getFilterValue()
                                         ? 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100'
                                         : 'bg-gray-50 border-gray-300 text-gray-400 cursor-not-allowed'
                                       }`}
@@ -269,9 +269,9 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                                               : currentFilters.filter(v => v !== value);
                                             header.column.setFilterValue(newFilters.length > 0 ? newFilters : undefined);
                                           }}
-                                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                          className="w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-1"
                                         />
-                                        <span className="ml-3 text-sm text-gray-700">{value}</span>
+                                        <span className="ml-3 text-s text-gray-700">{value}</span>
                                       </label>
                                     ))}
                                   </div>
@@ -280,14 +280,15 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                             )}
                           </div>
                         ) : (
-                          <div>
+                          <div className="relative">
                             <input
                               type="text"
                               value={header.column.getFilterValue() || ""}
                               onChange={(e) => header.column.setFilterValue(e.target.value)}
                               placeholder={`Search ${header.column.columnDef.header}...`}
-                              className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                              className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                             />
+                            {header.column.getFilterValue() && <Cross onClick={() => header.column.setFilterValue("")} />}
                           </div>
                         )}
                       </div>
