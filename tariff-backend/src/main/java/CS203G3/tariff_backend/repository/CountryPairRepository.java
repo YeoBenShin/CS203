@@ -13,4 +13,7 @@ import org.springframework.stereotype.Repository;
 public interface CountryPairRepository extends JpaRepository<CountryPair, Long> {
     @Query("SELECT cp FROM CountryPair cp WHERE cp.exporter.isoCode = :exporterIso AND cp.importer.isoCode = :importerIso")
     CountryPair findSingleByExporterAndImporter(@Param("exporterIso") String exporterIso, @Param("importerIso") String importerIso);
+
+    @Query("SELECT cp FROM CountryPair cp WHERE cp.exporter.isoCode = :exporterIso AND cp.importer.isoCode = :importerIso")
+    List<CountryPair> findByExporterAndImporter(@Param("exporterIso") String exporterIso, @Param("importerIso") String importerIso);
 }

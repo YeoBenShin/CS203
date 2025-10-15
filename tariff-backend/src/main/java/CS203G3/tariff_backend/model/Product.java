@@ -1,12 +1,14 @@
 package CS203G3.tariff_backend.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 @Entity
 public class Product {
     @Id
     @Column(name = "hs_code")
-    private String hSCode;
+    private String hSCode;  // Keep as String for frontend compatibility
     
     @Column(length = 255)
     private String description;
