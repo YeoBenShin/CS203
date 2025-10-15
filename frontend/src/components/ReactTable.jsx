@@ -126,7 +126,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
 
       {/* Table */}
       < div className="bg-white shadow overflow-auto sm:rounded-md" >
-        < table className="w-full divide-y divide-gray-200 " >
+        < table className="w-full divide-y divide-gray-200" >
           <thead className="bg-gray-50">
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
@@ -138,7 +138,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                     {/* Custom header with sorting and optional filter dropdown */}
                     <div className="flex flex-col justify-between">
                       <div
-                        className="cursor-pointer select-none flex items-center"
+                        className={`${header.column.columnDef.enableSorting ? 'cursor-pointer' : ''} select-none flex items-center`}
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}

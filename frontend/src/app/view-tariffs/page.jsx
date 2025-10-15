@@ -372,7 +372,7 @@ export default function ViewTariffsPage() {
             {
               header: "Tariff Rates",
               accessorKey: "tariffRates",
-              enableSorting: false, // Disable if sorting complex data doesn't make sense
+              enableSorting: false, // sorting complex data doesn't make sense
               enableColumnFilter: false,
               filterFn: (row, columnId, filterValue) => {
                 // Custom filter for tariff rates (search within the formatted string)
