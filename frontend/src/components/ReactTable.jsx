@@ -142,8 +142,8 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
       )}
 
       {/* Table */}
-      < div className="bg-white shadow overflow-auto sm:rounded-md" >
-        < table className="w-full divide-y divide-gray-200" >
+      < div className="bg-white shadow overflow-visible sm:rounded-md" >
+        < table className="w-full divide-y divide-gray-200 overflow-x-auto" >
           <thead className="bg-gray-50">
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
@@ -178,7 +178,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                             Filter Country
                           </button>
                           {dropdownOpen[header.column.id] && (
-                            <div className="absolute right-0 mt-1 w-48 bg-white border rounded-md shadow-lg z-10 p-2 max-h-60 overflow-y-auto">
+                            <div className="absolute right-0 mt-1 w-48 bg-white border rounded-md shadow-lg z-50 p-2 max-h-60 overflow-y-scroll">
                               <input
                                 type="text"
                                 value={filterSearch[header.column.id] || ""}
@@ -188,7 +188,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                               />
                               <button
                                 onClick={() => clearColFilter(header.column)}
-                                className="w-full py-1 text-xs bg-red-100 hover:bg-red-200 border rounded mb-2"
+                                className={`w-full py-1 text-xs bg-red-100 border rounded mb-2 ${header.column.getFilterValue() ? 'hover:bg-red-200 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
                               >
                                 Clear All
                               </button>

@@ -6,7 +6,8 @@ export default function Button({
     colorBg = "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
     width = "w-full",
     otherClass = "",
-    children,}) {
+    children,
+}) {
     return (
         <button
             type={type}
