@@ -231,7 +231,7 @@ export default function ViewWatchListPage() {
                     <Button
                         onClick={fetchTariffs}
                         isLoading={isLoading}
-                        className="inline-flex items-center"
+                        otherClass="inline-flex items-center"
                         width=""
                     >
                         Refresh

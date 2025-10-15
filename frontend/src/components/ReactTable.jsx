@@ -37,17 +37,17 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
   });
 
   // Compute unique values only for columns that have checkbox filtering enabled
-    const uniqueValues = useMemo(() => {
-      const uniques = {};
-      table.getAllColumns().forEach(column => {
-        if (column.columnDef.enableColumnFilter && column.columnDef.accessorKey) {
-          const values = data.map(row => row[column.columnDef.accessorKey]).filter(val => val != null);
-          uniques[column.id] = [...new Set(values)]; // Unique values for checkbox columns
-        }
-      });
-      return uniques;
-    }, [data, table.getAllColumns()]);
-    // console.log("Unique Values:", uniqueValues);
+  const uniqueValues = useMemo(() => {
+    const uniques = {};
+    table.getAllColumns().forEach(column => {
+      if (column.columnDef.enableColumnFilter && column.columnDef.accessorKey) {
+        const values = data.map(row => row[column.columnDef.accessorKey]).filter(val => val != null);
+        uniques[column.id] = [...new Set(values)]; // Unique values for checkbox columns
+      }
+    });
+    return uniques;
+  }, [data, table.getAllColumns()]);
+  // console.log("Unique Values:", uniqueValues);
 
   // Function to toggle dropdown
   const toggleDropdown = (columnId) => {
@@ -60,13 +60,20 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
   };
 
   // Function to clear all filters for a column
-  const clearAllFilters = (column) => {
+  const clearColFilter = (column) => {
     column.setFilterValue(undefined);
     setFilterSearch(prev => ({ ...prev, [column.id]: "" }));
   };
 
   const clearSearch = () => {
     setGlobalFilter("");
+  };
+
+  // Function to clear all filters globally
+  const clearAllFilters = () => {
+    setGlobalFilter("");
+    setColumnFilters([]);
+    setFilterSearch({});
   };
 
   // Effect to handle outside click and focus loss
@@ -79,7 +86,6 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
         }
       });
     };
-
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
@@ -90,7 +96,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
   return (
     <div>
       {/* Search Bar */}
-      <div className="relative max-w-md mb-4" >
+      <div className="relative max-w-md mb-2" >
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -118,9 +124,20 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
           )
         }
       </div >
-      {globalFilter && (
-        <div className="mb-4 text-sm text-gray-600">
-          Showing {table.getFilteredRowModel().rows.length} of {data.length} tariffs
+
+      {(globalFilter || columnFilters.length > 0) && (
+        <div className="flex justify-between items-center mb-2">
+          <div className="text-l text-gray-600 ml-2">
+            Showing {table.getFilteredRowModel().rows.length} of {data.length} tariffs
+          </div>
+          
+          <Button
+            onClick={clearAllFilters}
+            width=""
+            colorBg = "bg-red-600 hover:bg-red-700 focus:ring-red-500"
+          >
+            Clear All Filters
+          </Button>
         </div>
       )}
 
@@ -170,12 +187,12 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                                 className="w-full px-2 py-1 text-xs border rounded mb-2"
                               />
                               <button
-                                onClick={() => clearAllFilters(header.column)}
+                                onClick={() => clearColFilter(header.column)}
                                 className="w-full py-1 text-xs bg-red-100 hover:bg-red-200 border rounded mb-2"
                               >
                                 Clear All
                               </button>
-                              {uniqueValues[header.column.id]?.filter(value => 
+                              {uniqueValues[header.column.id]?.filter(value =>
                                 !filterSearch[header.column.id] || value.toLowerCase().includes(filterSearch[header.column.id].toLowerCase())
                               ).sort((a, b) => {
                                 const aChecked = header.column.getFilterValue()?.includes(a) || false;

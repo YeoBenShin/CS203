@@ -394,7 +394,7 @@ export default function ViewTariffsPage() {
           <Button
             onClick={fetchTariffs}
             isLoading={loading}
-            className="inline-flex items-center"
+            otherClass="inline-flex items-center"
             width=""
           >
             Refresh
