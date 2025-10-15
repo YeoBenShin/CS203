@@ -52,7 +52,7 @@ public interface TariffRepository extends JpaRepository<Tariff, Long> {
             @Param("tradeDate") Date tradeDate
     );
     
-    @Query("SELECT t FROM Tariff t WHERE t.product.hsCode = :hsCode AND t.countryPair.importer.isoCode = :importer AND t.countryPair.exporter.isoCode = :exporter")
+    @Query("SELECT t FROM Tariff t WHERE t.product.hSCode = :hsCode AND t.countryPair.importer.isoCode = :importer AND t.countryPair.exporter.isoCode = :exporter")
     List<Tariff> findByHsCodeAndCountryPair(
         @Param("hsCode") String hsCode,
         @Param("importer") String importer,
