@@ -7,11 +7,16 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import Button from "./Button";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 
 export default function ReactTable({ columns, data, rowLevelFunction }) {
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnFilters, setColumnFilters] = useState([]);
+
+  // State for managing dropdown visibility and search
+  const [dropdownOpen, setDropdownOpen] = useState({});
+  const [filterSearch, setFilterSearch] = useState({});
+  const dropdownRefs = useRef({});
 
   const table = useReactTable({
     data,
@@ -42,12 +47,45 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
       });
       return uniques;
     }, [data, table.getAllColumns()]);
+    // console.log("Unique Values:", uniqueValues);
 
-    console.log("Unique Values:", uniqueValues);
+  // Function to toggle dropdown
+  const toggleDropdown = (columnId) => {
+    setDropdownOpen(prev => ({ ...prev, [columnId]: !prev[columnId] }));
+  };
+
+  // Function to close dropdown
+  const closeDropdown = (columnId) => {
+    setDropdownOpen(prev => ({ ...prev, [columnId]: false }));
+  };
+
+  // Function to clear all filters for a column
+  const clearAllFilters = (column) => {
+    column.setFilterValue(undefined);
+    setFilterSearch(prev => ({ ...prev, [column.id]: "" }));
+  };
 
   const clearSearch = () => {
     setGlobalFilter("");
   };
+
+  // Effect to handle outside click and focus loss
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // console.log("Click outside event:", event);
+      Object.keys(dropdownRefs.current).forEach(columnId => {
+        if (dropdownRefs.current[columnId] && !dropdownRefs.current[columnId].contains(event.target)) {
+          closeDropdown(columnId);
+        }
+      });
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div>
@@ -87,7 +125,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
       )}
 
       {/* Table */}
-      < div className="bg-white shadow overflow-hidden sm:rounded-md" >
+      < div className="bg-white shadow overflow-auto sm:rounded-md" >
         < table className="w-full divide-y divide-gray-200 " >
           <thead className="bg-gray-50">
             {table.getHeaderGroups().map(headerGroup => (
@@ -115,16 +153,37 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                       </div>
                       {/* Checkbox dropdown only for enabled columns */}
                       {header.column.columnDef.enableColumnFilter ? (
-                        <div className="relative ml-2">
+                        <div className="relative" ref={el => dropdownRefs.current[header.column.id] = el}>
                           <button
-                            onClick={() => header.column.setFilterValue(header.column.getFilterValue() ? null : [])}
-                            className="mt-2 w-full py-1 text-xs border rounded cursor-pointer hover:bg-gray-100 "
+                            onClick={() => toggleDropdown(header.column.id)}
+                            className={`mt-2 w-full py-1 text-xs border rounded cursor-pointer items-center  ${header.column.getFilterValue() ? 'bg-green-100 hover:bg-blue-100' : 'hover:bg-gray-100'}`}
                           >
                             Filter Country
                           </button>
-                          {header.column.getFilterValue() !== undefined && (
-                            <div className="absolute right-0 mt-1 w-48 bg-white border rounded-md shadow-lg z-10 p-2 max-h-40 overflow-y-auto">
-                              {uniqueValues[header.column.id]?.map(value => (
+                          {dropdownOpen[header.column.id] && (
+                            <div className="absolute right-0 mt-1 w-48 bg-white border rounded-md shadow-lg z-10 p-2 max-h-60 overflow-y-auto">
+                              <input
+                                type="text"
+                                value={filterSearch[header.column.id] || ""}
+                                onChange={(e) => setFilterSearch(prev => ({ ...prev, [header.column.id]: e.target.value }))}
+                                placeholder="Search countries..."
+                                className="w-full px-2 py-1 text-xs border rounded mb-2"
+                              />
+                              <button
+                                onClick={() => clearAllFilters(header.column)}
+                                className="w-full py-1 text-xs bg-red-100 hover:bg-red-200 border rounded mb-2"
+                              >
+                                Clear All
+                              </button>
+                              {uniqueValues[header.column.id]?.filter(value => 
+                                !filterSearch[header.column.id] || value.toLowerCase().includes(filterSearch[header.column.id].toLowerCase())
+                              ).sort((a, b) => {
+                                const aChecked = header.column.getFilterValue()?.includes(a) || false;
+                                const bChecked = header.column.getFilterValue()?.includes(b) || false;
+                                if (aChecked && !bChecked) return -1;
+                                if (!aChecked && bChecked) return 1;
+                                return a.localeCompare(b);
+                              }).map(value => (
                                 <label key={value} className="flex items-center px-2 hover:bg-gray-50">
                                   <input
                                     type="checkbox"
