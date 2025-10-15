@@ -58,6 +58,7 @@ public class Tariff {
         this.expiryDate = expiryDate;
         this.reference = reference;
 
+
     }
 
     // Getters and Setters
@@ -108,7 +109,6 @@ public class Tariff {
     public void setCountryPair(CountryPair countryPair) {
         this.countryPair = countryPair;
     }
-
 
     public String getReference() {
         return reference;

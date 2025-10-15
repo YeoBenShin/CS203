@@ -1,6 +1,7 @@
 package CS203G3.tariff_backend.controller;
 
 import CS203G3.tariff_backend.dto.TariffDto;
+import CS203G3.tariff_backend.dto.UnitInfoDto;
 import CS203G3.tariff_backend.dto.CalculationRequest;
 import CS203G3.tariff_backend.dto.CalculationResult;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
@@ -17,8 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
-
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 /**
  * REST Controller for Tariff API endpoints
@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  */
 @RestController
 @RequestMapping("/api/tariffs")
+@CrossOrigin(origins = "http://localhost:3000") // Allow requests from your frontend
 public class TariffController {
 
     private final TariffService tariffService;
@@ -115,4 +116,9 @@ public class TariffController {
         return ResponseEntity.ok(calculationResult);
     }
     
+    @GetMapping("/unit-info")
+    public ResponseEntity<UnitInfoDto> getTariffUnitInfo(@RequestParam String hsCode, @RequestParam String importCountry, @RequestParam String exportCountry) {
+        UnitInfoDto unitInfo = tariffService.getUnitInfo(hsCode, importCountry, exportCountry);
+        return ResponseEntity.ok(unitInfo);
+    }
 }

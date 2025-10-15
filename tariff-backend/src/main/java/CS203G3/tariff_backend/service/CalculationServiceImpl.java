@@ -36,8 +36,8 @@ public class CalculationServiceImpl implements CalculationService {
     public CalculationResult calculateTariff(CalculationRequest request) {
         // Extract data from request
         String hsCode = request.getHsCode();
-        String exporterCountry = request.getCountry();
-        String importerCountry = "USA"; // Hardcoded as per frontend logic
+        String exporterCountry = request.getExporter();
+        String importerCountry = request.getImporter(); 
         Date tradeDate = request.getTradeDataAsDate();
 
         if (tradeDate == null) {
@@ -45,7 +45,7 @@ public class CalculationServiceImpl implements CalculationService {
         }
 
         // Find the country pair
-        CountryPair countryPair = countryPairRepository.findSingleByExporterAndImporter(exporterCountry, importerCountry);
+        List<CountryPair> countryPair = countryPairRepository.findByExporterAndImporter(exporterCountry, importerCountry);
         if (countryPair == null) {
             throw new ResourceNotFoundException("No country pair found for exporter: " + exporterCountry + " and importer: " + importerCountry);
         }
