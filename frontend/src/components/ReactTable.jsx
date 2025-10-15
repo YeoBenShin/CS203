@@ -146,8 +146,8 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="overflow-x-auto overflow-visible">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-visible">
+        <div className="overflow-visible">
           <table className="w-full divide-y divide-gray-200">
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
               {table.getHeaderGroups().map(headerGroup => (
@@ -191,11 +191,11 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                             <button
                               onClick={() => toggleDropdown(header.column.id)}
                               className={`w-full py-2 px-3 text-xs font-medium border rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-between ${header.column.getFilterValue()
-                                  ? 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'
-                                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                                ? 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'
+                                : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                                 }`}
                             >
-                              <span>Filter Country</span>
+                              <span>Filter {header.column.columnDef.header.substring(0, 11)}{header.column.columnDef.header.length > 11 ? "..." : ""}</span>
                               <div className="flex items-center space-x-1">
                                 {header.column.getFilterValue() && header.column.getFilterValue().length > 0 && (
                                   <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -209,71 +209,67 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                             </button>
                             {dropdownOpen[header.column.id] && (
                               <div
-                                className={`absolute mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] p-4 max-h-96 ${headerIndex >= headerGroup.headers.length - 2 ? 'right-0' : 'left-0'
-                                  }`}
-                                style={{
-                                  position: 'fixed',
-                                  top: dropdownRefs.current[header.column.id]?.getBoundingClientRect().bottom + window.scrollY + 8 || 0,
-                                  left: headerIndex >= headerGroup.headers.length - 2
-                                    ? dropdownRefs.current[header.column.id]?.getBoundingClientRect().right - 256 + window.scrollX || 0
-                                    : dropdownRefs.current[header.column.id]?.getBoundingClientRect().left + window.scrollX || 0
-                                }}
+                                className={`absolute mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] p-4`}
                               >
                                 <div className="space-y-3">
-                                  {/* Search input */}
-                                  <div className="relative">
-                                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                    <input
-                                      type="text"
-                                      value={filterSearch[header.column.id] || ""}
-                                      onChange={(e) => setFilterSearch(prev => ({ ...prev, [header.column.id]: e.target.value }))}
-                                      placeholder="Search countries..."
-                                      className="w-full pl-10 pr-3 py-2 text-s border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                    />
-                                    {filterSearch[header.column.id] && (<Cross onClick={() => setFilterSearch(prev => ({ ...prev, [header.column.id]: "" }))} />)}
-                                  </div>
+                                  <div className="space-y-3">
+                                    {/* Search input */}
+                                    <div className="relative">
+                                      <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                      </svg>
+                                      <input
+                                        type="text"
+                                        value={filterSearch[header.column.id] || ""}
+                                        onChange={(e) => setFilterSearch(prev => ({ ...prev, [header.column.id]: e.target.value }))}
+                                        placeholder="Search countries..."
+                                        className="w-full pl-10 pr-3 py-2 text-s border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                      />
+                                      {filterSearch[header.column.id] && (<Cross onClick={() => setFilterSearch(prev => ({ ...prev, [header.column.id]: "" }))} />)}
+                                    </div>
 
-                                  {/* Clear button */}
-                                  <button
-                                    onClick={() => clearColFilter(header.column)}
-                                    disabled={!header.column.getFilterValue()}
-                                    className={`w-full py-2 text-s font-medium border rounded-lg transition-colors duration-200 ${header.column.getFilterValue()
+                                    {/* Clear button */}
+                                    <button
+                                      onClick={() => clearColFilter(header.column)}
+                                      disabled={!header.column.getFilterValue()}
+                                      className={`w-full py-2 text-s font-medium border rounded-lg transition-colors duration-200 ${header.column.getFilterValue()
                                         ? 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100'
                                         : 'bg-gray-50 border-gray-300 text-gray-400 cursor-not-allowed'
-                                      }`}
-                                  >
-                                    Clear Selection
-                                  </button>
+                                        }`}
+                                    >
+                                      Clear Selection
+                                    </button>
+                                  </div>
 
                                   {/* Options list */}
-                                  <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
-                                    {uniqueValues[header.column.id]?.filter(value =>
-                                      !filterSearch[header.column.id] || value.toLowerCase().includes(filterSearch[header.column.id].toLowerCase())
-                                    ).sort((a, b) => {
-                                      const aChecked = header.column.getFilterValue()?.includes(a) || false;
-                                      const bChecked = header.column.getFilterValue()?.includes(b) || false;
-                                      if (aChecked && !bChecked) return -1;
-                                      if (!aChecked && bChecked) return 1;
-                                      return a.localeCompare(b);
-                                    }).map(value => (
-                                      <label key={value} className="flex items-center p-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-b-0">
-                                        <input
-                                          type="checkbox"
-                                          checked={header.column.getFilterValue()?.includes(value) || false}
-                                          onChange={(e) => {
-                                            const currentFilters = header.column.getFilterValue() || [];
-                                            const newFilters = e.target.checked
-                                              ? [...currentFilters, value]
-                                              : currentFilters.filter(v => v !== value);
-                                            header.column.setFilterValue(newFilters.length > 0 ? newFilters : undefined);
-                                          }}
-                                          className="w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-1"
-                                        />
-                                        <span className="ml-3 text-s text-gray-700">{value}</span>
-                                      </label>
-                                    ))}
+                                  <div className="flex-1 overflow-scroll max-h-96">
+                                    <div className="border border-gray-200 rounded-lg">
+                                      {uniqueValues[header.column.id]?.filter(value =>
+                                        !filterSearch[header.column.id] || value.toLowerCase().includes(filterSearch[header.column.id].toLowerCase())
+                                      ).sort((a, b) => {
+                                        const aChecked = header.column.getFilterValue()?.includes(a) || false;
+                                        const bChecked = header.column.getFilterValue()?.includes(b) || false;
+                                        if (aChecked && !bChecked) return -1;
+                                        if (!aChecked && bChecked) return 1;
+                                        return a.localeCompare(b);
+                                      }).map(value => (
+                                        <label key={value} className="flex items-center p-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-b-0">
+                                          <input
+                                            type="checkbox"
+                                            checked={header.column.getFilterValue()?.includes(value) || false}
+                                            onChange={(e) => {
+                                              const currentFilters = header.column.getFilterValue() || [];
+                                              const newFilters = e.target.checked
+                                                ? [...currentFilters, value]
+                                                : currentFilters.filter(v => v !== value);
+                                              header.column.setFilterValue(newFilters.length > 0 ? newFilters : undefined);
+                                            }}
+                                            className="w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-1"
+                                          />
+                                          <span className="ml-3 text-s text-gray-700">{value}</span>
+                                        </label>
+                                      ))}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
