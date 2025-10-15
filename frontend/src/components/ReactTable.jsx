@@ -7,6 +7,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import Button from "./Button";
+import Cross from "./Cross";
 import { useState, useMemo, useEffect, useRef } from "react";
 
 export default function ReactTable({ columns, data, rowLevelFunction }) {
@@ -94,183 +95,264 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
   }, []);
 
   return (
-    <div>
-      {/* Search Bar */}
-      <div className="relative max-w-md mb-2" >
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-        <input
-          type="text"
-          value={globalFilter}
-          onChange={(e) => { setGlobalFilter(e.target.value) }}
-          placeholder="Global search across all columns..."
-          className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-        />
-        {
-          globalFilter && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <button
-                onClick={clearSearch}
-                className="text-gray-400 hover:text-gray-600"
+    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
+      {/* Header Section */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+          {/* Search Bar */}
+          <div className="relative max-w-md flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={globalFilter}
+              onChange={(e) => { setGlobalFilter(e.target.value) }}
+              placeholder="Search across all columns..."
+              className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+            />
+            {globalFilter && <Cross onClick={clearSearch} />}
+          </div>
+
+          {/* Filter Status and Clear Button */}
+          {(globalFilter || columnFilters.length > 0) && (
+            <div className="flex items-center justify-between lg:justify-end space-x-4">
+              <div className="text-sm text-gray-600 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                <span className="font-medium text-blue-700">
+                  {table.getFilteredRowModel().rows.length}
+                </span>
+                <span className="text-gray-600"> of </span>
+                <span className="font-medium">
+                  {data.length}
+                </span>
+                <span className="text-gray-600"> results</span>
+              </div>
+
+              <Button
+                onClick={clearAllFilters}
+                width=""
+                colorBg="bg-red-500 hover:bg-red-600 focus:ring-red-500"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </button>
+                Clear All Filters
+              </Button>
             </div>
-          )
-        }
-      </div >
-
-      {(globalFilter || columnFilters.length > 0) && (
-        <div className="flex justify-between items-center mb-2">
-          <div className="text-l text-gray-600 ml-2">
-            Showing {table.getFilteredRowModel().rows.length} of {data.length} tariffs
-          </div>
-          
-          <Button
-            onClick={clearAllFilters}
-            width=""
-            colorBg = "bg-red-600 hover:bg-red-700 focus:ring-red-500"
-          >
-            Clear All Filters
-          </Button>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Table */}
-      < div className="bg-white shadow overflow-visible sm:rounded-md" >
-        < table className="w-full divide-y divide-gray-200 overflow-x-auto" >
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <th
-                    key={header.id}
-                    className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
-                  >
-                    {/* Custom header with sorting and optional filter dropdown */}
-                    <div className="flex flex-col justify-between">
-                      <div
-                        className={`${header.column.columnDef.enableSorting ? 'cursor-pointer' : ''} select-none flex items-center`}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.columnDef.enableSorting && (
-                          <div>
-                            {header.column.getIsSorted() === "asc" && <span>&nbsp;🔼</span>}
-                            {header.column.getIsSorted() === "desc" && <span>&nbsp;🔽</span>}
-                            {header.column.getIsSorted() === false && <span>&nbsp;↕️</span>}
-                          </div>
-                        )}
-
-                      </div>
-                      {/* Checkbox dropdown only for enabled columns */}
-                      {header.column.columnDef.enableColumnFilter ? (
-                        <div className="relative" ref={el => dropdownRefs.current[header.column.id] = el}>
-                          <button
-                            onClick={() => toggleDropdown(header.column.id)}
-                            className={`mt-2 w-full py-1 text-xs border rounded cursor-pointer items-center  ${header.column.getFilterValue() ? 'bg-green-100 hover:bg-blue-100' : 'hover:bg-gray-100'}`}
-                          >
-                            Filter Country
-                          </button>
-                          {dropdownOpen[header.column.id] && (
-                            <div className="absolute right-0 mt-1 w-48 bg-white border rounded-md shadow-lg z-50 p-2 max-h-60 overflow-y-scroll">
-                              <input
-                                type="text"
-                                value={filterSearch[header.column.id] || ""}
-                                onChange={(e) => setFilterSearch(prev => ({ ...prev, [header.column.id]: e.target.value }))}
-                                placeholder="Search countries..."
-                                className="w-full px-2 py-1 text-xs border rounded mb-2"
-                              />
-                              <button
-                                onClick={() => clearColFilter(header.column)}
-                                className={`w-full py-1 text-xs bg-red-100 border rounded mb-2 ${header.column.getFilterValue() ? 'hover:bg-red-200 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
-                              >
-                                Clear All
-                              </button>
-                              {uniqueValues[header.column.id]?.filter(value =>
-                                !filterSearch[header.column.id] || value.toLowerCase().includes(filterSearch[header.column.id].toLowerCase())
-                              ).sort((a, b) => {
-                                const aChecked = header.column.getFilterValue()?.includes(a) || false;
-                                const bChecked = header.column.getFilterValue()?.includes(b) || false;
-                                if (aChecked && !bChecked) return -1;
-                                if (!aChecked && bChecked) return 1;
-                                return a.localeCompare(b);
-                              }).map(value => (
-                                <label key={value} className="flex items-center px-2 hover:bg-gray-50">
-                                  <input
-                                    type="checkbox"
-                                    checked={header.column.getFilterValue()?.includes(value) || false}
-                                    onChange={(e) => {
-                                      const currentFilters = header.column.getFilterValue() || [];
-                                      const newFilters = e.target.checked
-                                        ? [...currentFilters, value]
-                                        : currentFilters.filter(v => v !== value);
-                                      header.column.setFilterValue(newFilters.length > 0 ? newFilters : undefined);
-                                    }}
-                                    className="mr-2"
-                                  />
-                                  <span className="px-2 text-sm">{value}</span>
-                                </label>
-                              ))}
+      {/* Table Section */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="overflow-x-auto overflow-visible">
+          <table className="w-full divide-y divide-gray-200">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header, headerIndex) => (
+                    <th
+                      key={header.id}
+                      className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200 relative"
+                    >
+                      <div className="flex flex-col space-y-3">
+                        {/* Header with sorting */}
+                        <div
+                          className={`${header.column.columnDef.enableSorting ? 'cursor-pointer hover:text-blue-600' : ''} select-none flex items-center space-x-2 transition-colors duration-200`}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
+                          {header.column.columnDef.enableSorting && (
+                            <div className="flex items-center">
+                              {header.column.getIsSorted() === "asc" && (
+                                <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                </svg>
+                              )}
+                              {header.column.getIsSorted() === "desc" && (
+                                <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" />
+                                </svg>
+                              )}
+                              {header.column.getIsSorted() === false && (
+                                <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z" />
+                                </svg>
+                              )}
                             </div>
                           )}
                         </div>
-                      ) : (
-                        <div>
-                          <input
-                            type="text"
-                            value={header.column.getFilterValue() || ""}
-                            onChange={(e) => header.column.setFilterValue(e.target.value)}
-                            placeholder={`Search ${header.column.columnDef.header}...`}
-                            className="mt-2 w-full px-2 py-1 text-xs border rounded"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="hover:bg-gray-100 cursor-pointer" onClick={rowLevelFunction ? () => rowLevelFunction(row.original) : null}>
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-4 py-4 text-sm text-gray-500">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table >
+
+                        {/* Filters */}
+                        {header.column.columnDef.enableColumnFilter ? (
+                          <div className="relative" ref={el => dropdownRefs.current[header.column.id] = el}>
+                            <button
+                              onClick={() => toggleDropdown(header.column.id)}
+                              className={`w-full py-2 px-3 text-xs font-medium border rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-between ${header.column.getFilterValue()
+                                  ? 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'
+                                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                                }`}
+                            >
+                              <span>Filter Country</span>
+                              <div className="flex items-center space-x-1">
+                                {header.column.getFilterValue() && header.column.getFilterValue().length > 0 && (
+                                  <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                    {header.column.getFilterValue().length}
+                                  </span>
+                                )}
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </div>
+                            </button>
+                            {dropdownOpen[header.column.id] && (
+                              <div
+                                className={`absolute mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] p-4 max-h-96 ${headerIndex >= headerGroup.headers.length - 2 ? 'right-0' : 'left-0'
+                                  }`}
+                                style={{
+                                  position: 'fixed',
+                                  top: dropdownRefs.current[header.column.id]?.getBoundingClientRect().bottom + window.scrollY + 8 || 0,
+                                  left: headerIndex >= headerGroup.headers.length - 2
+                                    ? dropdownRefs.current[header.column.id]?.getBoundingClientRect().right - 256 + window.scrollX || 0
+                                    : dropdownRefs.current[header.column.id]?.getBoundingClientRect().left + window.scrollX || 0
+                                }}
+                              >
+                                <div className="space-y-3">
+                                  {/* Search input */}
+                                  <div className="relative">
+                                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    <input
+                                      type="text"
+                                      value={filterSearch[header.column.id] || ""}
+                                      onChange={(e) => setFilterSearch(prev => ({ ...prev, [header.column.id]: e.target.value }))}
+                                      placeholder="Search countries..."
+                                      className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                    {filterSearch[header.column.id] && (<Cross onClick={() => setFilterSearch(prev => ({ ...prev, [header.column.id]: "" }))} />)}
+                                  </div>
+
+                                  {/* Clear button */}
+                                  <button
+                                    onClick={() => clearColFilter(header.column)}
+                                    disabled={!header.column.getFilterValue()}
+                                    className={`w-full py-2 text-sm font-medium border rounded-lg transition-colors duration-200 ${header.column.getFilterValue()
+                                        ? 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100'
+                                        : 'bg-gray-50 border-gray-300 text-gray-400 cursor-not-allowed'
+                                      }`}
+                                  >
+                                    Clear Selection
+                                  </button>
+
+                                  {/* Options list */}
+                                  <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
+                                    {uniqueValues[header.column.id]?.filter(value =>
+                                      !filterSearch[header.column.id] || value.toLowerCase().includes(filterSearch[header.column.id].toLowerCase())
+                                    ).sort((a, b) => {
+                                      const aChecked = header.column.getFilterValue()?.includes(a) || false;
+                                      const bChecked = header.column.getFilterValue()?.includes(b) || false;
+                                      if (aChecked && !bChecked) return -1;
+                                      if (!aChecked && bChecked) return 1;
+                                      return a.localeCompare(b);
+                                    }).map(value => (
+                                      <label key={value} className="flex items-center p-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-b-0">
+                                        <input
+                                          type="checkbox"
+                                          checked={header.column.getFilterValue()?.includes(value) || false}
+                                          onChange={(e) => {
+                                            const currentFilters = header.column.getFilterValue() || [];
+                                            const newFilters = e.target.checked
+                                              ? [...currentFilters, value]
+                                              : currentFilters.filter(v => v !== value);
+                                            header.column.setFilterValue(newFilters.length > 0 ? newFilters : undefined);
+                                          }}
+                                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                        />
+                                        <span className="ml-3 text-sm text-gray-700">{value}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div>
+                            <input
+                              type="text"
+                              value={header.column.getFilterValue() || ""}
+                              onChange={(e) => header.column.setFilterValue(e.target.value)}
+                              placeholder={`Search ${header.column.columnDef.header}...`}
+                              className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {table.getRowModel().rows.map((row, index) => (
+                <tr
+                  key={row.id}
+                  className={`transition-colors duration-150 ${rowLevelFunction ? 'cursor-pointer hover:bg-blue-100' : ''
+                    } ${index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}`}
+                  onClick={rowLevelFunction ? () => rowLevelFunction(row.original) : null}
+                >
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className="px-6 py-4 text-sm text-gray-700 border-b border-gray-100">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination Controls */}
-        < div className="flex justify-between p-4" >
-          <Button
-            onClick={table.previousPage}
-            isLoading={!table.getCanPreviousPage()}
-            width=""
-          >
-            {!table.getCanPreviousPage() ? "No Previous" : "Previous"}
-          </Button>
-          <span>
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-          </span>
-          <Button
-            onClick={table.nextPage}
-            isLoading={!table.getCanNextPage()}
-            width=""
-          >
-            {!table.getCanNextPage() ? "No More Next" : "Next"}
-          </Button>
-        </div >
-      </div >
+        <div className="bg-gray-50 border-t border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={table.previousPage}
+                isLoading={!table.getCanPreviousPage()}
+                width=""
+                textConfig="text-sm text-gray-700 font-medium"
+                colorBg={table.getCanPreviousPage() ? "bg-white hover:bg-gray-50 border border-gray-300 text-gray-700" : "bg-gray-100 text-gray-400 cursor-not-allowed"}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous
+              </Button>
+              <Button
+                onClick={() => { table.nextPage }}
+                isLoading={!table.getCanNextPage()}
+                width=""
+                textConfig="text-sm text-gray-700 font-medium"
+                colorBg={table.getCanNextPage() ? "bg-white hover:bg-gray-50 border border-gray-300 text-gray-700" : "bg-gray-100 text-gray-400 cursor-not-allowed"}
+              >
+                Next
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </Button>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                Page <span className="font-medium text-gray-900">{table.getState().pagination.pageIndex + 1}</span> of{" "}
+                <span className="font-medium text-gray-900">{table.getPageCount()}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
