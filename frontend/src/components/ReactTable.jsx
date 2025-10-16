@@ -7,7 +7,8 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import Button from "./Button";
-import Cross from "./Cross";
+import CrossIcon from "./icons/CrossIcon";
+import SearchIcon from "./icons/SearchIcon";
 import { useState, useMemo, useEffect, useRef } from "react";
 
 export default function ReactTable({ columns, data, rowLevelFunction }) {
@@ -101,11 +102,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
           {/* Search Bar */}
           <div className="relative max-w-md flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
+            <SearchIcon />
             <input
               type="text"
               value={globalFilter}
@@ -113,7 +110,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
               placeholder="Search across all columns..."
               className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
             />
-            {globalFilter && <Cross onClick={clearSearch} />}
+            {globalFilter && <CrossIcon onClick={clearSearch} />}
           </div>
 
           {/* Filter Status and Clear Button */}
@@ -215,9 +212,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                                   <div className="space-y-3">
                                     {/* Search input */}
                                     <div className="relative">
-                                      <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                      </svg>
+                                      <SearchIcon className="h-4 w-4" />
                                       <input
                                         type="text"
                                         value={filterSearch[header.column.id] || ""}
@@ -225,7 +220,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                                         placeholder="Search countries..."
                                         className="w-full pl-10 pr-3 py-2 text-s border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                       />
-                                      {filterSearch[header.column.id] && (<Cross onClick={() => setFilterSearch(prev => ({ ...prev, [header.column.id]: "" }))} />)}
+                                      {filterSearch[header.column.id] && (<CrossIcon onClick={() => setFilterSearch(prev => ({ ...prev, [header.column.id]: "" }))} />)}
                                     </div>
 
                                     {/* Clear button */}
@@ -284,7 +279,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                               placeholder={`Search ${header.column.columnDef.header}...`}
                               className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                             />
-                            {header.column.getFilterValue() && <Cross onClick={() => header.column.setFilterValue("")} />}
+                            {header.column.getFilterValue() && <CrossIcon onClick={() => header.column.setFilterValue("")} />}
                           </div>
                         )}
                       </div>

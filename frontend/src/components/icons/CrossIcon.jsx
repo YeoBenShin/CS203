@@ -1,4 +1,4 @@
-const Cross = ({
+const CrossIcon = ({
     onClick
 }) => {
     return (
@@ -15,4 +15,4 @@ const Cross = ({
     )
 }
 
-export default Cross;
+export default CrossIcon;
