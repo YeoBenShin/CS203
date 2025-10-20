@@ -37,8 +37,12 @@ name: Java CI/CD to ECR & ECS
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'tariff-backend/**'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'tariff-backend/**'
   workflow_dispatch:
 
 env:

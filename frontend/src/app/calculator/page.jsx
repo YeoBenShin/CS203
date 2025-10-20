@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import FieldSelector from "../components/FieldSelector";
-import Button from '../components/Button';
-import LoadingSpinner from "../components/messages/LoadingSpinner";
-import ErrorMessageDisplay from "../components/messages/ErrorMessageDisplay";
-import LoadingPage from "../components/LoadingPage";
+import FieldSelector from "../../components/FieldSelector";
+import Button from '../../components/Button';
+import LoadingSpinner from "../../components/messages/LoadingSpinner";
+import ErrorMessageDisplay from "../../components/messages/ErrorMessageDisplay";
+import LoadingPage from "../../components/LoadingPage";
 import { useUser } from '@clerk/nextjs';
-import { SuccessMessageDisplay, showSuccessPopupMessage } from "../components/messages/SuccessMessageDisplay";
+import { SuccessMessageDisplay, showSuccessPopupMessage } from "../../components/messages/SuccessMessageDisplay";
 
 const getUnitDetails = (unitCode) => {
   if (!unitCode) return null;
@@ -84,7 +84,7 @@ export default function CalculatorPage() {
 
   const [tariffUnitInfo, setTariffUnitInfo] = useState(null);
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
-  
+
   const { user } = useUser();
   const userUuid = user ? user.id : null;
 

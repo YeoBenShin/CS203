@@ -93,4 +93,12 @@ public class TariffCreateDto {
     public void setTariffRates(Map<UnitOfCalculation, BigDecimal> tariffRates) {
         this.tariffRates = tariffRates;
     }
+
+    @Override
+    public String toString() {
+        return "TariffCreateDto [exporter=" + exporter + ", importer=" + importer + ", hSCode=" + hSCode
+                + ", effectiveDate=" + effectiveDate + ", expiryDate=" + expiryDate + ", reference=" + reference
+                + ", tariffRates=" + tariffRates + "]";
+    }
+
 }
