@@ -192,7 +192,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                                 : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                                 }`}
                             >
-                              <span>Filter {header.column.columnDef.header.substring(0, 11)}{header.column.columnDef.header.length > 11 ? "..." : ""}</span>
+                              <span>Filter {header.column.columnDef.header.substring(0, 10)}{header.column.columnDef.header.length > 11 ? "..." : ""}</span>
                               <div className="flex items-center space-x-1">
                                 {header.column.getFilterValue() && header.column.getFilterValue().length > 0 && (
                                   <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
