@@ -78,7 +78,7 @@ export default function ViewTariffsPage() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, []);
+  }, []); 
 
   const fetchTariffs = async () => {
     try {
