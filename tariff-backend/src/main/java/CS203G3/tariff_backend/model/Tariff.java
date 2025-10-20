@@ -40,6 +40,9 @@ public class Tariff {
     @Column(name = "reference", length = 255)
     private String reference;
 
+    @Column(name = "tariff_name")
+    private String tariffName;
+
     @OneToMany(mappedBy = "tariff", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TariffRate> tariffRates;
 
@@ -104,6 +107,14 @@ public class Tariff {
 
     public void setReference(String reference) {
         this.reference = reference;
+    }
+
+    public String getTariffName() {
+        return tariffName;
+    }
+
+    public void setTariffName(String tariffName) {
+        this.tariffName = tariffName;
     }
 
     public List<TariffRate> getTariffRates() {
