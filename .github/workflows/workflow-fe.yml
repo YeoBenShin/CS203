@@ -1,0 +1,96 @@
+name: Frontend CI/CD
+
+on:
+    push:
+        branches: ["main"]
+        paths: 
+          - "frontend/**"
+    pull_request:
+        paths: 
+          - "frontend/**"
+    workflow_dispatch:
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECR_REPOSITORY: tariffy/frontend
+  ECS_SERVICE: tariffy-frontend-task-service-dysixd6s
+  ECS_CLUSTER: quick-turtle-o5o4px
+  ECS_TASK_DEFINITION_FAMILY: tariffy-frontend-task
+
+  CONTAINER_NAME: tariffy-frontend
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v4
+
+        - name: Create frontend .env from secrets
+          run: |
+            cat > frontend/.env <<EOF
+            NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+            EOF
+
+        - name: Install deps & build
+          working-directory: ./frontend
+          run: |
+            npm ci
+            npm run build
+
+    push-to-ecr:
+        needs: build
+        runs-on: ubuntu-latest
+        environment: production
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+
+          - name: Create frontend .env from secrets
+            run: |
+                cat > frontend/.env <<EOF
+                NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
+                NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+                EOF
+            
+          - name: Configure AWS credentials
+            uses: aws-actions/configure-aws-credentials@v1
+            with:
+                aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+                aws-region: ${{ env.AWS_REGION }}
+
+          - name: Login to Amazon ECR
+            id: login-ecr
+            uses: aws-actions/amazon-ecr-login@v2
+
+          - name: Build, tag, and push image to Amazon ECR
+            id: build-image
+            env:
+                ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                IMAGE_TAG: ${{ github.sha }}
+            working-directory: ./frontend
+            run: |
+                # Build a docker container and
+                # push it to ECR so that it can
+                # be deployed to ECS.
+                docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+                docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+                echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+          - name: Fill in the new image ID in the Amazon ECS task definition
+            id: task-def
+            uses: aws-actions/amazon-ecs-render-task-definition@v1
+            with:
+                task-definition-family: ${{ env.ECS_TASK_DEFINITION_FAMILY }}
+                container-name: ${{ env.CONTAINER_NAME }}
+                image: ${{ steps.build-image.outputs.image }}
+
+          - name: Deploy Amazon ECS task definition
+            uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+            with:
+                task-definition: ${{ steps.task-def.outputs.task-definition }}
+                service: ${{ env.ECS_SERVICE }}
+                cluster: ${{ env.ECS_CLUSTER }}
+                wait-for-service-stability: true

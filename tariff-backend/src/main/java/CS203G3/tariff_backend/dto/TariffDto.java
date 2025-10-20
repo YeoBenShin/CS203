@@ -24,7 +24,7 @@ public class TariffDto {
     private String importerName;
 
     // fields for frontend display from product
-    @JsonProperty("hSCode")
+    //@JsonProperty("hSCode")
     private String hSCode;
     private String productDescription;
 

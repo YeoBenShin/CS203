@@ -12,7 +12,7 @@ export default function Home() {
             US Import Duties & Taxes with Tariffy Easily
           </h1>
           <p className="text-gray-700 text-lg mb-6">
-            Get an accurate estimate of the shipment's total landed cost.
+            Get an accurate estimate of the shipment&apos;s total landed cost.
             <br /> Avoid surprises and simplify international trade.
           </p>
         </div>

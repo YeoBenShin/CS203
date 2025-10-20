@@ -3,8 +3,10 @@ import { NextResponse } from "next/server";
 
 const isAdminRoute = createRouteMatcher('/admin(.*)');
 const isSignInRoute = createRouteMatcher('/sign-in(.*)');
+const isHealthRoute = createRouteMatcher('/health(.*)');  
 
 export default clerkMiddleware(async (auth, req) => {
+  if (isHealthRoute(req)) return NextResponse.next();
   const { userId, sessionId } = await auth();
 
   if (!userId || !sessionId) {
