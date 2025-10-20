@@ -13,7 +13,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configure(http))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/health").permitAll()
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             )
             .csrf(csrf -> csrf.disable());
         return http.build();
