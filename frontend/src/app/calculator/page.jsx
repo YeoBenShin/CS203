@@ -34,7 +34,7 @@ export default function CalculatorPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
   const { user } = useUser();
   const userUuid = user ? user.id : null;

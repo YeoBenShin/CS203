@@ -39,6 +39,7 @@ jobs:
             npm run build
 
     push-to-ecr:
+        needs: build
         runs-on: ubuntu-latest
         environment: production
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
