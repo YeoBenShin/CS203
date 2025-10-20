@@ -28,6 +28,7 @@ jobs:
         - name: Create frontend .env from secrets
           run: |
             cat > frontend/.env <<EOF
+            NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
             NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
             EOF
 
