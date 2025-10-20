@@ -603,24 +603,31 @@ export default function CalculatorPage() {
                   <div className="bg-white rounded-lg p-4">
                     <h3 className="text-lg font-bold text-black mb-4">Individual Tariff Details</h3>
                     <div className="space-y-3">
-                      {tariffBreakdown.map((tariff, index) => (
-                        <div
-                          key={tariff.tariffID || index}
-                          className="flex justify-between items-center p-3 border border-gray-300 rounded hover:bg-gray-50 cursor-help relative group"
-                          title={tariff.reference || "not-updated"}
-                        >
-                          <div>
-                            <span className="font-semibold text-black">Tariff {index + 1}</span>
-                            <span className="text-gray-600 ml-2">({(tariff.rate ?? 0).toFixed(2)}%)</span>
-                          </div>
-                          <span className="font-bold text-black">${(tariff.amountApplied ?? 0).toFixed(2)}</span>
+                      {tariffBreakdown.map((tariff, index) => {
+                        // Support both backend field names: tariffRate/tariffCost and legacy rate/amountApplied
+                        const rate = tariff.tariffRate ?? 0;
+                        const amountApplied = tariff.tariffCost ?? 0;
+                        const unitType = tariff.type ? ` (${tariff.type})` : '';
+                        
+                        return (
+                          <div
+                            key={tariff.tariffID || index}
+                            className="flex justify-between items-center p-3 border border-gray-300 rounded hover:bg-gray-50 cursor-help relative group"
+                            title={tariff.reference || "not-updated"}
+                          >
+                            <div>
+                              <span className="font-semibold text-black">Tariff {index + 1}{unitType}</span>
+                              <span className="text-gray-600 ml-2">({Number(rate).toFixed(2)}%)</span>
+                            </div>
+                            <span className="font-bold text-black">${Number(amountApplied).toFixed(2)}</span>
 
-                          {/* Tooltip */}
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                            {tariff.reference || "not-updated"}
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                              {tariff.reference || "not-updated"}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
