@@ -11,15 +11,17 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import CS203G3.tariff_backend.dto.CalculationRequest;
 import CS203G3.tariff_backend.dto.CalculationResult;
+import CS203G3.tariff_backend.dto.TariffBreakdown;
 import CS203G3.tariff_backend.dto.TariffCalculationMap;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
 import CS203G3.tariff_backend.dto.TariffDto;
 import CS203G3.tariff_backend.dto.TariffRateBreakdownDto;
-import CS203G3.tariff_backend.dto.TariffBreakdown;
+import CS203G3.tariff_backend.dto.UnitInfoDto;
+import CS203G3.tariff_backend.exception.MissingFieldException;
+import CS203G3.tariff_backend.exception.NoTariffFoundException;
 import CS203G3.tariff_backend.exception.ResourceAlreadyExistsException;
 import CS203G3.tariff_backend.exception.ResourceNotFoundException;
 import CS203G3.tariff_backend.exception.tariff.ExpiryBeforeEffectiveException;
@@ -27,7 +29,6 @@ import CS203G3.tariff_backend.exception.tariff.ImmutableFieldChangeException;
 import CS203G3.tariff_backend.exception.tariff.NegativeTariffRateException;
 import CS203G3.tariff_backend.exception.tariff.SameCountryException;
 import CS203G3.tariff_backend.exception.tariff.WrongNumberOfArgumentsException;
-import CS203G3.tariff_backend.exception.NoTariffFoundException;
 import CS203G3.tariff_backend.model.CountryPair;
 import CS203G3.tariff_backend.model.Product;
 import CS203G3.tariff_backend.model.Tariff;
@@ -38,8 +39,6 @@ import CS203G3.tariff_backend.repository.CountryRepository;
 import CS203G3.tariff_backend.repository.ProductRepository;
 import CS203G3.tariff_backend.repository.TariffRateRepository;
 import CS203G3.tariff_backend.repository.TariffRepository;
-import CS203G3.tariff_backend.dto.UnitInfoDto;
-import CS203G3.tariff_backend.exception.MissingFieldException;
 
 /**
  * Implementation of TariffService with DTO support
@@ -465,9 +464,9 @@ public class TariffServiceImpl implements TariffService {
         BigDecimal totalTariffRate = (totalTariffCost.divide(request.getProductValue(), 4, java.math.RoundingMode.HALF_UP)).multiply(BigDecimal.valueOf(100));
 
         List<TariffBreakdown> breakdownList = breakdowns.stream()
-            .map(dto -> new TariffBreakdown(
-                dto.getUnitOfCalculation(),      // type
-                dto.getRate(),                   // tariffRate
+            .map(rate -> new TariffBreakdown(
+                rate.getUnitOfCalculation(),      // type
+                rate.getRate(),                   // tariffRate
                 BigDecimal.ZERO                  // tariffCost (set actual cost if available)
             ))
             .collect(Collectors.toList());
