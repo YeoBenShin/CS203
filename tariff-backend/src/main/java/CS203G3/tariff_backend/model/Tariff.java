@@ -3,16 +3,16 @@ package CS203G3.tariff_backend.model;
 import java.sql.Date;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
 
 @Entity
 @Table(name = "tariff")
@@ -40,6 +40,9 @@ public class Tariff {
     @Column(name = "reference", length = 255)
     private String reference;
 
+    @Column(name = "tariff_name")
+    private String tariffName;
+
     @OneToMany(mappedBy = "tariff", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TariffRate> tariffRates;
 
@@ -53,6 +56,7 @@ public class Tariff {
         this.effectiveDate = effectiveDate;
         this.expiryDate = expiryDate;
         this.reference = reference;
+
 
     }
 
@@ -97,7 +101,6 @@ public class Tariff {
         this.countryPair = countryPair;
     }
 
-
     public String getReference() {
         return reference;
     }
@@ -106,6 +109,21 @@ public class Tariff {
         this.reference = reference;
     }
 
+    public String getTariffName() {
+        return tariffName;
+    }
+
+    public void setTariffName(String tariffName) {
+        this.tariffName = tariffName;
+    }
+
+    public List<TariffRate> getTariffRates() {
+        return tariffRates;
+    }
+
+    public void setTariffRates(List<TariffRate> tariffRates) {
+        this.tariffRates = tariffRates;
+    }
 
     @Override
     public String toString() {
@@ -113,5 +131,4 @@ public class Tariff {
                 + countryPair + ", effectiveDate=" + effectiveDate + ", expiryDate=" + expiryDate + ", reference="
                 + reference + "]";
     }
-
 }
