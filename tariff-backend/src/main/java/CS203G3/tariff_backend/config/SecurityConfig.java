@@ -25,7 +25,7 @@ public class SecurityConfig {
     @Value("${clerk.jwk-set-uri}")
     private String jwkSetUri;
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public SecurityConfig(UserRepository userRepository) {
         this.userRepository = userRepository;
