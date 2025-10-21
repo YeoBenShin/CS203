@@ -7,8 +7,6 @@ import CS203G3.tariff_backend.dto.CalculationResult;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
 import CS203G3.tariff_backend.service.TariffService;
 
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,7 +50,6 @@ public class TariffController {
         return ResponseEntity.ok(tariffs);
     }
     
-
     /**
      * Get tariff by ID
      * GET /api/tariffs/{id}
@@ -96,9 +93,9 @@ public class TariffController {
      * Delete a tariff
      * DELETE /api/tariffs/{id}
      */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTariff(@PathVariable Long id) {
-        tariffService.deleteTariff(id);
+    @DeleteMapping("/{tariffId}")
+    public ResponseEntity<Void> deleteTariff(@PathVariable Long tariffId) {
+        tariffService.deleteTariff(tariffId);
         return ResponseEntity.noContent().build();
     }
 

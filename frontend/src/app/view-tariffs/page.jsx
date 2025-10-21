@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useUser } from '@clerk/nextjs';
+import { useUser, useAuth } from '@clerk/nextjs';
 import { SuccessMessageDisplay, showSuccessPopupMessage } from "../../components/messages/SuccessMessageDisplay";
 import ReactTable from "../../components/ReactTable";
 import Button from "../../components/Button";
@@ -9,6 +9,7 @@ import TariffDetailPopUp from "../../components/popUps/TariffDetailPopUp";
 import DeleteTariffPopUp from "../../components/popUps/DeleteTariffPopUp";
 import LoadingPage from "../../components/LoadingPage";
 import { formatRate, formatUnitOfCalculation, formatDateForInput, formatDate } from "@/utils/formatDisplayHelpers";
+import fetchApi from "@/utils/fetchApi";
 
 export default function ViewTariffsPage() {
 
@@ -45,6 +46,7 @@ export default function ViewTariffsPage() {
   // user role
   const { user } = useUser();
   const role = user?.publicMetadata?.role || "user";
+  const { getToken } = useAuth();
 
 
   // ----------------------------------------------------------
@@ -83,7 +85,8 @@ export default function ViewTariffsPage() {
   const fetchTariffs = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs`);
+      const token = await getToken();
+      const response = await fetchApi(token,  "api/tariffs");
       if (response.ok) {
         const data = await response.json();
         // console.log("Fetched tariffs:", data);
@@ -274,11 +277,8 @@ export default function ViewTariffsPage() {
       };
       console.log("Submitting edit with data:", requestData);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs/${tariffToEdit.tariffID}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData)
-      });
+      const token = await getToken();
+      const response = await fetchApi(token, `api/tariffs/${tariffToEdit.tariffID}`, "PUT", requestData);
 
       if (response.ok) {
         const updatedTariff = await response.json();

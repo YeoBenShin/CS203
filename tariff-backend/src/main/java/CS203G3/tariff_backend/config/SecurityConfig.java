@@ -1,12 +1,13 @@
 package CS203G3.tariff_backend.config;
 
-import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,11 +17,17 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
 
+import CS203G3.tariff_backend.repository.UserRepository;
+import CS203G3.tariff_backend.model.User;
+
 @Configuration
 public class SecurityConfig {
 
     @Value("${clerk.jwk-set-uri}")
     private String jwkSetUri;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -28,7 +35,15 @@ public class SecurityConfig {
             .cors(cors -> cors.configure(http))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/health").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,"/api/tariffs").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,"/api/tariffs/{tariffId}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE,"/api/tariffs/{tariffId}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,"/api/countries").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,"/api/countries/{id}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE,"/api/countries/{id}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,"/api/products").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,"/api/products/{hSCode}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE,"/api/products/{hSCode}").hasRole("ADMIN")
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )
@@ -39,6 +54,7 @@ public class SecurityConfig {
                     .jwtAuthenticationConverter(jwtAuthenticationConverter())
                 )
             ); // enable JWT validation;
+            // jwkSetUri + Spring's oauth2ResourceServer is what validates the token (signature, exp, nbf);
         return http.build();
     }
 
@@ -57,18 +73,17 @@ public class SecurityConfig {
                     .map(g -> new SimpleGrantedAuthority(g.getAuthority()))
                     .collect(Collectors.toList()));
 
-            // Clerk exposes public metadata in the token under "public_metadata" (object) in many setups.
-            // If token contains { "public_metadata": { "role": "admin" } } map that to ROLE_ADMIN.
-            Object pm = jwt.getClaims().get("public_metadata");
-            if (pm instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> map = (Map<String, Object>) pm;
-                Object role = map.get("role");
-                if ("admin".equals(role)) {
+            String userId = jwt.getSubject();
+            if (userId != null) {
+                User user = userRepository.findByUuid(userId);
+                // System.out.println("User ID from JWT: " + userId);
+                // System.out.println("User fetched from DB: " + user);
+                // System.out.println("Is user admin? " + (user != null ? user.isAdmin() : "N/A"));
+                if (user != null && user.isAdmin()) {
+                    // System.out.println("Assigning ROLE_ADMIN to user: " + userId);
                     authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
                 }
             }
-
             return authorities;
         });
 
