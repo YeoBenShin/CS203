@@ -1,10 +1,5 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
-
-const MapChart = dynamic(() => import("@/components/MapChart"), {
-  ssr: false, // This line is important. It disables server-side rendering for the map.
-  loading: () => <p>Loading map...</p> // Optional: show a loading message.
-});
+import ClientHeatMap from "@/components/ClientHeatMap";
 
 export default function Home() {
   return (
@@ -30,12 +25,12 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 py-10">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+      <section className="max-w-7xl mx-auto px-6 py-5">
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
           Global Tariff Hotspots
         </h2>
-        <div className="border rounded-lg shadow-lg overflow-hidden">
-          <MapChart />
+        <div className="rounded-lg overflow-hidden">
+          <ClientHeatMap />
         </div>
       </section>
     </main>
