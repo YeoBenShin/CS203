@@ -24,7 +24,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: getPaginationRowModel(), 
     getSortedRowModel: getSortedRowModel(), // Enables sorting
     getFilteredRowModel: getFilteredRowModel(), // Enables filtering
     onColumnFiltersChange: setColumnFilters, // Enable column filters
