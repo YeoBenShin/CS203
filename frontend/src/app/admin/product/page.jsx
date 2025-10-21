@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import { SuccessMessageDisplay, showSuccessPopupMessage } from "@/components/messages/SuccessMessageDisplay";
 import Button from '../../../components/Button';
+import fetchApi from '@/utils/fetchApi';
+import { useAuth } from '@clerk/nextjs';
 
 export default function AddProductPage() {
   const [form, setForm] = useState({
@@ -12,6 +14,8 @@ export default function AddProductPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
+  const { getToken } = useAuth();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -30,15 +34,10 @@ export default function AddProductPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/products`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          hsCode: form.hsCode,
-          description: form.description
-        }),
+      const token = await getToken();
+      const response = await fetchApi(token, 'api/products', 'POST', {
+        hsCode: form.hsCode,
+        description: form.description
       });
 
       if (response.ok) {

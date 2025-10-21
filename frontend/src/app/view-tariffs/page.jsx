@@ -135,10 +135,8 @@ export default function ViewTariffsPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080"}/api/tariffs/${tariffToDelete.tariffID}`, {
-        method: "DELETE",
-      });
-
+      const token = await getToken();
+      const response = await fetchApi(token, `api/tariffs/${tariffToDelete.tariffID}`, "DELETE");
       if (response.ok) {
         const updatedTariffs = tariffs.filter(tariff => tariff.tariffID !== tariffToDelete.tariffID);
         setTariffs(updatedTariffs);

@@ -7,6 +7,8 @@ import ErrorMessageDisplay from "../../components/messages/ErrorMessageDisplay";
 import LoadingPage from "../../components/LoadingPage";
 import { useUser } from '@clerk/nextjs';
 import { SuccessMessageDisplay, showSuccessPopupMessage } from "../../components/messages/SuccessMessageDisplay";
+import fetchApi from "@/utils/fetchApi";
+import { useAuth } from "@clerk/nextjs";
 
 const getUnitDetails = (unitCode) => {
   if (!unitCode) return null;
@@ -83,10 +85,10 @@ export default function CalculatorPage() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const [tariffUnitInfo, setTariffUnitInfo] = useState(null);
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
   const { user } = useUser();
   const userUuid = user ? user.id : null;
+  const { getToken } = useAuth();
 
   // Ensure dates are formatted consistently
   const formatDate = (date) => {
@@ -116,7 +118,8 @@ export default function CalculatorPage() {
             importCountry: selectedImportCountry.value,
             exportCountry: selectedExportCountry.value,
           });
-          const response = await fetch(`${baseUrl}/api/tariffs/unit-info?${params}`);
+          const token = await getToken();
+          const response = await fetchApi(token, `/api/tariffs/unit-info?${params}`);
           
           if (response.ok) {
             const data = await response.json(); // Expects { "unit": "KG" }
@@ -165,7 +168,8 @@ export default function CalculatorPage() {
 
   const fetchHsCodes = async () => {
     try {
-      const response = await fetch(`${baseUrl}/api/products`);
+      const token = await getToken();
+      const response = await fetchApi(token, "/api/products");
       const data = await response.json();
 
       const products = data.map(item => ({
@@ -184,7 +188,8 @@ export default function CalculatorPage() {
   // Fetch countries from backend
   const fetchCountries = async () => {
     try {
-      const response = await fetch(`${baseUrl}/api/countries`);
+      const token = await getToken();
+      const response = await fetchApi(token, "/api/countries");
       const data = await response.json();
 
       const countries = data.map(country => ({
@@ -298,11 +303,8 @@ export default function CalculatorPage() {
     };
 
     try {
-      const response = await fetch(`${baseUrl}/api/calculations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+      const token = await getToken();
+      const response = await fetchApi(token, "/api/calculations", "POST", data);
 
       const responseData = await response.json();
       if (response.ok) {
@@ -368,12 +370,8 @@ export default function CalculatorPage() {
         uuid: userUuid,
         tariffs: tariffBreakdown,
       }
-
-      const response = await fetch(`${baseUrl}/api/watchlists`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+      const token = await getToken();
+      const response = await fetchApi(token, "/api/watchlists", "POST", data);
 
       if (response.ok) {
         showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff saved to watchlist successfully!");

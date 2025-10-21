@@ -5,8 +5,11 @@ import LoadingSpinner from "../../components/messages/LoadingSpinner";
 import { SuccessMessageDisplay, showSuccessPopupMessage } from "../../components/messages/SuccessMessageDisplay";
 import FieldSelector from "../../components/FieldSelector";
 import Button from "../../components/Button";
+import fetchApi from "@/utils/fetchApi";
+import { useAuth } from "@clerk/nextjs";
 
 export default function AdminPage() {
+  const { getToken } = useAuth();
   const [form, setForm] = useState({
     exporter: null,
     product: null,
@@ -27,8 +30,8 @@ export default function AdminPage() {
     useEffect(() => {
       const fetchCountries = async () => {
         try {
-          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
-          const response = await fetch(`${baseUrl}/api/countries`);
+          const token = await getToken();
+          const response = await fetchApi(token, "/api/countries");
           const countries = await response.json();
           const options = countries.filter(country => country.isoCode !== 'USA').map(country => ({
             label: country.name,
@@ -46,8 +49,8 @@ export default function AdminPage() {
     useEffect(() => {
       const fetchProducts = async () => {
         try {
-          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
-          const response = await fetch(`${baseUrl}/api/products`);
+          const token = await getToken();
+          const response = await fetchApi(token, "/api/products");
           const products = await response.json();
           const options = products.map(product => ({
             label: `${product.hsCode}${product.description ? ` - ${product.description}` : ''}`,
@@ -195,14 +198,9 @@ export default function AdminPage() {
         };
         
         console.log("Sending request data:", requestData);
-        
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
-        const response = await fetch(`${baseUrl}/api/tariffs`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData)
-      });
+  
+        const token = await getToken();
+        const response = await fetchApi(token, "/api/tariffs", "POST", requestData);
       
       if (response.ok) {
         showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup,"Tariff added successfully!");

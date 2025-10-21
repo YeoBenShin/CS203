@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST,"/api/products").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT,"/api/products/{hSCode}").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE,"/api/products/{hSCode}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE,"/api/products/{hSCode}").hasRole("ADMIN")
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )
@@ -76,7 +77,7 @@ public class SecurityConfig {
             String userId = jwt.getSubject();
             if (userId != null) {
                 User user = userRepository.findByUuid(userId);
-                // System.out.println("User ID from JWT: " + userId);
+                System.out.println("User ID from JWT: " + userId);
                 // System.out.println("User fetched from DB: " + user);
                 // System.out.println("Is user admin? " + (user != null ? user.isAdmin() : "N/A"));
                 if (user != null && user.isAdmin()) {
