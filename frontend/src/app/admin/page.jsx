@@ -31,7 +31,7 @@ export default function AdminPage() {
       const fetchCountries = async () => {
         try {
           const token = await getToken();
-          const response = await fetchApi(token, "/api/countries");
+          const response = await fetchApi(token, "api/countries");
           const countries = await response.json();
           const options = countries.filter(country => country.isoCode !== 'USA').map(country => ({
             label: country.name,
@@ -50,7 +50,7 @@ export default function AdminPage() {
       const fetchProducts = async () => {
         try {
           const token = await getToken();
-          const response = await fetchApi(token, "/api/products");
+          const response = await fetchApi(token, "api/products");
           const products = await response.json();
           const options = products.map(product => ({
             label: `${product.hsCode}${product.description ? ` - ${product.description}` : ''}`,
@@ -200,7 +200,7 @@ export default function AdminPage() {
         console.log("Sending request data:", requestData);
   
         const token = await getToken();
-        const response = await fetchApi(token, "/api/tariffs", "POST", requestData);
+        const response = await fetchApi(token, "api/tariffs", "POST", requestData);
       
       if (response.ok) {
         showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup,"Tariff added successfully!");

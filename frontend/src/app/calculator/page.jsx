@@ -304,7 +304,7 @@ export default function CalculatorPage() {
 
     try {
       const token = await getToken();
-      const response = await fetchApi(token, "/api/calculations", "POST", data);
+      const response = await fetchApi(token, "api/calculations", "POST", data);
 
       const responseData = await response.json();
       if (response.ok) {
@@ -371,7 +371,7 @@ export default function CalculatorPage() {
         tariffs: tariffBreakdown,
       }
       const token = await getToken();
-      const response = await fetchApi(token, "/api/watchlists", "POST", data);
+      const response = await fetchApi(token, "api/watchlists", "POST", data);
 
       if (response.ok) {
         showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff saved to watchlist successfully!");
