@@ -15,7 +15,7 @@ class TariffBackendApplicationTests {
 
 	@MockitoBean
 	private UserRepository userRepository;
-	
+
 	@Test
 	void contextLoads() {
 	}
