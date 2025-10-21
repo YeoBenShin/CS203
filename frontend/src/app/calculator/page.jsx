@@ -169,7 +169,7 @@ export default function CalculatorPage() {
   const fetchHsCodes = async () => {
     try {
       const token = await getToken();
-      const response = await fetchApi(token, "/api/products");
+      const response = await fetchApi(token, "api/products");
       const data = await response.json();
 
       const products = data.map(item => ({
@@ -189,7 +189,7 @@ export default function CalculatorPage() {
   const fetchCountries = async () => {
     try {
       const token = await getToken();
-      const response = await fetchApi(token, "/api/countries");
+      const response = await fetchApi(token, "api/countries");
       const data = await response.json();
 
       const countries = data.map(country => ({
