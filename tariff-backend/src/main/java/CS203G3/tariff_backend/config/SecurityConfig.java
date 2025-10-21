@@ -2,7 +2,6 @@ package CS203G3.tariff_backend.config;
 
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,8 +25,11 @@ public class SecurityConfig {
     @Value("${clerk.jwk-set-uri}")
     private String jwkSetUri;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public SecurityConfig(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -77,7 +79,7 @@ public class SecurityConfig {
             String userId = jwt.getSubject();
             if (userId != null) {
                 User user = userRepository.findByUuid(userId);
-                System.out.println("User ID from JWT: " + userId);
+                // System.out.println("User ID from JWT: " + userId);
                 // System.out.println("User fetched from DB: " + user);
                 // System.out.println("Is user admin? " + (user != null ? user.isAdmin() : "N/A"));
                 if (user != null && user.isAdmin()) {
