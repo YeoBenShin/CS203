@@ -1,13 +1,13 @@
 package CS203G3.tariff_backend.service;
 
-import CS203G3.tariff_backend.exception.ResourceNotFoundException;
-import CS203G3.tariff_backend.model.Product;
-import CS203G3.tariff_backend.repository.ProductRepository;
-
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import CS203G3.tariff_backend.exception.ResourceNotFoundException;
+import CS203G3.tariff_backend.model.Product;
+import CS203G3.tariff_backend.repository.ProductRepository;
 
 
 @Service
@@ -35,7 +35,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product getProductByhSCode(String hSCode) {
-        return productRepository.findById(hSCode).orElseThrow(() -> new ResourceNotFoundException("Product", hSCode.toString()));
+        return productRepository.findById(hSCode).orElseThrow(() -> new ResourceNotFoundException("Product", hSCode));
     }
 
     @Override
@@ -48,7 +48,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public Product updateProduct(String hSCode, Product product) {
         if (!productRepository.existsById(hSCode)) {
-            throw new ResourceNotFoundException("Product", hSCode.toString());
+            throw new ResourceNotFoundException("Product", hSCode);
         }
         product.setHSCode(hSCode);
         return productRepository.save(product);
@@ -58,7 +58,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void deleteProduct(String hSCode) {
         if (!productRepository.existsById(hSCode)) {
-            throw new ResourceNotFoundException("Product", hSCode.toString());
+            throw new ResourceNotFoundException("Product", hSCode);
         }
         productRepository.deleteById(hSCode);
     }

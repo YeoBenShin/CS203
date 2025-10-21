@@ -5,10 +5,10 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * DTO for calculation result
- * Output for tariff cost calculations
+ * DTO for calculation result Output for tariff cost calculations
  */
 public class CalculationResult {
+
     private BigDecimal netTotal;
     private String tariffName;
     private Date effectiveDate;  // JavaScript Date object
@@ -16,9 +16,9 @@ public class CalculationResult {
     private String reference;
     private List<TariffBreakdown> tariffs;
 
-
     // Constructors
-    public CalculationResult() {}
+    public CalculationResult() {
+    }
 
     public CalculationResult(BigDecimal netTotal, String tariffName, Date effectiveDate, Date expiryDate,
             String reference, List<TariffBreakdown> tariffs) {
@@ -29,7 +29,6 @@ public class CalculationResult {
         this.reference = reference;
         this.tariffs = tariffs;
     }
-
 
     public BigDecimal getNetTotal() {
         return netTotal;

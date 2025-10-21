@@ -13,7 +13,7 @@ import CS203G3.tariff_backend.model.UnitOfCalculation;
 
 @Service
 public class TariffCalculationServiceImpl implements TariffCalculationService {
-    
+
     @Override
     public CalculationResult calculate(List<TariffCalculationMap> tariffRates, BigDecimal productValue) {
         List<TariffBreakdown> breakdownList = new ArrayList<>();
@@ -22,7 +22,7 @@ public class TariffCalculationServiceImpl implements TariffCalculationService {
         for (TariffCalculationMap tMap : tariffRates) {
             BigDecimal subCost;
             if (tMap.getUnitOfCalculation() == UnitOfCalculation.AV) {
-            // Correctly calculate the percentage
+                // Correctly calculate the percentage
                 subCost = tMap.getValue().multiply(tMap.getRate().divide(new BigDecimal("100")));
             } else {
                 // Logic for specific rates (e.g., per KG, per item) is correct
@@ -36,12 +36,12 @@ public class TariffCalculationServiceImpl implements TariffCalculationService {
         BigDecimal netTotal = productValue.add(totalTariffCost);
 
         CalculationResult result = new CalculationResult(
-            netTotal,
-            null, // tariffName
-            null, // effectiveDate
-            null, // expiryDate
-            null, // reference
-            breakdownList
+                netTotal,
+                null, // tariffName
+                null, // effectiveDate
+                null, // expiryDate
+                null, // reference
+                breakdownList
         );
         return result;
     }

@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "tariff")
 public class Tariff {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "tariff_id")
@@ -47,7 +47,8 @@ public class Tariff {
     private List<TariffRate> tariffRates;
 
     // Constructors
-    public Tariff() {}
+    public Tariff() {
+    }
 
     public Tariff(Long tariffID, Product product, CountryPair countryPair, Date effectiveDate, Date expiryDate, String reference) {
         this.tariffID = tariffID;
@@ -56,7 +57,6 @@ public class Tariff {
         this.effectiveDate = effectiveDate;
         this.expiryDate = expiryDate;
         this.reference = reference;
-
 
     }
 

@@ -619,11 +619,6 @@ export default function CalculatorPage() {
                               <span className="text-gray-600 ml-2">({Number(rate).toFixed(2)}%)</span>
                             </div>
                             <span className="font-bold text-black">${Number(amountApplied).toFixed(2)}</span>
-
-                            {/* Tooltip */}
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                              {tariff.reference || "not-updated"}
-                            </div>
                           </div>
                         );
                       })}

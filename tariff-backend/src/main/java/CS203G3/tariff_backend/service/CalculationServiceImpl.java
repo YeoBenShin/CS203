@@ -24,9 +24,9 @@ public class CalculationServiceImpl implements CalculationService {
     private final CountryPairRepository countryPairRepository;
     private final TariffCalculationService tariffCalculationService;
 
-    public CalculationServiceImpl(TariffRepository tariffRepository, 
-                                CountryPairRepository countryPairRepository,
-                                TariffCalculationService tariffCalculationService) {
+    public CalculationServiceImpl(TariffRepository tariffRepository,
+            CountryPairRepository countryPairRepository,
+            TariffCalculationService tariffCalculationService) {
         this.tariffRepository = tariffRepository;
         this.countryPairRepository = countryPairRepository;
         this.tariffCalculationService = tariffCalculationService;
@@ -37,7 +37,7 @@ public class CalculationServiceImpl implements CalculationService {
         // Extract data from request
         String hsCode = request.getHsCode();
         String exporterCountry = request.getExporter();
-        String importerCountry = request.getImporter(); 
+        String importerCountry = request.getImporter();
         Date tradeDate = request.getTradeDataAsDate();
 
         if (tradeDate == null) {
@@ -53,9 +53,9 @@ public class CalculationServiceImpl implements CalculationService {
         // Find valid tariff for the given HS code, country pair, and trade date
         Optional<Tariff> tariffOpt = tariffRepository.findValidTariff(hsCode, countryPair, tradeDate);
         if (tariffOpt.isEmpty()) {
-            throw new ResourceNotFoundException("No valid tariff found for HS Code: " + hsCode + 
-                ", exporter: " + exporterCountry + ", importer: " + importerCountry + 
-                ", trade date: " + tradeDate);
+            throw new ResourceNotFoundException("No valid tariff found for HS Code: " + hsCode
+                    + ", exporter: " + exporterCountry + ", importer: " + importerCountry
+                    + ", trade date: " + tradeDate);
         }
 
         Tariff tariff = tariffOpt.get();
@@ -64,9 +64,9 @@ public class CalculationServiceImpl implements CalculationService {
         List<TariffCalculationMap> tariffCalculationMaps = new ArrayList<>();
         for (TariffRate tariffRate : tariff.getTariffRates()) {
             TariffCalculationMap map = new TariffCalculationMap(
-                tariffRate.getUnitOfCalculation(),
-                tariffRate.getTariffRate(),
-                request.getShippingCost() // Use shipping cost as the base value for all calculations
+                    tariffRate.getUnitOfCalculation(),
+                    tariffRate.getTariffRate(),
+                    request.getShippingCost() // Use shipping cost as the base value for all calculations
             );
             tariffCalculationMaps.add(map);
         }
