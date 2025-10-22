@@ -3,56 +3,82 @@ import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
 import { Tooltip } from "react-tooltip";
 
-// The tariff data is now placed directly inside the component file.
-// This removes any issues related to incorrect file paths.
+// ✅ Your dataset
 const mockTariffs = [
-  { "countryname": "USA", "tariffrate": 3.4 },
-  { "countryname": "CHN", "tariffrate": 7.6 },
-  { "countryname": "JPN", "tariffrate": 2.5 },
-  { "countryname": "DEU", "tariffrate": 2.1 },
-  { "countryname": "GBR", "tariffrate": 2.1 },
-  { "countryname": "IND", "tariffrate": 6.9 },
-  { "countryname": "FRA", "tariffrate": 2.1 },
-  { "countryname": "ITA", "tariffrate": 2.1 },
-  { "countryname": "BRA", "tariffrate": 10.2 },
-  { "countryname": "CAN", "tariffrate": 3.1 },
-  { "countryname": "RUS", "tariffrate": 5.3 },
-  { "countryname": "AUS", "tariffrate": 2.6 },
-  { "countryname": "MEX", "tariffrate": 5.8 },
-  { "countryname": "IDN", "tariffrate": 5.7 },
-  { "countryname": "SAU", "tariffrate": 4.9 },
-  { "countryname": "TUR", "tariffrate": 8.1 },
-  { "countryname": "CHE", "tariffrate": 1.8 },
-  { "countryname": "ARG", "tariffrate": 11.5 },
-  { "countryname": "NGA", "tariffrate": 12.7 },
-  { "countryname": "ZAF", "tariffrate": 7.6 }
+  { countryname: "AUS", tariffrate: 15.2 },
+  { countryname: "AUT", tariffrate: 42.8 },
+  { countryname: "BEL", tariffrate: 55.9 },
+  { countryname: "BRA", tariffrate: 67.3 },
+  { countryname: "CAN", tariffrate: 23.4 },
+  { countryname: "CHE", tariffrate: 51.1 },
+  { countryname: "CHN", tariffrate: 45.0 },
+  { countryname: "DEU", tariffrate: 58.7 },
+  { countryname: "DNK", tariffrate: 53.9 },
+  { countryname: "ESP", tariffrate: 49.3 },
+  { countryname: "FIN", tariffrate: 35.7 },
+  { countryname: "FRA", tariffrate: 52.2 },
+  { countryname: "GBR", tariffrate: 26.4 },
+  { countryname: "GRC", tariffrate: 19.8 },
+  { countryname: "HUN", tariffrate: 46.1 },
+  { countryname: "IDN", tariffrate: 51.4 },
+  { countryname: "IND", tariffrate: 47.9 },
+  { countryname: "IRL", tariffrate: 31.7 },
+  { countryname: "ITA", tariffrate: 48.6 },
+  { countryname: "JPN", tariffrate: 38.2 },
+  { countryname: "KOR", tariffrate: 44.3 },
+  { countryname: "LTU", tariffrate: 33.1 },
+  { countryname: "LUX", tariffrate: 28.9 },
+  { countryname: "MEX", tariffrate: 41.5 },
+  { countryname: "NLD", tariffrate: 37.7 },
+  { countryname: "NOR", tariffrate: 16.5 },
+  { countryname: "POL", tariffrate: 46.0 },
+  { countryname: "PRT", tariffrate: 27.6 },
+  { countryname: "ROU", tariffrate: 32.1 },
+  { countryname: "RUS", tariffrate: 13.4 },
+  { countryname: "SGP", tariffrate: 10.2 },
+  { countryname: "SWE", tariffrate: 40.5 },
+  { countryname: "TUR", tariffrate: 43.9 },
+  { countryname: "TWN", tariffrate: 34.8 },
+  { countryname: "USA", tariffrate: 39.6 },
+  { countryname: "ZAF", tariffrate: 21.2 },
+  { countryname: "NZL", tariffrate: 14.7 },
+  { countryname: "SAU", tariffrate: 29.1 },
+  { countryname: "ARE", tariffrate: 25.3 },
+  { countryname: "EGY", tariffrate: 28.5 },
+  { countryname: "ARG", tariffrate: 54.1 },
+  { countryname: "ISR", tariffrate: 31.9 },
+  { countryname: "THA", tariffrate: 47.3 },
+  { countryname: "VNM", tariffrate: 52.0 },
+  { countryname: "MYS", tariffrate: 37.5 },
+  { countryname: "PHL", tariffrate: 40.2 },
+  { countryname: "PAK", tariffrate: 35.8 },
+  { countryname: "NGA", tariffrate: 49.0 },
+  { countryname: "KEN", tariffrate: 44.4 },
+  { countryname: "UGA", tariffrate: 39.9 },
 ];
 
-// Use a dataset that provides ISO_A3 and names in properties
-const geoUrl = "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson";
+// ✅ GeoJSON URL
+const geoUrl =
+  "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson";
 
 const HeatMap = () => {
   const [content, setContent] = useState("");
 
-  // Convert the array of tariffs into a map for efficient lookups
+  // Convert tariff list into lookup map
   const tariffDataMap = useMemo(() => {
     const map = {};
-    if (Array.isArray(mockTariffs)) {
-      mockTariffs.forEach(item => {
-        // FIX: Trim the country name to remove any hidden whitespace
-        if (item.countryname && typeof item.tariffrate === 'number') {
-          map[item.countryname.trim()] = item.tariffrate;
-        }
-      });
-    }
+    mockTariffs.forEach((item) => {
+      const code = item.countryname.trim().toUpperCase();
+      map[code] = item.tariffrate;
+    });
     return map;
   }, []);
 
-  // Dynamically calculate the maximum tariff from the data
   const maxTariffValue = Math.max(0, ...Object.values(tariffDataMap));
-
-  // A vibrant color scale mapping the lowest tariff to light yellow and the highest to a strong red
-  const colorScale = scaleLinear().domain([0, maxTariffValue]).range(["#ffeda0", "#f03b20"]).clamp(true);
+  const colorScale = scaleLinear()
+    .domain([0, maxTariffValue])
+    .range(["#ffeda0", "#f03b20"])
+    .clamp(true);
 
   const handleCountryClick = (countryName, iso3) => {
     console.log("Clicked:", { countryName, iso3 });
@@ -65,18 +91,14 @@ const HeatMap = () => {
           {({ geographies }) =>
             geographies.map((geo) => {
               const p = geo.properties ?? {};
-              // FIX: Trim the ISO code from the map data to ensure a clean match
-              let iso3 =
-                (p.ISO_A3 || p.ADM0_A3 || p.iso_a3 || p.A3 || p.id || "").toString().toUpperCase().trim();
-              
-              if (iso3 === "-99") {
-                iso3 = (p.ADM0_A3 || p.A3 || "").toString().toUpperCase().trim();
-              }
-              const countryName = p.ADMIN || p.NAME || p.NAME_LONG || p.name || iso3 || "Unknown";
 
-              // Look up the tariff value from our created map
+              // ✅ Use the actual ISO property from your GeoJSON
+              const iso3 = (p["ISO3166-1-Alpha-3"] || "").trim().toUpperCase();
+              const countryName = p.name || p.ADMIN || p.NAME || iso3;
+
               const tariffValue = tariffDataMap[iso3];
-              const hasTariff = tariffValue !== undefined && tariffValue !== null;
+              const hasTariff = tariffValue !== undefined;
+
               const fillColor = hasTariff ? colorScale(tariffValue) : "#f0f0f0ff";
 
               return (
@@ -86,7 +108,7 @@ const HeatMap = () => {
                   onClick={() => handleCountryClick(countryName, iso3)}
                   onMouseEnter={() => {
                     const tooltipText = hasTariff
-                      ? `${iso3}: ${tariffValue}%`
+                      ? `${countryName}: ${tariffValue}%`
                       : `${countryName}: not-updated`;
                     setContent(tooltipText);
                   }}
@@ -94,23 +116,18 @@ const HeatMap = () => {
                   style={{
                     default: {
                       fill: fillColor,
-                      stroke: "#ffffffff",
-                      strokeWidth: 1,
-                      vectorEffect: "non-scaling-stroke",
+                      stroke: "#ffffff",
+                      strokeWidth: 0.5,
                       outline: "none",
                     },
                     hover: {
                       fill: fillColor,
-                      stroke: "#ffffffff",
-                      outline: "none",
+                      stroke: "#000000",
                       cursor: "pointer",
                     },
                     pressed: {
                       fill: fillColor,
-                      stroke: "#ffffffff",
-                      strokeWidth: 1,
-                      vectorEffect: "non-scaling-stroke",
-                      outline: "none",
+                      stroke: "#000000",
                     },
                   }}
                 />
@@ -125,4 +142,3 @@ const HeatMap = () => {
 };
 
 export default memo(HeatMap);
-
