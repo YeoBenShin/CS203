@@ -112,4 +112,21 @@
         </plugins>
     </build>
 
+    <!-- overriding spring boot's logback-core version for CVE-2025-11226 -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.5.19</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>1.5.19</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
 </project>
