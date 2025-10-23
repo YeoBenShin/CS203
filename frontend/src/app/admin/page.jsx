@@ -2,7 +2,10 @@
 import React, { useState, useEffect } from "react";
 import ErrorDisplay from "../../components/messages/ErrorMessageDisplay";
 import LoadingSpinner from "../../components/messages/LoadingSpinner";
-import { SuccessMessageDisplay, showSuccessPopupMessage } from "../../components/messages/SuccessMessageDisplay";
+import {
+  SuccessMessageDisplay,
+  showSuccessPopupMessage,
+} from "../../components/messages/SuccessMessageDisplay";
 import FieldSelector from "../../components/FieldSelector";
 import Button from "../../components/Button";
 import fetchApi from "@/utils/fetchApi";
@@ -10,223 +13,157 @@ import { useAuth } from "@clerk/nextjs";
 
 export default function AdminPage() {
   const { getToken } = useAuth();
+
   const [form, setForm] = useState({
     exporter: null,
+    importer: null,
     product: null,
-    rate: "",
     effectiveDate: "",
     expiryDate: "",
-    reference: ""
+    reference: "",
   });
 
+  const [rates, setRates] = useState([{ unit: "AV", rate: "" }]); // at least one (Ad Valorem)
   const [errors, setErrors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-
   const [countryOptions, setCountryOptions] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
-  
-    useEffect(() => {
-      const fetchCountries = async () => {
-        try {
-          const token = await getToken();
-          const response = await fetchApi(token, "api/countries");
-          const countries = await response.json();
-          const options = countries.filter(country => country.isoCode !== 'USA').map(country => ({
-            label: country.name,
-            value: country.isoCode
-          }));
-          setCountryOptions(options);
-        } catch (error) {
-          console.error("Failed to fetch countries:", error);
-        }
-      };
-      
-      fetchCountries();
-    }, []);
-  
-    useEffect(() => {
-      const fetchProducts = async () => {
-        try {
-          const token = await getToken();
-          const response = await fetchApi(token, "api/products");
-          const products = await response.json();
-          const options = products.map(product => ({
-            label: `${product.hsCode}${product.description ? ` - ${product.description}` : ''}`,
-            value: product.hsCode
-          }));
-          setProductOptions(options);
-          console.log("Fetched products:", products);
-        } catch (error) {
-          console.error("Failed to fetch products:", error);
-        }
-      };
-  
-      fetchProducts();
-    }, []);
+
+  // Fetch countries
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const token = await getToken();
+        const response = await fetchApi(token, "api/countries");
+        const countries = await response.json();
+        const options = countries.map((country) => ({
+          label: country.name,
+          value: country.isoCode,
+        }));
+        setCountryOptions(options);
+      } catch (error) {
+        console.error("Failed to fetch countries:", error);
+      }
+    };
+    fetchCountries();
+  }, []);
+
+  // Fetch products
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const token = await getToken();
+        const response = await fetchApi(token, "api/products");
+        const products = await response.json();
+        const options = products.map((product) => ({
+          label: `${product.hsCode}${product.description ? ` - ${product.description}` : ""}`,
+          value: product.hsCode,
+        }));
+        setProductOptions(options);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear errors when user starts typing
-    if (errors.length > 0) {
-      setErrors([]);
+  };
+
+  const handleRateChange = (index, field, value) => {
+    const updatedRates = [...rates];
+    updatedRates[index][field] = value;
+    setRates(updatedRates);
+  };
+
+  const addRate = () => {
+    setRates([...rates, { unit: "", rate: "" }]);
+  };
+
+  const removeRate = (index) => {
+    if (rates.length > 1) {
+      setRates(rates.filter((_, i) => i !== index));
     }
   };
 
-   const handleExporterChange = (option) => {
-    setForm({ ...form, exporter: option });
-    if (errors.length > 0) {
-      setErrors([]);
-    }
-  };
-  const handleProductChange = (option) => {
-    setForm({ ...form, product: option });
-    if (errors.length > 0) {
-      setErrors([]);
-    }
-  };
-
-  // Client-side validation
   const validateForm = () => {
     const validationErrors = [];
-
-    if (!form.exporter) {
-      validationErrors.push("Please select an exporter country");
-    }
-    if (!form.product) {
-      validationErrors.push("Please select a product");
-    }
-    if (!form.rate) {
-      validationErrors.push("Please enter a tariff rate");
-    } else {
-      const rate = parseFloat(form.rate);
-      if (rate < 0) {
-        validationErrors.push("Tariff rate cannot be negative");
-      }
-    }
-    if (!form.effectiveDate) {
-      validationErrors.push("Please enter an effective date");
-    }
-
-    // Check if exporter and importer are the same
-    if (form.exporter && form.exporter.value === "USA") {
-      validationErrors.push("Exporter and importer cannot be the same country");
-    }
-
-    // Check if expiry date is before effective date
+    if (!form.exporter) validationErrors.push("Please select an exporter country.");
+    if (!form.importer) validationErrors.push("Please select an importer country.");
+    if (form.exporter && form.importer && form.exporter.value === form.importer.value)
+      validationErrors.push("Exporter and importer cannot be the same country.");
+    if (!form.product) validationErrors.push("Please select a product.");
+    if (rates.length === 0 || !rates.some((r) => r.rate))
+      validationErrors.push("Please enter at least one tariff rate.");
+    if (!form.effectiveDate) validationErrors.push("Please enter an effective date.");
     if (form.effectiveDate && form.expiryDate) {
-      const effectiveDate = new Date(form.effectiveDate);
-      const expiryDate = new Date(form.expiryDate);
-      if (expiryDate <= effectiveDate) {
-        validationErrors.push("Expiry date must be after the effective date");
-      }
+      const eff = new Date(form.effectiveDate);
+      const exp = new Date(form.expiryDate);
+      if (exp <= eff) validationErrors.push("Expiry date must be after effective date.");
     }
-
     return validationErrors;
   };
-
-  // Parse backend error response
-  const parseErrorResponse = (errorData) => {
-    if (typeof errorData === 'string') {
-      try {
-        const parsed = JSON.parse(errorData);
-        return parseErrorResponse(parsed);
-      } catch {
-        return [errorData];
-      }
-    }
-
-    // Handle structured error response from backend
-    if (errorData && errorData.errorCode) {
-      return [getHelpfulErrorMessage(errorData.errorCode, errorData.message)];
-    }
-
-    // Handle validation errors array
-    if (Array.isArray(errorData)) {
-      return errorData;
-    }
-
-    // Handle generic error object
-    if (errorData && errorData.message) {
-      return [errorData.message];
-    }
-
-    return ["An unexpected error occurred. Please try again."];
-  };
-
-  // Convert error codes to user-friendly messages
-  const getHelpfulErrorMessage = (errorCode, originalMessage) => {
-    const errorMessages = {
-      'SAME_COUNTRY': 'Please select different countries for exporter and importer.',
-      'NEGATIVE_TARIFF_RATE': 'Tariff rate must be a positive number.',
-      'INVALID_TARIFF_RATE': 'Please enter a valid positive tariff rate.',
-      'PAST_EFFECTIVE_DATE': 'Please select an effective date that is today or in the future.',
-      'EXPIRY_BEFORE_EFFECTIVE': 'Expiry date must be after the effective date.',
-      'OVERLAPPING_TARIFF_PERIOD': 'A tariff already exists for this period. Please choose different dates.',
-      'DUPLICATE_TARIFF_MAPPING': 'This tariff mapping already exists. Please check your selections.',
-      'INVALID_DATE_RANGE': 'Please check your date inputs for any conflicts.',
-      'RESOURCE_NOT_FOUND': 'One of the selected options is no longer available. Please refresh and try again.'
-    };
-
-    return errorMessages[errorCode] || originalMessage || 'An error occurred with your request.';
-  };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors([]);
-    setSuccessMessage("");
     setIsLoading(true);
-    
-    // Client-side validation
+
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
       setIsLoading(false);
       return;
     }
-    
+
+    // Convert rates array into map structure { "AV": 0.05, "KG": 0.02 }
+    const tariffRates = {};
+    rates.forEach((r) => {
+      if (r.unit && r.rate) {
+        tariffRates[r.unit.toUpperCase()] = parseFloat(r.rate) / 100;
+      }
+    });
+
+    const requestData = {
+      exporter: form.exporter.value,
+      importer: form.importer.value,
+      hSCode: form.product.value,
+      effectiveDate: form.effectiveDate,
+      expiryDate: form.expiryDate || null,
+      reference: form.reference || null,
+      tariffRates,
+    };
+
+    console.log("Sending request data:", requestData);
+
     try {
-        const requestData = {
-          exporter: form.exporter.value,
-          HSCode: Number(form.product.value),
-          rate: parseFloat(form.rate) / 100, // Convert percentage to decimal
-          effectiveDate: new Date(form.effectiveDate).toISOString(),
-          expiryDate: form.expiryDate ? new Date(form.expiryDate).toISOString() : null,
-          reference: form.reference || null
-        };
-        
-        console.log("Sending request data:", requestData);
-  
-        const token = await getToken();
-        const response = await fetchApi(token, "api/tariffs", "POST", requestData);
-      
+      const token = await getToken();
+      const response = await fetchApi(token, "api/tariffs", "POST", requestData);
       if (response.ok) {
-        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup,"Tariff added successfully!");
-        setForm({ 
-          exporter: null, 
-          product: null, 
-          rate: "", 
-          effectiveDate: "", 
-          expiryDate: "", 
-          reference: "" 
+        showSuccessPopupMessage(
+          setSuccessMessage,
+          setShowSuccessPopup,
+          "✅ Tariff added successfully!"
+        );
+        setForm({
+          exporter: null,
+          importer: null,
+          product: null,
+          effectiveDate: "",
+          expiryDate: "",
+          reference: "",
         });
+        setRates([{ unit: "AV", rate: "" }]);
       } else {
-        const errorText = await response.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = errorText;
-        }
-        
-        const errorMessages = parseErrorResponse(errorData);
-        setErrors(errorMessages);
+        const errText = await response.text();
+        setErrors([errText]);
       }
     } catch (err) {
-      console.error("Network error:", err);
-      setErrors(["❌ Network error: Please check your connection and try again."]);
+      console.error(err);
+      setErrors(["Network error: please try again."]);
     } finally {
       setIsLoading(false);
     }
@@ -235,80 +172,147 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-white to-blue-400 flex flex-col items-center justify-start p-8">
       <h1 className="text-3xl font-bold mb-6 text-black">Admin: Add Tariff</h1>
-      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
-        <p className="text-sm text-gray-600 mb-4">
-          Fields marked with <span className="text-red-500">*</span> are required
-        </p>
+
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md"
+      >
+        {/* Exporter */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Exporter <span className="text-red-500">*</span>
+            Exporter Country *
           </label>
           <FieldSelector
             options={countryOptions}
             value={form.exporter}
-            onChange={handleExporterChange}
+            onChange={(opt) => setForm({ ...form, exporter: opt })}
             placeholder="Select exporter country"
           />
         </div>
+
+        {/* Importer */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Product <span className="text-red-500">*</span>
+            Importer Country *
+          </label>
+          <FieldSelector
+            options={countryOptions}
+            value={form.importer}
+            onChange={(opt) => setForm({ ...form, importer: opt })}
+            placeholder="Select importer country"
+          />
+        </div>
+
+        {/* Product */}
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Product (HS Code) *
           </label>
           <FieldSelector
             options={productOptions}
             value={form.product}
-            onChange={handleProductChange}
-            placeholder="Select Product HSCode"
+            onChange={(opt) => setForm({ ...form, product: opt })}
+            placeholder="Select product"
           />
         </div>
-        
+
+        {/* Tariff Rates */}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="rate">
-            Rate (%) <span className="text-red-500">*</span>
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Tariff Rates (%)
           </label>
-          <input 
-            name="rate" 
-            type="number" 
-            min="0" 
-            step="0.01"
-            value={form.rate} 
-            onChange={handleChange} 
-            placeholder="Enter percentage (e.g., 1 for 1%, 25 for 25%)" 
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-          />
-          <p className="text-xs text-gray-600 mt-1">Enter as percentage: 1 for 1%, 5 for 5%, 25 for 25%</p>
+          {rates.map((rate, index) => (
+            <div key={index} className="flex space-x-2 mb-2">
+              <input
+                type="text"
+                value={rate.unit}
+                onChange={(e) => handleRateChange(index, "unit", e.target.value)}
+                placeholder="Unit (e.g., AV, KG, M2)"
+                className="border rounded w-1/2 py-2 px-3"
+              />
+              <input
+                type="number"
+                step="0.01"
+                value={rate.rate}
+                onChange={(e) => handleRateChange(index, "rate", e.target.value)}
+                placeholder="Rate (%)"
+                className="border rounded w-1/2 py-2 px-3"
+              />
+              {index > 0 && (
+                <button
+                  type="button"
+                  onClick={() => removeRate(index)}
+                  className="text-red-500 font-bold"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addRate}
+            className="text-blue-500 text-sm mt-2"
+          >
+            + Add another rate
+          </button>
         </div>
+
+        {/* Dates */}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="effectiveDate">
-            Effective Date <span className="text-red-500">*</span>
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Effective Date *
           </label>
-          <input 
-            name="effectiveDate" 
-            type="date" 
-            value={form.effectiveDate} 
-            onChange={handleChange} 
-            className={`shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${form.effectiveDate ? " text-gray-700" : "text-white"}`} 
+          <input
+            type="date"
+            name="effectiveDate"
+            value={form.effectiveDate}
+            onChange={handleChange}
+            className="border rounded w-full py-2 px-3"
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="expiryDate">Expiry Date</label>
-          <input name="expiryDate" type="date" value={form.expiryDate} onChange={handleChange} className={`shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${form.expiryDate ? " text-gray-700" : "text-white"}`} />
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Expiry Date
+          </label>
+          <input
+            type="date"
+            name="expiryDate"
+            value={form.expiryDate}
+            onChange={handleChange}
+            className="border rounded w-full py-2 px-3"
+          />
         </div>
+
+        {/* Reference */}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="reference">Reference</label>
-          <input name="reference" type="text" value={form.reference} onChange={handleChange} placeholder="Source URL" className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Reference
+          </label>
+          <input
+            type="text"
+            name="reference"
+            value={form.reference}
+            onChange={handleChange}
+            placeholder="Optional reference"
+            className="border rounded w-full py-2 px-3"
+          />
         </div>
-        <Button 
-          type='submit'
-        >
-          {isLoading && <LoadingSpinner />} 
+
+        {/* Submit */}
+        <Button type="submit">
+          {isLoading && <LoadingSpinner />}{" "}
           {isLoading ? "Adding Tariff..." : "Add Tariff"}
         </Button>
-        {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
-        
-        {/* Error Messages */}
+
+        {showSuccessPopup && (
+          <SuccessMessageDisplay
+            successMessage={successMessage}
+            setShowSuccessPopup={setShowSuccessPopup}
+          />
+        )}
         <ErrorDisplay errors={errors} />
-       </form>
+      </form>
     </main>
   );
 }
