@@ -1,6 +1,7 @@
 package CS203G3.tariff_backend.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,28 +20,39 @@ public class TariffCalculationServiceImpl implements TariffCalculationService {
         List<TariffBreakdown> breakdownList = new ArrayList<>();
         BigDecimal totalTariffCost = BigDecimal.ZERO;
 
+        final BigDecimal hundred = BigDecimal.valueOf(100);
+        final RoundingMode RM = RoundingMode.HALF_UP;
+
         for (TariffCalculationMap tMap : tariffRates) {
+            BigDecimal rate = tMap.getRate() != null ? tMap.getRate() : BigDecimal.ZERO;
             BigDecimal subCost;
+
             if (tMap.getUnitOfCalculation() == UnitOfCalculation.AV) {
-                // Correctly calculate the percentage
-                subCost = tMap.getValue().multiply(tMap.getRate().divide(new BigDecimal("100")));
+                BigDecimal base = productValue != null ? productValue : BigDecimal.ZERO;
+                subCost = base.multiply(rate).divide(hundred, 6, RM).setScale(2, RM);
             } else {
-                // Logic for specific rates (e.g., per KG, per item) is correct
-                subCost = tMap.getValue().multiply(tMap.getRate().divide(new BigDecimal("100")));
+                BigDecimal qty = tMap.getValue() != null ? tMap.getValue() : BigDecimal.ZERO;
+                subCost = qty.multiply(rate).setScale(2, RM);
             }
 
-            TariffBreakdown breakdown = new TariffBreakdown(tMap.getUnitOfCalculation(), tMap.getRate(), subCost);
+            TariffBreakdown breakdown = new TariffBreakdown(
+                tMap.getUnitOfCalculation(),
+                rate,
+                subCost
+            );
             breakdownList.add(breakdown);
             totalTariffCost = totalTariffCost.add(subCost);
         }
-        BigDecimal netTotal = productValue.add(totalTariffCost);
+
+        BigDecimal baseValue = productValue != null ? productValue : BigDecimal.ZERO;
+        BigDecimal netTotal = baseValue.add(totalTariffCost);
 
         CalculationResult result = new CalculationResult(
                 netTotal,
-                null, // tariffName
-                null, // effectiveDate
-                null, // expiryDate
-                null, // reference
+                null,
+                null,
+                null,
+                null,
                 breakdownList
         );
         return result;

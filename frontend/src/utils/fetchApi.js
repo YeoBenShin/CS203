@@ -1,21 +1,17 @@
+const stripSlashes = (s = "") => String(s).replace(/^\/+|\/+$/g, "");
+
 const fetchApi = async (token, path, method = "GET", body = null) => {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
+  const cleanedPath = stripSlashes(path);
+  const url = `/backapi/${cleanedPath}`; // same-origin via rewrite
 
-  const options = {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  };
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
 
-  // Only attach body for methods that support it (POST, PUT, PATCH)
-  if (body && method !== "GET" && method !== "HEAD") {
-    options.body = JSON.stringify(body);
-  }
+  const options = { method, headers };
+  if (body && method !== "GET" && method !== "HEAD") options.body = JSON.stringify(body);
 
-  const response = await fetch(`${baseUrl}/${path}`, options);
-  return response;
+  const res = await fetch(url, options);
+  return res;
 };
 
 export default fetchApi;
