@@ -1,5 +1,7 @@
 package CS203G3.tariff_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum UnitOfCalculation {
     BBL,
     C,
@@ -82,5 +84,12 @@ public enum UnitOfCalculation {
     W,
     WTS,
     X,
-    AV // Ad Valorem
+    AV; // Ad Valorem
+
+    @JsonCreator
+    public static UnitOfCalculation fromString(String key) {
+        if (key == null) return null;
+        return UnitOfCalculation.valueOf(key.toUpperCase());
+    }
+    
 }
