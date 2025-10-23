@@ -5,6 +5,7 @@ const fetchApi = async (token, path, method = "GET", body = null) => {
     method,
     headers: {
       "Content-Type": "application/json",
+      // credentials: "include",
       Authorization: `Bearer ${token}`,
     },
   };
