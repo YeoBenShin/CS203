@@ -84,6 +84,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- fix for CVE-2025-48924-->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.18.0</version>
+        </dependency>
+
         <!-- FIX 2: Changed H2 Database scope to 'test' -->
         <dependency>
             <groupId>com.h2database</groupId>
