@@ -198,7 +198,7 @@ export default function CalculatorPage() {
           const response = await fetchApi(token, `/api/tariffs/unit-info?${params}`);
 
           if (response.ok) {
-            const data = await response.json(); // Could be { unit: "KG" } or { units: ["KG","G","AV"] } or { unit: "KG,G,AV" }
+            const data = await response.json(); // returns as List e.g. [AV, KG]
 
             // Store the date constraints for continuous validation
             const apiEffectiveDate = data.effectiveDate ? new Date(data.effectiveDate) : null;
@@ -517,7 +517,7 @@ export default function CalculatorPage() {
 
     try {
       const token = await getToken();
-      const response = await fetchApi(token, "api/tariffs/calculate", "POST", data);
+      const response = await fetchApi(token, "/api/tariffs/calculate", "POST", data);
 
       const responseData = await response.json();
       if (response.ok) {
