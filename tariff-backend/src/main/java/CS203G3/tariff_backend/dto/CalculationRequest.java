@@ -47,9 +47,8 @@ public class CalculationRequest {
         this.tradeDate = tradeDate;
     }
 
-    // Legacy field getters and setters for backward compatibility
     public String getHSCode() {
-        return getHsCode();
+        return hSCode;
     }
 
     public void setHSCode(String hSCode) {
