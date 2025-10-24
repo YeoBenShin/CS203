@@ -25,10 +25,6 @@ public class CalculationRequest {
         this.quantityValues = quantityValues;
     }
 
-    // public void setHsCode(String hsCode) {
-    //     this.hSCode = hsCode;
-    // }
-
     public Date getTradeDate() {
         return tradeDate;
     }
@@ -37,11 +33,11 @@ public class CalculationRequest {
         this.tradeDate = tradeDate;
     }
 
-    public String getHsCode() {
+    public String getHSCode() {
         return hSCode;
     }
 
-    public void setHsCode(String hSCode) {
+    public void setHSCode(String hSCode) {
         this.hSCode = hSCode;
     }
 

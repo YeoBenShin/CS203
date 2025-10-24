@@ -382,7 +382,7 @@ public class TariffServiceImpl implements TariffService {
                 request.getExporter(), request.getImporter());
 
         Optional<Tariff> tariffOpt = tariffRepository.findValidTariff(
-                request.getHsCode(),
+                request.getHSCode(),
                 countryPair,
                 request.getTradeDate()
         );

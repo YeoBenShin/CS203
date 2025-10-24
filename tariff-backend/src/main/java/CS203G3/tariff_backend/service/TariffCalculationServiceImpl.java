@@ -18,7 +18,7 @@ public class TariffCalculationServiceImpl implements TariffCalculationService {
     @Override
     public CalculationResult calculate(List<TariffCalculationMap> tariffRates, BigDecimal productValue) {
         List<TariffBreakdown> breakdownList = new ArrayList<>();
-        BigDecimal totalTariffCost = BigDecimal.ZERO;
+        BigDecimal netTotal = productValue;
 
         final BigDecimal hundred = BigDecimal.valueOf(100);
         final RoundingMode RM = RoundingMode.HALF_UP;
@@ -41,11 +41,9 @@ public class TariffCalculationServiceImpl implements TariffCalculationService {
                 subCost
             );
             breakdownList.add(breakdown);
-            totalTariffCost = totalTariffCost.add(subCost);
+            netTotal = netTotal.add(subCost);
         }
 
-        BigDecimal baseValue = productValue != null ? productValue : BigDecimal.ZERO;
-        BigDecimal netTotal = baseValue.add(totalTariffCost);
 
         CalculationResult result = new CalculationResult(
                 netTotal,
