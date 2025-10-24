@@ -11,13 +11,13 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @Configuration
 public class CorsConfig {
 
-    @Value("${FRONTEND_ORIGIN:http://localhost:3000}")
+    @Value("${FRONTEND_ORIGIN}")
     private String frontendOrigin;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(frontendOrigin));
+        config.setAllowedOrigins(List.of(frontendOrigin, "http://localhost:3000"));
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
