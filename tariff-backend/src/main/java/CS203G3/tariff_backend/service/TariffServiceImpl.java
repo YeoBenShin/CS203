@@ -260,7 +260,7 @@ public class TariffServiceImpl implements TariffService {
             throw new NoTariffFoundException("No tariff rates found for this tariff.");
         }
 
-        return new UnitInfoDto(allUnits);
+        return new UnitInfoDto(allUnits, tariff.getEffectiveDate(), tariff.getExpiryDate());
     }
 
     /**
@@ -382,9 +382,9 @@ public class TariffServiceImpl implements TariffService {
                 request.getExporter(), request.getImporter());
 
         Optional<Tariff> tariffOpt = tariffRepository.findValidTariff(
-                request.getHSCode(),
+                request.getHsCode(),
                 countryPair,
-                request.getTradeDataAsDate()
+                request.getTradeDate()
         );
         Tariff tariff = tariffOpt.orElseThrow(
                 () -> new ResourceNotFoundException("No such tariff record found")

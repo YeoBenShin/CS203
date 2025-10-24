@@ -13,7 +13,6 @@ public class CalculationRequest {
     private String exporter;
     private String importer;
     private BigDecimal productValue;
-
     private Map<UnitOfCalculation, BigDecimal> quantityValues;
 
     public CalculationRequest(Date tradeDate, String hSCode, String exporter,
@@ -26,9 +25,9 @@ public class CalculationRequest {
         this.quantityValues = quantityValues;
     }
 
-    public void setHsCode(String hsCode) {
-        this.hSCode = hsCode;
-    }
+    // public void setHsCode(String hsCode) {
+    //     this.hSCode = hsCode;
+    // }
 
     public Date getTradeDate() {
         return tradeDate;
@@ -38,11 +37,11 @@ public class CalculationRequest {
         this.tradeDate = tradeDate;
     }
 
-    public String getHSCode() {
+    public String getHsCode() {
         return hSCode;
     }
 
-    public void setHSCode(String hSCode) {
+    public void setHsCode(String hSCode) {
         this.hSCode = hSCode;
     }
 

@@ -45,12 +45,12 @@ public class CalculationServiceImpl implements CalculationService {
     @Override
     public CalculationResult calculateTariff(CalculationRequest request) {
         // Validate required fields
-        String hsCode = request.getHsCode();
+        String hSCode = request.getHsCode();
         String exporterCountry = request.getExporter();
         String importerCountry = request.getImporter();
-        Date tradeDate = request.getTradeDataAsDate();
+        Date tradeDate = request.getTradeDate();
 
-        if (hsCode == null || hsCode.isBlank()) {
+        if (hSCode == null || hSCode.isBlank()) {
             throw new IllegalArgumentException("HS Code is required");
         }
         if (exporterCountry == null || exporterCountry.isBlank()) {
@@ -75,9 +75,9 @@ public class CalculationServiceImpl implements CalculationService {
 
         // Find valid tariff for the given HS code, country pair, and trade date
         Optional<Tariff> tariffOpt = tariffRepository.findValidTariff(
-                request.getHSCode(),
+                request.getHsCode(),
                 countryPair,
-                request.getTradeDataAsDate()
+                request.getTradeDate()
         );
         Tariff tariff = tariffOpt.orElseThrow(() -> new RuntimeException("No tariff found"));
 
