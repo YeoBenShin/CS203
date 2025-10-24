@@ -9,7 +9,8 @@ import CS203G3.tariff_backend.repository.UserRepository;
 
 @SpringBootTest(classes = TariffBackendApplication.class)
 @TestPropertySource(properties = {
-    "clerk.jwk-set-uri=http://localhost:8080/jwks" 
+    "clerk.jwk-set-uri=http://localhost:8080/jwks",
+	"FRONTEND_ORIGIN=http://localhost:3000"
 })
 class TariffBackendApplicationTests {
 
