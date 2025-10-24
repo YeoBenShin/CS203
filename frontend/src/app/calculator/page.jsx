@@ -9,6 +9,7 @@ import { useUser } from '@clerk/nextjs';
 import { SuccessMessageDisplay, showSuccessPopupMessage } from "../../components/messages/SuccessMessageDisplay";
 import fetchApi from "@/utils/fetchApi";
 import { useAuth } from "@clerk/nextjs";
+import { v4 as uuidv4 } from 'uuid';
 
 const getUnitDetails = (unitCode) => {
   if (!unitCode) return null;
@@ -531,7 +532,7 @@ export default function CalculatorPage() {
 
         // Automatically add to recent calculations
         const newCalculation = {
-          id: crypto.randomUUID(),
+          id: uuidv4(),
           product: selectedProduct.description,
           hsCode: selectedProduct.value,
           country: selectedExportCountry.label.split(' - ')[1], // Get country name
