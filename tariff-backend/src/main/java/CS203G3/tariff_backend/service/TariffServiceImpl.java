@@ -234,33 +234,31 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
-    public UnitInfoDto getUnitInfo(String hsCode, String importCountry, String exportCountry) {
+    public List<UnitOfCalculation> getUnitInfo(String hSCode, String importCountry, String exportCountry, Date tradeDate) {
         CountryPair countryPair = countryPairRepository.findSingleByExporterAndImporter(exportCountry, importCountry);
         if (countryPair == null) {
             throw new ResourceNotFoundException("Country pairing not found for importer " + importCountry + " and exporter " + exportCountry);
         }
+        System.out.println("Country pair: " + countryPair.getId());
+        Optional<Tariff> tariffOpt = tariffRepository.findByHsCodeAndCountryPairAndTradeDate(hSCode, countryPair, tradeDate);
 
-        List<Tariff> tariffs = tariffRepository.findByHsCodeAndCountryPair(hsCode, importCountry, exportCountry);
 
-        if (tariffs.isEmpty()) {
-            throw new NoTariffFoundException("No tariff rate found for the given HS code and country pair.");
-        }
+        Tariff tariff = tariffOpt.orElseThrow(() ->
+            new NoTariffFoundException(String.format(
+                "No tariff found for HSCode=%s, importer=%s, exporter=%s, trade date=%s",
+                hSCode, importCountry, exportCountry, tradeDate)
+                )
+            );
 
-        // Get the first tariff and find ALL its tariff rates
-        Tariff tariff = tariffs.get(0);
+        // Find all of its tariff rates
         List<TariffRate> tariffRates = tariffRateRepository.findAllByTariff_TariffID(tariff.getTariffID());
 
         // Collect ALL unit types (including AV) and return them
-        List<String> allUnits = tariffRates.stream()
-                .map(rate -> rate.getUnitOfCalculation().name())
-                .distinct() // Remove duplicates if any
+        List<UnitOfCalculation> allUnits = tariffRates.stream()
+                .map(rate -> rate.getUnitOfCalculation())
                 .collect(java.util.stream.Collectors.toList());
 
-        if (allUnits.isEmpty()) {
-            throw new NoTariffFoundException("No tariff rates found for this tariff.");
-        }
-
-        return new UnitInfoDto(allUnits, tariff.getEffectiveDate(), tariff.getExpiryDate());
+        return allUnits;
     }
 
     /**

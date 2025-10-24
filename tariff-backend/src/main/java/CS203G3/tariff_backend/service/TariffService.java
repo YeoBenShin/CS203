@@ -1,12 +1,14 @@
 package CS203G3.tariff_backend.service;
 
 import java.util.List;
+import java.sql.Date;
 
 import CS203G3.tariff_backend.dto.CalculationRequest;
 import CS203G3.tariff_backend.dto.CalculationResult;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
 import CS203G3.tariff_backend.dto.TariffDto;
 import CS203G3.tariff_backend.dto.UnitInfoDto;
+import CS203G3.tariff_backend.model.UnitOfCalculation;
 
 /**
  * Service interface for Tariff business logic
@@ -63,5 +65,5 @@ public interface TariffService {
     
     CalculationResult calculateTariff(CalculationRequest calculationDto);
 
-    UnitInfoDto getUnitInfo(String hsCode, String importCountry, String exportCountry);
+    List<UnitOfCalculation> getUnitInfo(String hSCode, String importCountry, String exportCountry, Date tradeDate);
 }
