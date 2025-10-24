@@ -189,9 +189,10 @@ export default function CalculatorPage() {
 
         try {
           const params = new URLSearchParams({
-            hsCode: selectedProduct.value,
+            hSCode: selectedProduct.value,
             importCountry: selectedImportCountry.value,
             exportCountry: selectedExportCountry.value,
+            tradeDate: tradeDate,
           });
           const token = await getToken();
           const response = await fetchApi(token, `/api/tariffs/unit-info?${params}`);
@@ -234,7 +235,8 @@ export default function CalculatorPage() {
 
             // If date is valid, proceed with normal processing
             // Prefer data.units; fallback to data.unit
-            const unitsRaw = data.units ?? data.unit;
+            console.log("this is the return data from API: ", data);
+            const unitsRaw = data;
 
             console.log("Raw units from API:", unitsRaw); // Debug log
 
