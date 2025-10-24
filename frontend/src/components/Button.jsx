@@ -1,5 +1,5 @@
 export default function Button({
-    onClick = () => {},
+    onClick = () => { },
     isLoading = false,
     type = "button",
     textConfig = "text-sm text-white font-medium",

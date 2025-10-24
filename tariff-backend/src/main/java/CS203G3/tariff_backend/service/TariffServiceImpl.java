@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import CS203G3.tariff_backend.dto.CalculationRequest;
 import CS203G3.tariff_backend.dto.CalculationResult;
-import CS203G3.tariff_backend.dto.TariffBreakdown;
 import CS203G3.tariff_backend.dto.TariffCalculationMap;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
 import CS203G3.tariff_backend.dto.TariffDto;
@@ -158,7 +157,7 @@ public class TariffServiceImpl implements TariffService {
 
         // validate if theres too many tariffrates, <= 3
         if (createDto.getTariffRates().size() > 3) {
-            throw new WrongNumberOfArgumentsException("Cannot have more than 3 tariff rates.");
+            throw new MissingFieldException("Cannot have more than 3 tariff rates.");
         }
 
         // create and set TariffRates
@@ -247,21 +246,21 @@ public class TariffServiceImpl implements TariffService {
             throw new NoTariffFoundException("No tariff rate found for the given HS code and country pair.");
         }
 
-        // A product can have multiple tariff rates (e.g., per kg, per item).
-        // We will find the first "specific" unit of calculation (not Ad Valorem).
+        // Get the first tariff and find ALL its tariff rates
         Tariff tariff = tariffs.get(0);
         List<TariffRate> tariffRates = tariffRateRepository.findAllByTariff_TariffID(tariff.getTariffID());
 
-        Optional<TariffRate> specificRate = tariffRates.stream()
-                .filter(rate -> rate.getUnitOfCalculation() != UnitOfCalculation.AV)
-                .findFirst();
+        // Collect ALL unit types (including AV) and return them
+        List<String> allUnits = tariffRates.stream()
+                .map(rate -> rate.getUnitOfCalculation().name())
+                .distinct() // Remove duplicates if any
+                .collect(java.util.stream.Collectors.toList());
 
-        if (specificRate.isPresent()) {
-            String unit = specificRate.get().getUnitOfCalculation().name();
-            return new UnitInfoDto(unit);
-        } else {
-            throw new NoTariffFoundException("No specific unit of measurement is required for this tariff (only Ad Valorem).");
+        if (allUnits.isEmpty()) {
+            throw new NoTariffFoundException("No tariff rates found for this tariff.");
         }
+
+        return new UnitInfoDto(allUnits);
     }
 
     /**
@@ -378,8 +377,7 @@ public class TariffServiceImpl implements TariffService {
 
     @Override
     public CalculationResult calculateTariff(CalculationRequest request) {
-        // fetch tariff
-
+        // Resolve country pair and valid tariff
         List<CountryPair> countryPair = countryPairRepository.findByExporterAndImporter(
                 request.getExporter(), request.getImporter());
 
@@ -388,81 +386,39 @@ public class TariffServiceImpl implements TariffService {
                 countryPair,
                 request.getTradeDataAsDate()
         );
-        Tariff tariff = tariffOpt.orElseThrow(()
-                -> new ResourceNotFoundException("No such tariff record found")
+        Tariff tariff = tariffOpt.orElseThrow(
+                () -> new ResourceNotFoundException("No such tariff record found")
         );
 
-        // fetch tariffrates
+        // Build calculation maps
         Long tariffId = tariff.getTariffID();
         List<TariffRate> tariffRates = tariffRateRepository.findAllByTariff_TariffID(tariffId);
 
-        // format mapping of qty - rate - value
         List<TariffCalculationMap> tariffList = new ArrayList<>();
         for (TariffRate tRate : tariffRates) {
             UnitOfCalculation unitOfCalculation = tRate.getUnitOfCalculation();
             BigDecimal rate = tRate.getTariffRate();
-            BigDecimal value = request.getQuantityValues().get(unitOfCalculation);
 
-            // if Ad Valorem rate required, use productValue as value
-            if (unitOfCalculation.equals(UnitOfCalculation.AV)) {
-                value = request.getProductValue();
+            BigDecimal value;
+            if (unitOfCalculation == UnitOfCalculation.AV) {
+                value = request.getProductValue(); // AV base
+            } else {
+                BigDecimal q = request.getQuantityValues() != null
+                        ? request.getQuantityValues().get(unitOfCalculation)
+                        : null;
+                value = q != null ? q : BigDecimal.ZERO;
             }
 
             TariffCalculationMap tariffMap = new TariffCalculationMap(unitOfCalculation, rate, value);
-
             tariffList.add(tariffMap);
         }
 
-        // tariff calculation handler
-        // CalculationResult cr = tariffCalculationService.calculate(tariffList, request.getProductValue());
-        // set other tariff info
-        BigDecimal totalTariffCost = BigDecimal.ZERO;
-        List<TariffRateBreakdownDto> breakdowns = new ArrayList<>();
-        CalculationResult cr = new CalculationResult();
-        cr.setNetTotal(totalTariffCost);
+        // Delegate to calculation engine
+        CalculationResult cr = tariffCalculationService.calculate(tariffList, request.getProductValue());
         cr.setTariffName(tariff.getTariffName());
         cr.setEffectiveDate(tariff.getEffectiveDate());
         cr.setExpiryDate(tariff.getExpiryDate());
         cr.setReference(tariff.getReference());
-
-        for (TariffRate rate : tariffRates) {
-            BigDecimal calculatedRateCost = BigDecimal.ZERO;
-
-            if (rate.getUnitOfCalculation() == UnitOfCalculation.AV) {
-                BigDecimal rateValue = rate.getTariffRate();
-                calculatedRateCost = request.getProductValue().multiply(rateValue.divide(BigDecimal.valueOf(100)));
-            } else {
-                if (request.getQuantityValues() == null) {
-                    throw new MissingFieldException("Product quantity is required for specific tariff rate calculation but was not provided.");
-                }
-                Map<UnitOfCalculation, BigDecimal> quantity = request.getQuantityValues();
-                BigDecimal quantityValue = quantity.get(rate.getUnitOfCalculation());
-                calculatedRateCost = rate.getTariffRate().multiply(quantityValue);
-            }
-
-            totalTariffCost = totalTariffCost.add(calculatedRateCost);
-
-            // Use TariffRateBreakdownDto for breakdowns
-            TariffRateBreakdownDto breakdown = new TariffRateBreakdownDto();
-            breakdown.setTariffRateID(rate.getTariffRateID());
-            breakdown.setUnitOfCalculation(rate.getUnitOfCalculation());
-            breakdown.setRate(rate.getTariffRate());
-            breakdowns.add(breakdown);
-        }
-
-        BigDecimal totalCost = request.getProductValue().add(totalTariffCost);
-        BigDecimal totalTariffRate = (totalTariffCost.divide(request.getProductValue(), 4, java.math.RoundingMode.HALF_UP)).multiply(BigDecimal.valueOf(100));
-
-        List<TariffBreakdown> breakdownList = breakdowns.stream()
-                .map(rate -> new TariffBreakdown(
-                rate.getUnitOfCalculation(), // type
-                rate.getRate(), // tariffRate
-                BigDecimal.ZERO // tariffCost (set actual cost if available)
-        ))
-                .collect(Collectors.toList());
-
-        // Set breakdowns in CalculationResult
-        cr.setTariffs(breakdownList);
 
         return cr;
     }

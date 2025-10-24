@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import CS203G3.tariff_backend.model.UnitOfCalculation;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Future;
@@ -18,6 +20,7 @@ public class TariffCreateDto {
     @NotNull(message = "Importer is required")
     private String importer;
 
+    @JsonProperty("hSCode")
     @NotNull(message = "HS Code is required")
     private String hSCode;
 

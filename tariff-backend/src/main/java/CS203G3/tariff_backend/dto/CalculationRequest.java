@@ -2,24 +2,19 @@ package CS203G3.tariff_backend.dto;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import CS203G3.tariff_backend.model.UnitOfCalculation;
 
-/**
- * DTO for calculation request
- * Input for tariff cost calculations
- */
 public class CalculationRequest {
     private Date tradeDate;
     private String hSCode;
     private String exporter;
     private String importer;
     private BigDecimal productValue;
-    private Map<UnitOfCalculation, BigDecimal> quantityValues;
 
-    // Constructors
-    public CalculationRequest() {}
+    private Map<UnitOfCalculation, BigDecimal> quantityValues;
 
     public CalculationRequest(Date tradeDate, String hSCode, String exporter,
             String importer, BigDecimal productValue, Map<UnitOfCalculation, BigDecimal> quantityValues) {
@@ -29,10 +24,6 @@ public class CalculationRequest {
         this.importer = importer;
         this.productValue = productValue;
         this.quantityValues = quantityValues;
-    }
-
-    public String getHsCode() {
-        return hSCode;
     }
 
     public void setHsCode(String hsCode) {
@@ -71,6 +62,7 @@ public class CalculationRequest {
         this.importer = importer;
     }
 
+    // AV base: productValue if set, else shippingCost
     public BigDecimal getProductValue() {
         return productValue;
     }
@@ -80,9 +72,9 @@ public class CalculationRequest {
     }
 
     public Map<UnitOfCalculation, BigDecimal> getQuantityValues() {
-        return quantityValues;
+        if (this.quantityValues == null) this.quantityValues = new HashMap<>();
+        return this.quantityValues;
     }
-
     public void setQuantityValues(Map<UnitOfCalculation, BigDecimal> quantityValues) {
         this.quantityValues = quantityValues;
     }
