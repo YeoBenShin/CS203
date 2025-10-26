@@ -2,18 +2,20 @@ package CS203G3.tariff_backend.controller;
 
 import CS203G3.tariff_backend.dto.TariffDto;
 import CS203G3.tariff_backend.dto.UnitInfoDto;
+import CS203G3.tariff_backend.model.UnitOfCalculation;
 import CS203G3.tariff_backend.dto.CalculationRequest;
 import CS203G3.tariff_backend.dto.CalculationResult;
 import CS203G3.tariff_backend.dto.TariffCreateDto;
 import CS203G3.tariff_backend.service.TariffService;
 
+import java.util.List;
+import java.sql.Date;
+import java.time.LocalDate;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,7 +54,6 @@ public class TariffController {
         return ResponseEntity.ok(tariffs);
     }
     
-
     /**
      * Get tariff by ID
      * GET /api/tariffs/{id}
@@ -96,9 +97,9 @@ public class TariffController {
      * Delete a tariff
      * DELETE /api/tariffs/{id}
      */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTariff(@PathVariable Long id) {
-        tariffService.deleteTariff(id);
+    @DeleteMapping("/{tariffId}")
+    public ResponseEntity<Void> deleteTariff(@PathVariable Long tariffId) {
+        tariffService.deleteTariff(tariffId);
         return ResponseEntity.noContent().build();
     }
 
@@ -119,8 +120,12 @@ public class TariffController {
     }
     
     @GetMapping("/unit-info")
-    public ResponseEntity<UnitInfoDto> getTariffUnitInfo(@RequestParam String hsCode, @RequestParam String importCountry, @RequestParam String exportCountry) {
-        UnitInfoDto unitInfo = tariffService.getUnitInfo(hsCode, importCountry, exportCountry);
+    public ResponseEntity<List<UnitOfCalculation>> getTariffUnitInfo(
+        @RequestParam String hSCode, 
+        @RequestParam String importCountry, 
+        @RequestParam String exportCountry, 
+        @RequestParam Date tradeDate) {
+        List<UnitOfCalculation> unitInfo = tariffService.getUnitInfo(hSCode, importCountry, exportCountry, tradeDate);
         return ResponseEntity.ok(unitInfo);
     }
 }

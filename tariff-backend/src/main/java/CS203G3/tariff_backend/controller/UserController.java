@@ -21,7 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/user")
 class UserController {
     // private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 

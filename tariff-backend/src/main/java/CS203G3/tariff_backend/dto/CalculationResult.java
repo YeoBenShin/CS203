@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
+import CS203G3.tariff_backend.model.UnitOfCalculation;
+
 /**
  * DTO for calculation result Output for tariff cost calculations
  */
@@ -30,76 +32,46 @@ public class CalculationResult {
         this.tariffs = tariffs;
     }
 
-    public BigDecimal getNetTotal() {
-        return netTotal;
-    }
+    // Getters/Setters
+    public BigDecimal getNetTotal() { return netTotal; }
+    public void setNetTotal(BigDecimal netTotal) { this.netTotal = netTotal; }
 
-    public void setNetTotal(BigDecimal netTotal) {
-        this.netTotal = netTotal;
-    }
+    public List<TariffBreakdown> getTariffs() { return tariffs; }
+    public void setTariffs(List<TariffBreakdown> tariffs) { this.tariffs = tariffs; }
 
-    public List<TariffBreakdown> getTariffs() {
-        return tariffs;
-    }
+    public String getTariffName() { return tariffName; }
+    public void setTariffName(String tariffName) { this.tariffName = tariffName; }
 
-    public void setTariffs(List<TariffBreakdown> tariffs) {
-        this.tariffs = tariffs;
-    }
+    public Date getEffectiveDate() { return effectiveDate; }
+    public void setEffectiveDate(Date effectiveDate) { this.effectiveDate = effectiveDate; }
 
-    public String getTariffName() {
-        return tariffName;
-    }
+    public Date getExpiryDate() { return expiryDate; }
+    public void setExpiryDate(Date expiryDate) { this.expiryDate = expiryDate; }
 
-    public void setTariffName(String tariffName) {
-        this.tariffName = tariffName;
-    }
+    public String getReference() { return reference; }
+    public void setReference(String reference) { this.reference = reference; }
 
-    public Date getEffectiveDate() {
-        return effectiveDate;
-    }
-
-    public void setEffectiveDate(Date effectiveDate) {
-        this.effectiveDate = effectiveDate;
-    }
-
-    public Date getExpiryDate() {
-        return expiryDate;
-    }
-
-    public void setExpiryDate(Date expiryDate) {
-        this.expiryDate = expiryDate;
-    }
-
-    public String getReference() {
-        return reference;
-    }
-
-    public void setReference(String reference) {
-        this.reference = reference;
-    }
-
-    // Frontend expected fields
-    public BigDecimal getTotalCost() {
-        return netTotal;
-    }
+    // Frontend convenience fields
+    public BigDecimal getTotalCost() { return netTotal; }
 
     public BigDecimal getTotalTariffCost() {
-        // Calculate total tariff cost by summing all tariff breakdown costs
-        if (tariffs != null) {
-            return tariffs.stream()
-                    .map(TariffBreakdown::getTariffCost)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-        }
-        return BigDecimal.ZERO;
+      // Sum all duty amounts from breakdowns
+      if (tariffs != null) {
+        return tariffs.stream()
+            .map(TariffBreakdown::getTariffCost)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+      }
+      return BigDecimal.ZERO;
     }
 
+    // Sum only AV rates as percentage
     public BigDecimal getTotalTariffRate() {
-        // Calculate total tariff rate by summing all tariff rates
-        if (tariffs != null) {
-            return tariffs.stream()
-                    .map(TariffBreakdown::getTariffRate)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-        }
-        return BigDecimal.ZERO;
+      if (tariffs != null) {
+        return tariffs.stream()
+            .filter(t -> t.getType() == UnitOfCalculation.AV)
+            .map(TariffBreakdown::getTariffRate)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+      }
+      return BigDecimal.ZERO;
     }
 }

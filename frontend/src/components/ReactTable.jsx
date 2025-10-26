@@ -20,11 +20,67 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
   const [filterSearch, setFilterSearch] = useState({});
   const dropdownRefs = useRef({});
 
+  const [startPeriod, setStartPeriod] = useState(new Date().toISOString().split('T')[0]); // default to today
+  const [endPeriod, setEndPeriod] = useState(""); // empty string = null
+
+  const isTariffInEffect = (row) => {
+    // normalize inputs
+    const eff = row?.effectiveDate ? new Date(row.effectiveDate).toISOString().split('T')[0] : null;
+    const exp = row?.expiryDate ? new Date(row.expiryDate).toISOString().split('T')[0] : new Date("9999-12-31").toISOString().split('T')[0];
+    const start = startPeriod ? new Date(startPeriod).toISOString().split('T')[0] : null;
+    const end = endPeriod ? new Date(endPeriod).toISOString().split('T')[0] : null;
+    console.log("Checking tariff:", row, "with period", start, end);
+
+    // If both periods null - all not in effect
+    if (!start && !end) return false;
+
+    // If only end provided - effectiveDate <= end
+    if (!start && end) {
+      if (!eff) return false;
+      // treat same-day inclusive
+      return eff <= end && exp >= end;
+    }
+
+    // If only start provided (end null) => effectiveDate >= start
+    if (start && !end) {
+      if (!eff) return false;
+      return start >= eff && start <= exp;
+    }
+
+    // If both provided -> check interval overlap:
+    if (start && end) {
+      if (!eff) return false;
+      return (start <= exp && end >= eff);
+    }
+
+    return false;
+  };
+
+  // add computed "In Effect" column to the passed columns
+  const columnsWithInEffect = useMemo(() => {
+    const inEffectCol = {
+      id: "inEffect",
+      header: "In Effect",
+      enableSorting: true,
+      filterFn: "includesString",
+      cell: ({ row }) => {
+        const val = isTariffInEffect(row.original) ? "Yes" : "No";
+        return (
+          <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${val === "Yes" ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+          {val}
+          </span>
+        );
+      },
+    };
+
+    return [...columns, inEffectCol];
+  }, [columns, startPeriod, endPeriod, data]);
+
   const table = useReactTable({
     data,
-    columns,
+    columns: columnsWithInEffect,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: getPaginationRowModel(), 
     getSortedRowModel: getSortedRowModel(), // Enables sorting
     getFilteredRowModel: getFilteredRowModel(), // Enables filtering
     onColumnFiltersChange: setColumnFilters, // Enable column filters
@@ -35,7 +91,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
       globalFilter: "",
       columnFilters: [],
     },
-    state: { globalFilter, columnFilters },
+    state: { globalFilter, columnFilters, columnsWithInEffect },
   });
 
   // Compute unique values only for columns that have checkbox filtering enabled
@@ -112,6 +168,37 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
             />
             {globalFilter && <CrossIcon onClick={clearSearch} />}
           </div>
+
+          {/* --- NEW: period inputs --- */}
+          <div className="flex items-center space-x-3">
+            <label className="text-sm text-gray-600">Start</label>
+            <input
+              type="date"
+              value={startPeriod || ""}
+              onChange={(e) => setStartPeriod(e.target.value || "")}
+              className={`px-3 py-2 border rounded-lg text-sm ${!startPeriod ? 'text-white' : ""}`}
+            />
+            <label className="text-sm text-gray-600">End</label>
+            <input
+              type="date"
+              value={endPeriod || ""}
+              onChange={(e) => setEndPeriod(e.target.value || "")}
+              className={`px-3 py-2 border rounded-lg text-sm ${!endPeriod ? 'text-white' : ""}`}
+            />
+            <Button 
+              onClick={() => { setStartPeriod(new Date().toISOString().split('T')[0]); setEndPeriod(""); }}
+              width=""
+            >
+                Reset
+            </Button>
+            {/* <button
+              onClick={() => { setStartPeriod(new Date().toISOString().split('T')[0]); setEndPeriod(""); }}
+              className="text-sm px-3 py-2 bg-gray-100 rounded-lg border"
+            >
+              Reset
+            </button> */}
+          </div>
+          {/* --- end new inputs --- */}
 
           {/* Filter Status and Clear Button */}
           {(globalFilter || columnFilters.length > 0) && (
@@ -192,7 +279,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                                 : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                                 }`}
                             >
-                              <span>Filter {header.column.columnDef.header.substring(0, 10)}{header.column.columnDef.header.length > 11 ? "..." : ""}</span>
+                              <span>Filter {header.column.columnDef.header.substring(0, 8)}{header.column.columnDef.header.length > 9 ? "..." : ""}</span>
                               <div className="flex items-center space-x-1">
                                 {header.column.getFilterValue() && header.column.getFilterValue().length > 0 && (
                                   <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">

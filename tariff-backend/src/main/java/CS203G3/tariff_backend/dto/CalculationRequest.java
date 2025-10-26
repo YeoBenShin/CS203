@@ -2,74 +2,39 @@ package CS203G3.tariff_backend.dto;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import CS203G3.tariff_backend.model.UnitOfCalculation;
 
-/**
- * DTO for calculation request
- * Input for tariff cost calculations
- */
 public class CalculationRequest {
-    // Frontend fields
-    private String hsCode;
-    private String country;
-    private BigDecimal shippingCost;
-    private String tradeDate;
-    
-    // Legacy fields for backward compatibility
+    private Date tradeDate;
     private String hSCode;
     private String exporter;
     private String importer;
     private BigDecimal productValue;
     private Map<UnitOfCalculation, BigDecimal> quantityValues;
 
-    // Constructors
-    public CalculationRequest() {}
-
-    public CalculationRequest(String hsCode, String country, BigDecimal shippingCost, String tradeDate) {
-        this.hsCode = hsCode;
-        this.country = country;
-        this.shippingCost = shippingCost;
+    public CalculationRequest(Date tradeDate, String hSCode, String exporter,
+            String importer, BigDecimal productValue, Map<UnitOfCalculation, BigDecimal> quantityValues) {
         this.tradeDate = tradeDate;
+        this.hSCode = hSCode;
+        this.exporter = exporter;
+        this.importer = importer;
+        this.productValue = productValue;
+        this.quantityValues = quantityValues;
     }
 
-    // Frontend field getters and setters
-    public String getHsCode() {
-        return hsCode != null ? hsCode : hSCode;
-    }
-
-    public void setHsCode(String hsCode) {
-        this.hsCode = hsCode;
-    }
-
-    public String getCountry() {
-        return country != null ? country : exporter;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public BigDecimal getShippingCost() {
-        return shippingCost != null ? shippingCost : productValue;
-    }
-
-    public void setShippingCost(BigDecimal shippingCost) {
-        this.shippingCost = shippingCost;
-    }
-
-    public String getTradeDate() {
+    public Date getTradeDate() {
         return tradeDate;
     }
 
-    public void setTradeDate(String tradeDate) {
+    public void setTradeDate(Date tradeDate) {
         this.tradeDate = tradeDate;
     }
 
-    // Legacy field getters and setters for backward compatibility
     public String getHSCode() {
-        return getHsCode();
+        return hSCode;
     }
 
     public void setHSCode(String hSCode) {
@@ -77,7 +42,7 @@ public class CalculationRequest {
     }
 
     public String getExporter() {
-        return getCountry();
+        return exporter;
     }
 
     public void setExporter(String exporter) {
@@ -92,8 +57,9 @@ public class CalculationRequest {
         this.importer = importer;
     }
 
+    // AV base: productValue if set, else shippingCost
     public BigDecimal getProductValue() {
-        return getShippingCost();
+        return productValue;
     }
 
     public void setProductValue(BigDecimal productValue) {
@@ -101,22 +67,11 @@ public class CalculationRequest {
     }
 
     public Map<UnitOfCalculation, BigDecimal> getQuantityValues() {
-        return quantityValues;
+        if (this.quantityValues == null) this.quantityValues = new HashMap<>();
+        return this.quantityValues;
     }
-
     public void setQuantityValues(Map<UnitOfCalculation, BigDecimal> quantityValues) {
         this.quantityValues = quantityValues;
     }
 
-    // Utility method to convert string date to SQL Date
-    public Date getTradeDataAsDate() {
-        if (tradeDate != null) {
-            try {
-                return Date.valueOf(tradeDate);
-            } catch (IllegalArgumentException e) {
-                return null;
-            }
-        }
-        return null;
-    }
 }

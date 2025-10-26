@@ -7,12 +7,15 @@ import ErrorMessageDisplay from "../../components/messages/ErrorMessageDisplay";
 import LoadingPage from "../../components/LoadingPage";
 import { useUser } from '@clerk/nextjs';
 import { SuccessMessageDisplay, showSuccessPopupMessage } from "../../components/messages/SuccessMessageDisplay";
+import fetchApi from "@/utils/fetchApi";
+import { useAuth } from "@clerk/nextjs";
+import { v4 as uuidv4 } from 'uuid';
 
 const getUnitDetails = (unitCode) => {
   if (!unitCode) return null;
 
   switch (unitCode.toUpperCase()) {
-    case 'AV' : return { unit: 'Percentage', abbreviation: 'av'}
+    case 'AV': return { unit: 'Percentage', abbreviation: 'av' }
     case 'BBL': return { unit: 'Barrels', abbreviation: 'bbl' };
     case 'CAR': return { unit: 'Carats', abbreviation: 'car' };
     case 'KG':
@@ -50,6 +53,24 @@ const getUnitDetails = (unitCode) => {
   }
 };
 
+// Parse units from API: supports { units: ["KG","G"] }, { unit: "KG,G" }, or { unit: "KG" }
+const parseUnitsFromApi = (payload) => {
+  if (!payload) return [];
+  // If payload is an array it may contain comma-separated strings; flatten & split
+  if (Array.isArray(payload)) {
+    return payload
+      .flatMap((p) => String(p).split(/[,\s]+/).filter(Boolean))
+      .map(String);
+  }
+  // If payload is an object with a `unit` field that may be a comma-separated string, split it
+  if (typeof payload === "object" && payload.unit) {
+    const raw = String(payload.unit);
+    return raw.split(/[,\s]+/).filter(Boolean).map(String);
+  }
+  if (typeof payload === "string") return payload.split(/[,\s]+/).filter(Boolean);
+  return [];
+};
+
 export default function CalculatorPage() {
   const [pageLoading, setPageLoading] = useState(false);
   // Product search states  
@@ -65,6 +86,13 @@ export default function CalculatorPage() {
 
   // Quantity of goods states
   const [productQuantity, setProductQuantity] = useState('');
+
+  // NEW: multiple tariff units support
+  const [unitList, setUnitList] = useState([]); // [{ code, unit, abbreviation }]
+  const [unitQuantities, setUnitQuantities] = useState({}); // { KG: "1.23", G: "500" }
+
+  // Tracks whether unit-info fetch finished (success or error)
+  const [tariffUnitsLoaded, setTariffUnitsLoaded] = useState(false);
 
   // Other form states
   const [shippingCost, setShippingCost] = useState('');
@@ -82,11 +110,19 @@ export default function CalculatorPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
+  // Date validation state
+  const [isDateValid, setIsDateValid] = useState(true);
+  const [effectiveDate, setEffectiveDate] = useState(null);
+  const [expiryDate, setExpiryDate] = useState(null);
+  
+  // Tariff data availability state
+  const [hasTariffData, setHasTariffData] = useState(false);
+
   const [tariffUnitInfo, setTariffUnitInfo] = useState(null);
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8080";
 
   const { user } = useUser();
   const userUuid = user ? user.id : null;
+  const { getToken } = useAuth();
 
   // Ensure dates are formatted consistently
   const formatDate = (date) => {
@@ -103,45 +139,188 @@ export default function CalculatorPage() {
     setRecentCalculations(loadRecentCalculations());
   }, []);
 
+  // Continuous date validation whenever trade date changes
+  useEffect(() => {
+    if (!tradeDate || !effectiveDate || !expiryDate) {
+      // If no date constraints are available, consider date valid
+      setIsDateValid(true);
+      return;
+    }
+
+    const currentTradeDate = new Date(tradeDate);
+
+    let dateValidationError = null;
+    if (effectiveDate && currentTradeDate <= effectiveDate) {
+      dateValidationError = `Trade date must be on or after ${effectiveDate.toLocaleDateString()}`;
+    } else if (expiryDate && currentTradeDate > expiryDate) {
+      dateValidationError = `Trade date must be on or before ${expiryDate.toLocaleDateString()}`;
+    }
+
+    if (dateValidationError) {
+      setErrorMessage([dateValidationError]);
+      setIsDateValid(false);
+      setHasTariffData(false); // No valid tariff data due to date issue
+      // Clear unit info when date is invalid
+      setUnitList([]);
+      setUnitQuantities({});
+      setTariffUnitInfo(null);
+    } else {
+      // Clear error messages only if they were date-related
+      setErrorMessage(prev => prev.filter(msg => 
+        !msg.includes('Trade date must be')
+      ));
+      setIsDateValid(true);
+      // Note: Don't set hasTariffData here - let the main fetch handle that
+    }
+  }, [tradeDate, effectiveDate, expiryDate]);
+
   useEffect(() => {
     const fetchTariffUnitInfo = async () => {
       if (selectedProduct && selectedImportCountry && selectedExportCountry) {
+        setTariffUnitsLoaded(false);
         // Clear previous state
         setTariffUnitInfo(null);
         setProductQuantity('');
+        setUnitList([]);
+        setUnitQuantities({});
+        setIsDateValid(true); // Reset date validation when refetching
+        setEffectiveDate(null); // Clear stored dates
+        setExpiryDate(null);
+        setHasTariffData(false); // Reset tariff data availability
 
         try {
           const params = new URLSearchParams({
-            hsCode: selectedProduct.value,
+            hSCode: selectedProduct.value,
             importCountry: selectedImportCountry.value,
             exportCountry: selectedExportCountry.value,
+            tradeDate: tradeDate,
           });
-          const response = await fetch(`${baseUrl}/api/tariffs/unit-info?${params}`);
-          
+          const token = await getToken();
+          const response = await fetchApi(token, `/api/tariffs/unit-info?${params}`);
+
           if (response.ok) {
-            const data = await response.json(); // Expects { "unit": "KG" }
-            console.log('API Response Data:', data); 
-            
-            const unitDetails = getUnitDetails(data.unit);
-            console.log('Derived Unit Details:', unitDetails);
-            
-            setTariffUnitInfo(unitDetails);
+            const data = await response.json(); // returns as List e.g. [AV, KG]
+
+            // Store the date constraints for continuous validation
+            const apiEffectiveDate = data.effectiveDate ? new Date(data.effectiveDate) : null;
+            const apiExpiryDate = data.expiryDate ? new Date(data.expiryDate) : null;
+            setEffectiveDate(apiEffectiveDate);
+            setExpiryDate(apiExpiryDate);
+
+            // Check if trade date is within the valid range
+            const currentTradeDate = new Date(tradeDate);
+
+            // Validate trade date against effective and expiry dates
+            let dateValidationError = null;
+            if (apiEffectiveDate && currentTradeDate < apiEffectiveDate) {
+              dateValidationError = `Trade date must be on or after ${apiEffectiveDate.toLocaleDateString()}`;
+            } else if (apiExpiryDate && currentTradeDate > apiExpiryDate) {
+              dateValidationError = `Trade date must be on or before ${apiExpiryDate.toLocaleDateString()}`;
+            }
+
+            if (dateValidationError) {
+              setErrorMessage([dateValidationError]);
+              setUnitList([]);
+              setUnitQuantities({});
+              setTariffUnitInfo(null);
+              setTariffUnitsLoaded(true);
+              setIsDateValid(false); // Mark date as invalid
+              setHasTariffData(false); // No valid tariff data due to date issue
+              return; // Exit early - don't show quantity inputs
+            }
+
+            // Clear any previous error messages if date is valid
+            setErrorMessage([]);
+            setIsDateValid(true); // Mark date as valid
+            setHasTariffData(true); // Valid tariff data is available
+
+            // If date is valid, proceed with normal processing
+            // Prefer data.units; fallback to data.unit
+            console.log("this is the return data from API: ", data);
+            const unitsRaw = data;
+
+            console.log("Raw units from API:", unitsRaw); // Debug log
+
+            // Normalize -> uppercase -> unique
+            const unitCodesAll = parseUnitsFromApi(unitsRaw).map((u) => u.toUpperCase());
+            const uniqueCodes = Array.from(new Set(unitCodesAll));
+
+            console.log("Parsed unit codes:", uniqueCodes); // Debug log
+
+            // EXCLUDE AV from input list (AV does not require quantity input)
+            const nonAVCodes = uniqueCodes.filter((code) => code !== "AV");
+
+            console.log("Non-AV codes for inputs:", nonAVCodes); // Debug log
+
+            const detailsList = nonAVCodes.map((code) => {
+              const det = getUnitDetails(code);
+              return det ? { code, ...det } : { code, unit: code, abbreviation: code.toLowerCase() };
+            });
+
+            console.log("Details list for unit inputs:", detailsList); // Debug log
+
+            if (detailsList.length > 0) {
+              // initialize unit quantities so multiple inputs show immediately
+              const init = {};
+              detailsList.forEach((d) => { init[d.code] = ""; });
+
+              console.log("Setting unitList to:", detailsList); // Debug log
+              console.log("Initializing unitQuantities to:", init); // Debug log
+
+              setUnitList(detailsList);
+              setUnitQuantities(init);
+              setTariffUnitInfo(detailsList[0]); // keep single-unit legacy UI support if exactly one non-AV
+            } else {
+              // If only AV exists, there are no quantity inputs to show
+              console.log("No non-AV units found, clearing unit inputs"); // Debug log
+              setUnitList([]);
+              setUnitQuantities({});
+              setTariffUnitInfo(null);
+            }
           } else {
-            // If response is not ok (e.g., 404), no specific unit is found.
+            // Handle error response from backend
+            try {
+              const errorData = await response.json();
+              const errorMessage = errorData.message || errorData.error || 'No tariff information found for this product and country combination';
+              setErrorMessage([errorMessage]);
+            } catch (parseError) {
+              setErrorMessage(['No tariff information found for this product and country combination']);
+            }
+            
+            setUnitList([]);
+            setUnitQuantities({});
             setTariffUnitInfo(null);
+            setIsDateValid(false); // Mark as invalid to prevent dynamic boxes from showing
+            setHasTariffData(false); // No valid tariff data available
           }
         } catch (error) {
           console.error('Error fetching tariff unit info:', error);
+          setUnitList([]);
+          setUnitQuantities({});
           setTariffUnitInfo(null);
+          setIsDateValid(true); // Reset on error
+          setEffectiveDate(null); // Clear stored dates
+          setExpiryDate(null);
+          setHasTariffData(false); // No valid tariff data due to error
+        } finally {
+          // mark fetch as finished so downstream UI (shipping cost / calculate) can render
+          setTariffUnitsLoaded(true);
         }
       } else {
         // Clear info if any selection is missing
+        setUnitList([]);
+        setUnitQuantities({});
         setTariffUnitInfo(null);
+        setTariffUnitsLoaded(false);
+        setIsDateValid(true); // Reset when selections are missing
+        setEffectiveDate(null); // Clear stored dates
+        setExpiryDate(null);
+        setHasTariffData(false); // No tariff data when selections are missing
       }
     };
 
     fetchTariffUnitInfo();
-  }, [selectedProduct, selectedImportCountry, selectedExportCountry]);
+  }, [selectedProduct, selectedImportCountry, selectedExportCountry, tradeDate]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -165,7 +344,8 @@ export default function CalculatorPage() {
 
   const fetchHsCodes = async () => {
     try {
-      const response = await fetch(`${baseUrl}/api/products`);
+      const token = await getToken();
+      const response = await fetchApi(token, "api/products");
       const data = await response.json();
 
       const products = data.map(item => ({
@@ -184,7 +364,8 @@ export default function CalculatorPage() {
   // Fetch countries from backend
   const fetchCountries = async () => {
     try {
-      const response = await fetch(`${baseUrl}/api/countries`);
+      const token = await getToken();
+      const response = await fetchApi(token, "api/countries");
       const data = await response.json();
 
       const countries = data.map(country => ({
@@ -229,8 +410,6 @@ export default function CalculatorPage() {
     setImportSelectedCountry(option);
   };
 
-  // Removed search and tariff selection related functions
-
   // Handle form inputs
   const handleShippingCost = (e) => {
     setShippingCost(e.target.value);
@@ -239,10 +418,43 @@ export default function CalculatorPage() {
   }
 
   const handleProductQuantity = (e) => {
+    // legacy single-unit handler (kept for backward compatibility when only 1 unit)
     setProductQuantity(e.target.value);
     setCalcResult(null);
     setErrorMessage([]);
   }
+
+  // Multi-unit quantity change
+  const handleUnitQuantityChange = (code, value) => {
+    const key = String(code).toUpperCase();
+    setUnitQuantities((prev) => ({ ...prev, [key]: value }));
+    setCalcResult(null);
+    setErrorMessage([]);
+  };
+
+  // Helper to build quantities map for backend (numbers, only non-empty)
+  const buildQuantitiesPayload = () => {
+    const quantities = {};
+    Object.entries(unitQuantities).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") {
+        const n = Number(v);
+        if (!Number.isNaN(n) && n > 0) {
+          quantities[k.toString().toUpperCase()] = n;
+        }
+      }
+    });
+
+    // legacy single-unit fallback: if no unitList but productQuantity exists
+    if (Object.keys(quantities).length === 0 && productQuantity) {
+      const legacyCode = tariffUnitInfo?.code ?? (tariffUnitInfo?.unit ? tariffUnitInfo.unit : null);
+      if (legacyCode) {
+        const n = Number(productQuantity);
+        if (!Number.isNaN(n) && n > 0) quantities[legacyCode.toString().toUpperCase()] = n;
+      }
+    }
+
+    return Object.keys(quantities).length ? quantities : null;
+  };
 
   const handleTradeDate = (e) => {
     setTradeDate(e.target.value);
@@ -274,11 +486,16 @@ export default function CalculatorPage() {
 
     if (!tradeDate) {
       newErrorMsg.push("Please select a valid Trade Date");
-    } else if (new Date(tradeDate) > new Date()) {
-      // newErrorMsg.push("Trade date cannot be in the future");
     }
 
-    if (tariffUnitInfo && (!productQuantity || parseFloat(productQuantity) <= 0)) {
+    // Multi-unit validation
+    const quantitiesPayload = buildQuantitiesPayload();
+    if (unitList.length > 0) {
+      if (!quantitiesPayload || Object.keys(quantitiesPayload).length === 0) {
+        newErrorMsg.push(`Please enter a valid quantity for at least one of: ${unitList.map(u => u.code).join(", ")}`);
+      }
+    } else if (tariffUnitInfo && (!productQuantity || parseFloat(productQuantity) <= 0)) {
+      // legacy single-unit path
       newErrorMsg.push(`Please enter a valid quantity for the product.`);
     }
 
@@ -288,21 +505,20 @@ export default function CalculatorPage() {
     }
 
     setLoading(true);
+
     const data = {
-      hsCode: selectedProduct.value,
+      hSCode: selectedProduct.value,
       importer: selectedImportCountry.value,
       exporter: selectedExportCountry.value,
-      shippingCost: parseFloat(shippingCost),
-      productQuantity: productQuantity ? parseFloat(productQuantity) : null,
+      productValue: parseFloat(shippingCost),
+      // Send quantities in the new format expected by backend
+      quantityValues: quantitiesPayload,
       tradeDate: tradeDate
     };
 
     try {
-      const response = await fetch(`${baseUrl}/api/calculations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+      const token = await getToken();
+      const response = await fetchApi(token, "/api/tariffs/calculate", "POST", data);
 
       const responseData = await response.json();
       if (response.ok) {
@@ -316,7 +532,7 @@ export default function CalculatorPage() {
 
         // Automatically add to recent calculations
         const newCalculation = {
-          id: crypto.randomUUID(),
+          id: uuidv4(),
           product: selectedProduct.description,
           hsCode: selectedProduct.value,
           country: selectedExportCountry.label.split(' - ')[1], // Get country name
@@ -368,12 +584,8 @@ export default function CalculatorPage() {
         uuid: userUuid,
         tariffs: tariffBreakdown,
       }
-
-      const response = await fetch(`${baseUrl}/api/watchlists`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+      const token = await getToken();
+      const response = await fetchApi(token, "api/watchlists", "POST", data);
 
       if (response.ok) {
         showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff saved to watchlist successfully!");
@@ -408,6 +620,9 @@ export default function CalculatorPage() {
     }
   };
 
+  // Show inputs only when required selections are present, date is valid, and tariff data is available
+  const readyToCalculate = !!(selectedProduct && selectedImportCountry && selectedExportCountry && tradeDate && isDateValid && hasTariffData);
+
   if (pageLoading) {
     return <LoadingPage />;
   }
@@ -418,14 +633,6 @@ export default function CalculatorPage() {
         {/* Left Side - Main Calculator */}
         <div className="w-2/3">
           <h1 className="text-3xl text-black font-bold mb-8 text-center">Tariff Calculator</h1>
-
-          {/* Search Bar and Tariff Selection commented out
-          {selectedTariff ? (
-            // Selected Tariff Display section
-          ) : (
-            // Search Bar section
-          )}
-          */}
 
           {/* Descriptive Header */}
           <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
@@ -483,190 +690,230 @@ export default function CalculatorPage() {
               </div>
             </div>
           </div>
-          {tariffUnitInfo && (
+
+          {/* NEW: Unit(s) of Measurement (shows multiple inputs when there are multiple units) */}
+          {readyToCalculate && (unitList.length > 0 || tariffUnitInfo) && (
             <div className="bg-white/20 rounded-lg p-6 mb-6 animate-fade-in">
               <h2 className="text-xl font-bold text-black mb-4">Unit of Measurement</h2>
-              <div className="w-full md:w-1/2">
-                <label className="font-bold mb-2 text-black block">Quantity in {tariffUnitInfo.unit} ({tariffUnitInfo.abbreviation}):</label>
-                <input
-                  type="number"
-                  min="0"
-                  className="text-black border border-gray-300 rounded px-3 py-2 w-full bg-white"
-                  value={productQuantity}
-                  onChange={handleProductQuantity}
-                  placeholder="0"
-                />
-              </div>
+
+              {console.log("Rendering units - unitList.length:", unitList.length, "unitList:", unitList)} {/* Debug log */}
+
+              {unitList.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {unitList.map((u) => (
+                    <div className="w-full" key={u.code}>
+                      <label className="font-bold mb-2 text-black block">
+                        Quantity in {u.unit} ({u.abbreviation}):
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        className="text-black border border-gray-300 rounded px-3 py-2 w-full bg-white"
+                        value={unitQuantities[u.code] ?? ""}
+                        onChange={(e) => handleUnitQuantityChange(u.code, e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // legacy single unit UI (kept for backward compatibility)
+                <div className="w-full md:w-1/2">
+                  <label className="font-bold mb-2 text-black block">
+                    Quantity in {tariffUnitInfo.unit} ({tariffUnitInfo.abbreviation}):
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="text-black border border-gray-300 rounded px-3 py-2 w-full bg-white"
+                    value={productQuantity}
+                    onChange={handleProductQuantity}
+                    placeholder="0"
+                  />
+                </div>
+              )}
             </div>
           )}
 
           {/* Shipping Cost Section */}
-          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-bold text-black mb-4">Cost Details</h2>
-            <div className="w-full md:w-1/2">
-              <label className="font-bold mb-2 text-black block">Product Cost:</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="text-black border border-gray-300 rounded px-3 py-2 w-full pl-8 bg-white"
-                  value={shippingCost}
-                  onChange={handleShippingCost}
-                  placeholder="0.00"
-                />
+          {readyToCalculate && tariffUnitsLoaded && (
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 mb-6">
+              <h2 className="text-xl font-bold text-black mb-4">Cost Details</h2>
+              <div className="w-full md:w-1/2">
+                <label className="font-bold mb-2 text-black block">Product Cost:</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="text-black border border-gray-300 rounded px-3 py-2 w-full pl-8 bg-white"
+                    value={shippingCost}
+                    onChange={handleShippingCost}
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-              <ErrorMessageDisplay errors={errorMessage} />
-              {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
+          <ErrorMessageDisplay errors={errorMessage} />
+          {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
 
-              {/* Calculate Button */}
-              <div className="flex gap-4 mb-8">
+          {/* Calculate Button */}
+          {readyToCalculate && tariffUnitsLoaded && (
+            <div className="flex gap-4 mb-8">
+              <Button
+                className="w-200"
+                onClick={handleCalculate}
+                isLoading={loading}
+                width=''
+                colorBg="bg-blue-500 hover:bg-blue-600 focus:ring-blue-500"
+              >
+                {loading && <LoadingSpinner />}
+                {loading ? "Calculating..." : "Calculate Tariffs"}
+              </Button>
+
+              {calcResult && (
                 <Button
                   className="w-200"
-                  onClick={handleCalculate}
+                  onClick={handleSave}
                   isLoading={loading}
                   width=''
-                  colorBg="bg-blue-500 hover:bg-blue-600 focus:ring-blue-500"
+                  colorBg="bg-green-500 hover:bg-green-600 focus:ring-green-500"
                 >
                   {loading && <LoadingSpinner />}
-                  {loading ? "Calculating..." : "Calculate Tariffs"}
+                  {loading ? "Saving..." : "Save Tariff"}
                 </Button>
-
-                {calcResult && (
-                  <Button
-                    className="w-200"
-                    onClick={handleSave}
-                    isLoading={loading}
-                    width=''
-                    colorBg="bg-green-500 hover:bg-green-600 focus:ring-green-500"
-                  >
-                    {loading && <LoadingSpinner />}
-                    {loading ? "Saving..." : "Save Tariff"}
-                  </Button>
-                )}
-              </div>
-
-              {/* Results Section */}
-              {calcResult && (
-                <div className="bg-white/30 backdrop-blur-sm rounded-lg p-6">
-                  {/* Trade Summary */}
-                  <div className="bg-blue-50 rounded-lg p-4 mb-6 border-l-4 border-blue-500">
-                    <h2 className="text-lg font-bold text-black mb-3">Trade Summary</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="font-semibold text-gray-700">Product: </span>
-                        <span className="text-black">{selectedProduct ? selectedProduct.description : 'N/A'} </span>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-gray-700">HS Code: </span>
-                        <span className="text-black">{selectedProduct ? selectedProduct.value : 'N/A'} </span>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-gray-700">Trade Partners: </span>
-                        <span className="text-black">{`${selectedExportCountry?.value} to ${selectedImportCountry?.value}`} </span>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-gray-700">Trade Date: </span>
-                        <span className="text-black">{tradeDate || 'N/A'}</span>
-                      </div>
-                      <div className="md:col-span-2">
-                        <span className="font-semibold text-gray-700">Total Cumulative Tariff Rate:</span>
-                        <p className="text-2xl font-bold text-red-600">{calcResult.totalTariffRate}%</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <h2 className="text-2xl font-bold text-black mb-4">Tariff Breakdown</h2>
-
-                  {/* Summary */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-blue-100 p-4 rounded">
-                      <h3 className="font-bold text-black">Original Shipping Cost</h3>
-                      <p className="text-2xl font-bold text-blue-600">${calcResult.originalCost.toFixed(2)}</p>
-                    </div>
-                    <div className="bg-red-100 p-4 rounded">
-                      <h3 className="font-bold text-black">Total Tariff Cost</h3>
-                      <p className="text-2xl font-bold text-red-600">${calcResult.totalTariffCost.toFixed(2)}</p>
-                    </div>
-                    <div className="bg-green-100 p-4 rounded">
-                      <h3 className="font-bold text-black">Total Cost</h3>
-                      <p className="text-2xl font-bold text-green-600">${(calcResult.totalCost ?? 0).toFixed(2)}</p>
-                    </div>
-                  </div>
-
-                  {/* Detailed Breakdown */}
-                  <div className="bg-white rounded-lg p-4">
-                    <h3 className="text-lg font-bold text-black mb-4">Individual Tariff Details</h3>
-                    <div className="space-y-3">
-                      {tariffBreakdown.map((tariff, index) => {
-                        // Support both backend field names: tariffRate/tariffCost and legacy rate/amountApplied
-                        const rate = tariff.tariffRate ?? 0;
-                        const amountApplied = tariff.tariffCost ?? 0;
-                        const unitType = tariff.type ? ` (${tariff.type})` : '';
-                        
-                        return (
-                          <div
-                            key={tariff.tariffID || index}
-                            className="flex justify-between items-center p-3 border border-gray-300 rounded hover:bg-gray-50 cursor-help relative group"
-                            title={tariff.reference || "not-updated"}
-                          >
-                            <div>
-                              <span className="font-semibold text-black">Tariff {index + 1}{unitType}</span>
-                              <span className="text-gray-600 ml-2">({Number(rate).toFixed(2)}%)</span>
-                            </div>
-                            <span className="font-bold text-black">${Number(amountApplied).toFixed(2)}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
               )}
             </div>
+          )}
 
-            {/* Right Side - Recent Calculations */}
-            <div className="w-1/3 mt-17">
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6">
-                <h2 className="text-xl font-bold text-black mb-4">Recent Calculations</h2>
-
-                {recentCalculations.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <svg className="h-12 w-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-sm">No calculations yet</p>
-                    <p className="text-xs text-gray-400 mt-1">Your saved calculations will appear here</p>
+          {/* Results Section */}
+          {calcResult && (
+            <div className="bg-white/30 backdrop-blur-sm rounded-lg p-6">
+              {/* Trade Summary */}
+              <div className="bg-blue-50 rounded-lg p-4 mb-6 border-l-4 border-blue-500">
+                <h2 className="text-lg font-bold text-black mb-3">Trade Summary</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-semibold text-gray-700">Product: </span>
+                    <span className="text-black">{selectedProduct ? selectedProduct.description : 'N/A'} </span>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recentCalculations.map((calc) => (
-                      <div key={calc.id} className="bg-white/30 rounded-lg p-3 border border-white/20">
-                        <div className="justify-between items-start mb-2">
-                          <h4 className="text-sm font-semibold text-black truncate">{calc.product}</h4>
-                          <p className="text-xs text-gray-600">HS: {calc.hsCode}</p>
-                          <p className="text-xs text-gray-600">{calc.country}</p>
-                        </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">HS Code: </span>
+                    <span className="text-black">{selectedProduct ? selectedProduct.value : 'N/A'} </span>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Trade Partners: </span>
+                    <span className="text-black">{`${selectedExportCountry?.value} to ${selectedImportCountry?.value}`} </span>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Trade Date: </span>
+                    <span className="text-black">{tradeDate || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <h2 className="text-2xl font-bold text-black mb-4">Tariff Breakdown</h2>
+
+              {/* Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-100 p-4 rounded">
+                  <h3 className="font-bold text-black">Original Shipping Cost</h3>
+                  <p className="text-2xl font-bold text-blue-600">${calcResult.originalCost.toFixed(2)}</p>
+                </div>
+                <div className="bg-red-100 p-4 rounded">
+                  <h3 className="font-bold text-black">Total Tariff Cost</h3>
+                  <p className="text-2xl font-bold text-red-600">${calcResult.totalTariffCost.toFixed(2)}</p>
+                </div>
+                <div className="bg-green-100 p-4 rounded">
+                  <h3 className="font-bold text-black">Total Cost</h3>
+                  <p className="text-2xl font-bold text-green-600">${(calcResult.totalCost ?? 0).toFixed(2)}</p>
+                </div>
+              </div>
+
+              {/* Detailed Breakdown */}
+              <div className="bg-white rounded-lg p-4">
+                <h3 className="text-lg font-bold text-black mb-4">Individual Tariff Details</h3>
+                <div className="space-y-3">
+                  {tariffBreakdown.map((tariff, index) => {
+                    // Support both backend field names: tariffRate/tariffCost and legacy rate/amountApplied
+                    const rate = tariff.tariffRate ?? 0;
+                    const amountApplied = tariff.tariffCost ?? 0;
+
+                    // Unit detection (supports multiple backend field names)
+                    const unitCode = (tariff.type || tariff.unit || tariff.tariffUnit || "")
+                      .toString()
+                      .toUpperCase();
+                    const isAV = unitCode === "AV";
+
+                    // Parenthetical rate display: AV => percent, non-AV => per-unit
+                    const displayRate = isAV
+                      ? `${Number(rate).toFixed(2)}%`
+                      : `${Number(rate).toFixed(2)}${unitCode ? ` / ${unitCode}` : ""}`;
+
+                    const unitType = unitCode ? ` (${unitCode})` : "";
+
+                    return (
+                      <div
+                        key={tariff.tariffID || index}
+                        className="flex justify-between items-center p-3 border border-gray-300 rounded hover:bg-gray-50 cursor-help relative group"
+                        title={tariff.reference || "not-updated"}
+                      >
                         <div>
-                          <p className="text-sm font-bold text-green-600 ">Total Cost: ${calc.totalCost.toFixed(2)}</p>
-                          <p className="text-xs text-red-600">Tariff Rate: {calc.totalTariffRate}%</p>
-                          <div>
-                            <p className="text-xs text-red-600">Tariff Cost: ${calc.totalTariffCost}</p>
-                          </div>
+                          <span className="font-semibold text-black">Tariff {index + 1}{unitType}</span>
+                          <span className="text-gray-600 ml-2">({displayRate})</span>
                         </div>
-                        <div>
-                          <span className="text-xs text-gray-500">{calc.date}</span>
-                        </div>
+                        <span className="font-bold text-black">${Number(amountApplied).toFixed(2)}</span>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    );
+                  })}
+                </div>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Right Side - Recent Calculations */}
+        <div className="w-1/3 mt-17">
+          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6">
+            <h2 className="text-xl font-bold text-black mb-4">Recent Calculations</h2>
+
+            {recentCalculations.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <svg className="h-12 w-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <p className="text-sm">No calculations yet</p>
+                <p className="text-xs text-gray-400 mt-1">Your saved calculations will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentCalculations.map((calc) => (
+                  <div key={calc.id} className="bg-white/30 rounded-lg p-3 border border-white/20">
+                    <div className="justify-between items-start mb-2">
+                      <h4 className="text-sm font-semibold text-black truncate">{calc.product}</h4>
+                      <p className="text-xs text-gray-600">HS: {calc.hsCode}</p>
+                      <p className="text-xs text-gray-600">{calc.country}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-green-600 ">Total Cost: ${calc.totalCost.toFixed(2)}</p>
+                      <p className="text-xs text-red-600">Tariff Rate: {calc.totalTariffRate}%</p>
+                      <div>
+                        <p className="text-xs text-red-600">Tariff Cost: ${calc.totalTariffCost}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500">{calc.date}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </main>
-        );
+        </div>
+      </div>
+    </main>
+  );
 }
