@@ -374,6 +374,38 @@ public class TariffServiceImpl implements TariffService {
     }
 
     @Override
+    public List<TariffDto> getTariffsByProductAndCountry(String productId, String importingCountry) {
+        // First get product by HSCode
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
+
+        // Find all country pairs where the given country is the importer
+        List<CountryPair> countryPairs = countryPairRepository.findByImporter_IsoCode(importingCountry);
+        if (countryPairs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Find valid tariffs for this product and importing country
+        // Get all tariff rates that match our criteria
+        List<TariffRate> allTariffRates = tariffRateRepository.findAll().stream()
+                .filter(rate -> {
+                    Tariff tariff = rate.getTariff();
+                    return tariff.getProduct().getHSCode().equals(productId) &&
+                           tariff.getCountryPair().getImporter().getIsoCode().equals(importingCountry);
+                })
+                .collect(Collectors.toList());
+
+        // Group tariff rates by tariff ID
+        Map<Long, List<TariffRate>> groupedRates = allTariffRates.stream()
+                .collect(Collectors.groupingBy(tr -> tr.getTariff().getTariffID()));
+
+        // Convert each group of tariff rates to a TariffDto
+        return groupedRates.values().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public CalculationResult calculateTariff(CalculationRequest request) {
         // Resolve country pair and valid tariff
         List<CountryPair> countryPair = countryPairRepository.findByExporterAndImporter(

@@ -16,4 +16,7 @@ public interface CountryPairRepository extends JpaRepository<CountryPair, Long> 
 
     @Query("SELECT cp FROM CountryPair cp WHERE cp.exporter.isoCode = :exporterIso AND cp.importer.isoCode = :importerIso")
     List<CountryPair> findByExporterAndImporter(@Param("exporterIso") String exporterIso, @Param("importerIso") String importerIso);
+
+    @Query("SELECT cp FROM CountryPair cp WHERE cp.importer.isoCode = :isoCode")
+    List<CountryPair> findByImporter_IsoCode(@Param("isoCode") String isoCode);
 }

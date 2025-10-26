@@ -48,6 +48,14 @@ public interface TariffService {
      * @return The updated tariff DTO
      */
     TariffDto updateTariffRate(Long id, TariffCreateDto updateDto);
+
+    /**
+     * Get tariffs by product ID and importing country
+     * @param productId The product ID
+     * @param importingCountry The importing country code (optional)
+     * @return List of tariffs matching the criteria
+     */
+    List<TariffDto> getTariffsByProductAndCountry(String productId, String importingCountry);
     
     /**
      * Delete a tariff

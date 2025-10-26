@@ -128,4 +128,17 @@ public class TariffController {
         List<UnitOfCalculation> unitInfo = tariffService.getUnitInfo(hSCode, importCountry, exportCountry, tradeDate);
         return ResponseEntity.ok(unitInfo);
     }
+
+    /**
+     * Get tariffs by product ID and importing country
+     * GET /api/tariffs/search?productId=xxx&importingCountry=xxx
+     */
+    @GetMapping("/search/{productId}/{importingCountry}")
+    public ResponseEntity<List<TariffDto>> searchTariffsByProductIdAndImportingCountry(
+            @PathVariable String productId,
+            @PathVariable(required = false) String importingCountry) {
+        System.out.println("Searching tariffs for product: " + productId + ", country: " + importingCountry);
+        List<TariffDto> tariffs = tariffService.getTariffsByProductAndCountry(productId, importingCountry);
+        return ResponseEntity.ok(tariffs);
+    }
 }
