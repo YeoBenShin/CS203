@@ -33,6 +33,11 @@ public class TariffRate {
     public TariffRate() {
     }
 
+    public TariffRate(BigDecimal tariffRate, UnitOfCalculation unitOfCalculation) {
+        this.tariffRate = tariffRate;
+        this.unitOfCalculation = unitOfCalculation;
+    }
+
     public TariffRate(BigDecimal tariffRate) {
         this.tariffRate = tariffRate;
     }
