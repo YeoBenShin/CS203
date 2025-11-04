@@ -94,6 +94,11 @@ export default function CalculatorPage() {
   // Tracks whether unit-info fetch finished (success or error)
   const [tariffUnitsLoaded, setTariffUnitsLoaded] = useState(false);
 
+  // Manual validation states
+  const [isValidating, setIsValidating] = useState(false);
+  const [hasValidated, setHasValidated] = useState(false);
+  const [validationPassed, setValidationPassed] = useState(false);
+
   // Other form states
   const [shippingCost, setShippingCost] = useState('');
   const [tradeDate, setTradeDate] = useState("");
@@ -114,7 +119,7 @@ export default function CalculatorPage() {
   const [isDateValid, setIsDateValid] = useState(true);
   const [effectiveDate, setEffectiveDate] = useState(null);
   const [expiryDate, setExpiryDate] = useState(null);
-  
+
   // Tariff data availability state
   const [hasTariffData, setHasTariffData] = useState(false);
 
@@ -166,7 +171,7 @@ export default function CalculatorPage() {
       setTariffUnitInfo(null);
     } else {
       // Clear error messages only if they were date-related
-      setErrorMessage(prev => prev.filter(msg => 
+      setErrorMessage(prev => prev.filter(msg =>
         !msg.includes('Trade date must be')
       ));
       setIsDateValid(true);
@@ -174,152 +179,19 @@ export default function CalculatorPage() {
     }
   }, [tradeDate, effectiveDate, expiryDate]);
 
+  // Clear states when any input changes (no automatic fetch)
   useEffect(() => {
-    const fetchTariffUnitInfo = async () => {
-      if (selectedProduct && selectedImportCountry && selectedExportCountry) {
-        setTariffUnitsLoaded(false);
-        // Clear previous state
-        setTariffUnitInfo(null);
-        setProductQuantity('');
-        setUnitList([]);
-        setUnitQuantities({});
-        setIsDateValid(true); // Reset date validation when refetching
-        setEffectiveDate(null); // Clear stored dates
-        setExpiryDate(null);
-        setHasTariffData(false); // Reset tariff data availability
-
-        try {
-          const params = new URLSearchParams({
-            hSCode: selectedProduct.value,
-            importCountry: selectedImportCountry.value,
-            exportCountry: selectedExportCountry.value,
-            tradeDate: tradeDate,
-          });
-          const token = await getToken();
-          const response = await fetchApi(token, `/api/tariffs/unit-info?${params}`);
-
-          if (response.ok) {
-            const data = await response.json(); // returns as List e.g. [AV, KG]
-
-            // Store the date constraints for continuous validation
-            const apiEffectiveDate = data.effectiveDate ? new Date(data.effectiveDate) : null;
-            const apiExpiryDate = data.expiryDate ? new Date(data.expiryDate) : null;
-            setEffectiveDate(apiEffectiveDate);
-            setExpiryDate(apiExpiryDate);
-
-            // Check if trade date is within the valid range
-            const currentTradeDate = new Date(tradeDate);
-
-            // Validate trade date against effective and expiry dates
-            let dateValidationError = null;
-            if (apiEffectiveDate && currentTradeDate < apiEffectiveDate) {
-              dateValidationError = `Trade date must be on or after ${apiEffectiveDate.toLocaleDateString()}`;
-            } else if (apiExpiryDate && currentTradeDate > apiExpiryDate) {
-              dateValidationError = `Trade date must be on or before ${apiExpiryDate.toLocaleDateString()}`;
-            }
-
-            if (dateValidationError) {
-              setErrorMessage([dateValidationError]);
-              setUnitList([]);
-              setUnitQuantities({});
-              setTariffUnitInfo(null);
-              setTariffUnitsLoaded(true);
-              setIsDateValid(false); // Mark date as invalid
-              setHasTariffData(false); // No valid tariff data due to date issue
-              return; // Exit early - don't show quantity inputs
-            }
-
-            // Clear any previous error messages if date is valid
-            setErrorMessage([]);
-            setIsDateValid(true); // Mark date as valid
-            setHasTariffData(true); // Valid tariff data is available
-
-            // If date is valid, proceed with normal processing
-            // Prefer data.units; fallback to data.unit
-            console.log("this is the return data from API: ", data);
-            const unitsRaw = data;
-
-            console.log("Raw units from API:", unitsRaw); // Debug log
-
-            // Normalize -> uppercase -> unique
-            const unitCodesAll = parseUnitsFromApi(unitsRaw).map((u) => u.toUpperCase());
-            const uniqueCodes = Array.from(new Set(unitCodesAll));
-
-            console.log("Parsed unit codes:", uniqueCodes); // Debug log
-
-            // EXCLUDE AV from input list (AV does not require quantity input)
-            const nonAVCodes = uniqueCodes.filter((code) => code !== "AV");
-
-            console.log("Non-AV codes for inputs:", nonAVCodes); // Debug log
-
-            const detailsList = nonAVCodes.map((code) => {
-              const det = getUnitDetails(code);
-              return det ? { code, ...det } : { code, unit: code, abbreviation: code.toLowerCase() };
-            });
-
-            console.log("Details list for unit inputs:", detailsList); // Debug log
-
-            if (detailsList.length > 0) {
-              // initialize unit quantities so multiple inputs show immediately
-              const init = {};
-              detailsList.forEach((d) => { init[d.code] = ""; });
-
-              console.log("Setting unitList to:", detailsList); // Debug log
-              console.log("Initializing unitQuantities to:", init); // Debug log
-
-              setUnitList(detailsList);
-              setUnitQuantities(init);
-              setTariffUnitInfo(detailsList[0]); // keep single-unit legacy UI support if exactly one non-AV
-            } else {
-              // If only AV exists, there are no quantity inputs to show
-              console.log("No non-AV units found, clearing unit inputs"); // Debug log
-              setUnitList([]);
-              setUnitQuantities({});
-              setTariffUnitInfo(null);
-            }
-          } else {
-            // Handle error response from backend
-            try {
-              const errorData = await response.json();
-              const errorMessage = errorData.message || errorData.error || 'No tariff information found for this product and country combination';
-              setErrorMessage([errorMessage]);
-            } catch (parseError) {
-              setErrorMessage(['No tariff information found for this product and country combination']);
-            }
-            
-            setUnitList([]);
-            setUnitQuantities({});
-            setTariffUnitInfo(null);
-            setIsDateValid(false); // Mark as invalid to prevent dynamic boxes from showing
-            setHasTariffData(false); // No valid tariff data available
-          }
-        } catch (error) {
-          console.error('Error fetching tariff unit info:', error);
-          setUnitList([]);
-          setUnitQuantities({});
-          setTariffUnitInfo(null);
-          setIsDateValid(true); // Reset on error
-          setEffectiveDate(null); // Clear stored dates
-          setExpiryDate(null);
-          setHasTariffData(false); // No valid tariff data due to error
-        } finally {
-          // mark fetch as finished so downstream UI (shipping cost / calculate) can render
-          setTariffUnitsLoaded(true);
-        }
-      } else {
-        // Clear info if any selection is missing
-        setUnitList([]);
-        setUnitQuantities({});
-        setTariffUnitInfo(null);
-        setTariffUnitsLoaded(false);
-        setIsDateValid(true); // Reset when selections are missing
-        setEffectiveDate(null); // Clear stored dates
-        setExpiryDate(null);
-        setHasTariffData(false); // No tariff data when selections are missing
-      }
-    };
-
-    fetchTariffUnitInfo();
+    // Clear previous validation and unit states when inputs change
+    setTariffUnitInfo(null);
+    setProductQuantity('');
+    setUnitList([]);
+    setUnitQuantities({});
+    setTariffUnitsLoaded(false);
+    setIsDateValid(true);
+    setEffectiveDate(null);
+    setExpiryDate(null);
+    setHasTariffData(false);
+    // Don't reset validation state here - let the input handlers manage it
   }, [selectedProduct, selectedImportCountry, selectedExportCountry, tradeDate]);
 
   useEffect(() => {
@@ -380,6 +252,112 @@ export default function CalculatorPage() {
     }
   };
 
+  // Manual validation function
+  const handleValidateDetails = async () => {
+    if (!selectedProduct || !selectedImportCountry || !selectedExportCountry || !tradeDate) {
+      setErrorMessage(['Please fill in all required fields before validating.']);
+      return;
+    }
+
+    setIsValidating(true);
+    setErrorMessage([]);
+    setHasValidated(false);
+    setValidationPassed(false);
+
+    try {
+      const params = new URLSearchParams({
+        hSCode: selectedProduct.value,
+        importCountry: selectedImportCountry.value,
+        exportCountry: selectedExportCountry.value,
+        tradeDate: tradeDate,
+      });
+      const token = await getToken();
+      const response = await fetchApi(token, `/api/tariffs/unit-info?${params}`);
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Store the date constraints for continuous validation
+        const apiEffectiveDate = data.effectiveDate ? new Date(data.effectiveDate) : null;
+        const apiExpiryDate = data.expiryDate ? new Date(data.expiryDate) : null;
+        setEffectiveDate(apiEffectiveDate);
+        setExpiryDate(apiExpiryDate);
+
+        // Check if trade date is within the valid range
+        const currentTradeDate = new Date(tradeDate);
+
+        // Validate trade date against effective and expiry dates
+        let dateValidationError = null;
+        if (apiEffectiveDate && currentTradeDate < apiEffectiveDate) {
+          dateValidationError = `Trade date must be on or after ${apiEffectiveDate.toLocaleDateString()}`;
+        } else if (apiExpiryDate && currentTradeDate > apiExpiryDate) {
+          dateValidationError = `Trade date must be on or before ${apiExpiryDate.toLocaleDateString()}`;
+        }
+
+        if (dateValidationError) {
+          setErrorMessage([dateValidationError]);
+          setValidationPassed(false);
+          setHasValidated(true);
+          setIsDateValid(false);
+          setHasTariffData(false);
+          return;
+        }
+
+        // If date is valid, proceed with processing the units
+        setIsDateValid(true);
+        setHasTariffData(true);
+
+        const unitsRaw = data;
+        const unitCodesAll = parseUnitsFromApi(unitsRaw).map((u) => u.toUpperCase());
+        const uniqueCodes = Array.from(new Set(unitCodesAll));
+        const nonAVCodes = uniqueCodes.filter((code) => code !== "AV");
+
+        const detailsList = nonAVCodes.map((code) => {
+          const det = getUnitDetails(code);
+          return det ? { code, ...det } : { code, unit: code, abbreviation: code.toLowerCase() };
+        });
+
+        if (detailsList.length > 0) {
+          const init = {};
+          detailsList.forEach((d) => { init[d.code] = ""; });
+          setUnitList(detailsList);
+          setUnitQuantities(init);
+          setTariffUnitInfo(detailsList[0]);
+        } else {
+          setUnitList([]);
+          setUnitQuantities({});
+          setTariffUnitInfo(null);
+        }
+
+        setValidationPassed(true);
+        setTariffUnitsLoaded(true);
+
+      } else {
+        // Handle error response from backend
+        try {
+          const errorData = await response.json();
+          const errorMessage = errorData.message || errorData.error || 'Invalid country pair or no tariff information found for this combination';
+          setErrorMessage([errorMessage]);
+        } catch (parseError) {
+          setErrorMessage(['Invalid country pair or no tariff information found for this combination']);
+        }
+
+        setValidationPassed(false);
+        setIsDateValid(false);
+        setHasTariffData(false);
+      }
+    } catch (error) {
+      console.error('Error validating details:', error);
+      setErrorMessage(['Could not connect to the server. Please try again later.']);
+      setValidationPassed(false);
+      setIsDateValid(false);
+      setHasTariffData(false);
+    } finally {
+      setIsValidating(false);
+      setHasValidated(true);
+    }
+  };
+
   const handleHsCodeSelection = (option) => {
     if (!option) {
       setSelectedProduct(null);
@@ -388,6 +366,9 @@ export default function CalculatorPage() {
     setErrorMessage([]);
     setCalcResult(null);
     setSelectedProduct(option);
+    // Reset validation state when input changes
+    setHasValidated(false);
+    setValidationPassed(false);
   };
 
   const handleExportCountrySelection = (option) => {
@@ -398,6 +379,9 @@ export default function CalculatorPage() {
     setCalcResult(null);
     setErrorMessage([]);
     setExportSelectedCountry(option);
+    // Reset validation state when input changes
+    setHasValidated(false);
+    setValidationPassed(false);
   };
 
   const handleImportCountrySelection = (option) => {
@@ -408,6 +392,9 @@ export default function CalculatorPage() {
     setCalcResult(null);
     setErrorMessage([]);
     setImportSelectedCountry(option);
+    // Reset validation state when input changes
+    setHasValidated(false);
+    setValidationPassed(false);
   };
 
   // Handle form inputs
@@ -460,6 +447,9 @@ export default function CalculatorPage() {
     setTradeDate(e.target.value);
     setCalcResult(null);
     setErrorMessage([]);
+    // Reset validation state when input changes
+    setHasValidated(false);
+    setValidationPassed(false);
   }
 
   // Tariff calculation function
@@ -620,8 +610,8 @@ export default function CalculatorPage() {
     }
   };
 
-  // Show inputs only when required selections are present, date is valid, and tariff data is available
-  const readyToCalculate = !!(selectedProduct && selectedImportCountry && selectedExportCountry && tradeDate && isDateValid && hasTariffData);
+  // Show inputs only when required selections are present, date is valid, tariff data is available, and validation has passed
+  const readyToCalculate = !!(selectedProduct && selectedImportCountry && selectedExportCountry && tradeDate && isDateValid && hasTariffData && hasValidated && validationPassed);
 
   if (pageLoading) {
     return <LoadingPage />;
@@ -689,10 +679,31 @@ export default function CalculatorPage() {
                 />
               </div>
             </div>
+
+            {/* Validation Button */}
+            <div className="mt-6 flex justify-center">
+              <Button
+                className="px-8"
+                onClick={handleValidateDetails}
+                isLoading={isValidating}
+                disabled={!selectedProduct || !selectedImportCountry || !selectedExportCountry || !tradeDate}
+                colorBg="bg-blue-500 hover:bg-blue-600 focus:ring-blue-500"
+              >
+                {isValidating && <LoadingSpinner />}
+                {isValidating ? "Validating..." : "Validate Details"}
+              </Button>
+            </div>
+
+            {/* Validation Status Messages */}
+            {hasValidated && validationPassed && (
+              <div className="mt-4 p-3 bg-green-50 border-l-4 border-green-500 rounded">
+                <p className="text-green-700 font-medium">✓ Details validated successfully! You can now enter quantities.</p>
+              </div>
+            )}
           </div>
 
           {/* NEW: Unit(s) of Measurement (shows multiple inputs when there are multiple units) */}
-          {readyToCalculate && (unitList.length > 0 || tariffUnitInfo) && (
+          {hasValidated && validationPassed && (unitList.length > 0 || tariffUnitInfo) && (
             <div className="bg-white/20 rounded-lg p-6 mb-6 animate-fade-in">
               <h2 className="text-xl font-bold text-black mb-4">Unit of Measurement</h2>
 
