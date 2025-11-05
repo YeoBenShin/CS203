@@ -861,7 +861,7 @@ export default function CalculatorPage() {
 
                     // Parenthetical rate display: AV => percent, non-AV => per-unit
                     const displayRate = isAV
-                      ? `${Number(rate).toFixed(2)}%`
+                      ? `${Number(rate).toFixed(2)*100}%`
                       : `${Number(rate).toFixed(2)}${unitCode ? ` / ${unitCode}` : ""}`;
 
                     const unitType = unitCode ? ` (${unitCode})` : "";
