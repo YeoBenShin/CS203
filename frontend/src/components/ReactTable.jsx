@@ -399,7 +399,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Button
-                onClick={table.previousPage}
+                onClick={() => { if (table.getCanPreviousPage()) table.previousPage(); }}
                 isLoading={!table.getCanPreviousPage()}
                 width=""
                 textConfig="text-sm text-gray-700 font-medium"
@@ -411,7 +411,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                 Previous
               </Button>
               <Button
-                onClick={() => { table.nextPage }}
+                onClick={() => { if (table.getCanNextPage()) table.nextPage(); }}
                 isLoading={!table.getCanNextPage()}
                 width=""
                 textConfig="text-sm text-gray-700 font-medium"
