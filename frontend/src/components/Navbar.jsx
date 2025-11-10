@@ -30,24 +30,23 @@ export default function Navbar() {
 
   return (
     <nav className="w-full bg-white shadow-md border-b border-gray-200 p-6 flex items-center justify-between">
-      <Link href="/" className="text-3xl font-bold text-black">TARRIFY</Link>
-      <ul className="flex space-x-6 text-sm font-medium">
+      <Link href="/" className="text-3xl font-bold text-black hover:text-blue-600 transition">TARRIFY</Link>
+      <ul className="flex items-center space-x-6 text-sm font-medium">
         <li
           className="relative group"
           onMouseEnter={handleUserMouseEnter}
           onMouseLeave={handleUserMouseLeave}
         >
-
-          <button className="text-black text-lg hover:text-blue-600 focus:outline-none">Menu</button>
+          <button className="text-black text-lg hover:text-blue-600 focus:outline-none font-medium transition">Menu</button>
           <div
-            className={`absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded shadow-lg z-50 transition-opacity duration-200 ${userDropDown ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+            className={`absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 transition-all duration-200 ${userDropDown ? "opacity-100 pointer-events-auto translate-y-0" : "opacity-0 pointer-events-none -translate-y-2"}`}
           >
-            <Link href="/" className="block px-4 py-2 text-black hover:bg-blue-100">Home</Link>
-            <Link href="/calculator" className="block px-4 py-2 text-black hover:bg-blue-100">Tariff Calculator</Link>
-            <Link href="/view-tariffs" className="block px-4 py-2 text-black hover:bg-blue-100">View All Tariffs</Link>
-            <Link href="/watchlist" className="block px-4 py-2 text-black hover:bg-blue-100">My Watchlist</Link>
-            {role === "admin" && <Link href="/admin" className="block px-4 py-2 text-black hover:bg-blue-100">Add Tariff</Link>}
-            {role === "admin" && <Link href="/admin/product" className="block px-4 py-2 text-black hover:bg-blue-100">Add Product</Link>}
+            <Link href="/" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition rounded-t-lg">Home</Link>
+            <Link href="/calculator" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition">Tariff Calculator</Link>
+            <Link href="/heatmap" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition">Tariff Heatmap</Link>
+            <Link href="/view-tariffs" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition">View All Tariffs</Link>
+            {role === "admin" && <Link href="/admin" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition">Add Tariff</Link>}
+            {role === "admin" && <Link href="/admin/product" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition rounded-b-lg">Add Product</Link>}
           </div>
         </li>
         <li>
