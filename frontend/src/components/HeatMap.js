@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, memo, useMemo, useEffect } from "react";
-import { ComposableMap, Geographies, Geography } from "react-simple-maps";
+import React, { useState, memo, useMemo, useEffect, useCallback } from "react";
+import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
 import { Tooltip } from "react-tooltip";
 import { useAuth } from "@clerk/nextjs";
@@ -9,15 +9,59 @@ import { useAuth } from "@clerk/nextjs";
 import FieldSelector from "./FieldSelector";
 import fetchApi from "@/utils/fetchApi";
 
+const MemoGeography = memo(({ 
+  geography, 
+  fillColor, 
+  onCountryClick,
+  tooltipContent
+}) => {
+  // Create a stable click handler that won't change on re-renders
+  const handleClick = useCallback(() => {
+    onCountryClick(geography);
+  }, [geography, onCountryClick]);
+
+  return (
+    <Geography
+      geography={geography}
+      onClick={handleClick}
+      // Pass tooltip content declaratively to avoid state updates on hover
+      data-tooltip-id="map-tooltip"
+      data-tooltip-content={tooltipContent}
+      style={{
+        default: {
+          fill: fillColor,
+          stroke: "#ffffff",
+          strokeWidth: 0.5,
+          outline: "none",
+        },
+        hover: {
+          fill: fillColor,
+          stroke: "#000000",
+          strokeWidth: 1,
+          cursor: "pointer",
+        },
+        pressed: {
+          fill: fillColor,
+          stroke: "#000000",
+          strokeWidth: 1,
+        },
+      }}
+    />
+  );
+});
+
+MemoGeography.displayName = "MemoGeography";
+
 const HeatMap = ({ onCountrySelect }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [importingCountry, setImportingCountry] = useState(null);
   const [tariffs, setTariffs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [content, setContent] = useState("");
   const [countryOptions, setCountryOptions] = useState([]);
   const [selectedCountryDetails, setSelectedCountryDetails] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [center, setCenter] = useState([0, 20]);
   const { getToken } = useAuth();
 
   // Fetch products for dropdown
@@ -50,7 +94,7 @@ const HeatMap = ({ onCountrySelect }) => {
   useEffect(() => {
     const fetchTariffData = async () => {
       if (!selectedProduct || !importingCountry) {
-        setTariffs([]); // Clear tariffs if either selection is missing
+        setTariffs([]);
         return;
       }
 
@@ -82,7 +126,6 @@ const HeatMap = ({ onCountrySelect }) => {
             const exporterCode = tariff.exporterCode;
             if (!exporterCode) return;
 
-            // Process tariff rates with safeguards against missing or invalid data
             const tariffRates = tariff.tariffRates || [];
             const highestRate =
               tariffRates.length > 0
@@ -96,7 +139,7 @@ const HeatMap = ({ onCountrySelect }) => {
                 countryName: tariff.exporterName,
                 rates: tariffRates.map((rate) => ({
                   type: rate.unitOfCalculation,
-                  rate: parseFloat(rate.rate),
+                  rate: parseFloat(rate.rate) || 0,
                   id: rate.tariffRateID,
                 })),
                 effectiveDate: tariff.effectiveDate,
@@ -129,10 +172,9 @@ const HeatMap = ({ onCountrySelect }) => {
         const response = await fetchApi(token, "/api/countries");
         const countries = await response.json();
 
-        // Map backend countries to selector options
         const options = countries.map((country) => ({
-          value: country.isoCode, // Using ISO code from your backend
-          label: country.name, // Using country name from your backend
+          value: country.isoCode,
+          label: country.name,
         }));
 
         console.log("Countries loaded from backend:", options);
@@ -182,24 +224,79 @@ const HeatMap = ({ onCountrySelect }) => {
           validRates.length > 0
             ? Math.max(...validRates.map((r) => r.rate))
             : 0,
+        details: item.details, // Store all details for the click handler
       };
     });
     console.log("Processed tariff map:", map); // Debug the processed map
     return map;
   }, [tariffs]);
 
-  const maxTariffValue = Math.max(
-    0,
-    ...tariffs.map((t) => Math.max(...t.details.rates.map((r) => r.rate)))
-  );
-  const colorScale = scaleLinear()
-    .domain([0, maxTariffValue])
-    .range(["#ffeda0", "#f03b20"])
-    .clamp(true);
+  // Memoize maxTariffValue calculation
+  const maxTariffValue = useMemo(() => 
+    Math.max(
+      0,
+      ...Object.values(tariffDataMap).map((t) => t.maxRate)
+    )
+  , [tariffDataMap]);
 
-  const handleCountryClick = (countryName, iso3) => {
-    console.log("Clicked:", { countryName, iso3 });
-  };
+  // Memoize the color scale
+  const colorScale = useMemo(() => 
+    scaleLinear()
+      .domain([0, maxTariffValue || 1]) // Use || 1 to prevent domain [0, 0]
+      .range(["#ffeda0", "#f03b20"])
+      .clamp(true)
+  , [maxTariffValue]);
+
+  const handleCountryClick = useCallback(
+    (geo) => {
+      const p = geo.properties ?? {};
+      const iso3 = (p["ISO3166-1-Alpha-3"] || "").trim().toUpperCase();
+      const countryName = p.name || p.ADMIN || p.NAME || iso3;
+      const tariffData = tariffDataMap[iso3];
+
+      console.log("Clicked:", { countryName, iso3 });
+
+      if (tariffData && tariffData.details) {
+        setSelectedCountryDetails({
+          countryCode: iso3,
+          countryName: tariffData.countryName,
+          rates: tariffData.rates,
+          maxRate: tariffData.maxRate,
+          hSCode: tariffData.details.hSCode,
+          productDescription: tariffData.details.productDescription,
+          effectiveDate: tariffData.details.effectiveDate,
+          expiryDate: tariffData.details.expiryDate,
+          reference: tariffData.details.reference,
+        });
+      } else {
+        // Clear details if clicking a country with no data
+        setSelectedCountryDetails(null);
+      }
+    },
+    [tariffDataMap]
+  );
+
+  const handleZoomIn = useCallback(() => {
+    if (zoom < 16) {
+      setZoom(zoom * 1.5);
+    }
+  }, [zoom]);
+
+  const handleZoomOut = useCallback(() => {
+    if (zoom > 1) {
+      setZoom(zoom / 1.5);
+    }
+  }, [zoom]);
+
+  const handleResetZoom = useCallback(() => {
+    setZoom(1);
+    setCenter([0, 20]);
+  }, []);
+
+  const handleMoveEnd = useCallback((position) => {
+    setCenter(position.coordinates);
+    setZoom(position.zoom);
+  }, []);
 
   const renderMap = () => {
     if (loading)
@@ -220,87 +317,98 @@ const HeatMap = ({ onCountrySelect }) => {
       );
 
     return (
-      <ComposableMap id="map-tooltip">
-        <Geographies geography={geoUrl}>
-          {({ geographies }) => {
-            return geographies.map((geo) => {
-              const p = geo.properties ?? {};
-              const iso3 = (p["ISO3166-1-Alpha-3"] || "").trim().toUpperCase();
-              const countryName = p.name || p.ADMIN || p.NAME || iso3;
-
-              const tariffData = tariffDataMap[iso3];
-              const hasTariff = tariffData && tariffData.maxRate > 0;
-              const isImportingCountry = importingCountry?.value === iso3;
-
-              let fillColor;
-              if (isImportingCountry) {
-                fillColor = "#4a90e2"; // Highlight importing country
-              } else if (hasTariff) {
-                fillColor = colorScale(tariffData.maxRate);
-              } else {
-                fillColor = "#f0f0f0ff";
-              }
-
-              return (
-                <Geography
-                  key={geo.rsmKey}
-                  geography={geo}
-                  onClick={() => {
-                    const tariffData = tariffDataMap[iso3];
-                    if (tariffData) {
-                      setSelectedCountryDetails({
-                        countryCode: iso3,
-                        countryName: tariffData.countryName || countryName,
-                        rates: tariffData.rates || [],
-                        maxRate: tariffData.maxRate || 0,
-                      });
-                    }
-                  }}
-                  onMouseEnter={() => {
-                    const tariffData = tariffDataMap[iso3];
-                    console.log("Mouse over:", {
-                      iso3,
-                      countryName,
-                      hasData: !!tariffData,
-                      rates: tariffData?.rates,
-                    });
-
-                    let tooltipText;
-                    if (isImportingCountry) {
-                      tooltipText = `${countryName} (Importing Country)`;
-                    } else if (tariffData && tariffData.maxRate > 0) {
-                      tooltipText = `${countryName}: ${tariffData.maxRate.toFixed(
-                        2
-                      )}%`;
-                    } else {
-                      tooltipText = `${countryName} (No tariff data)`;
-                    }
-                    setContent(tooltipText);
-                  }}
-                  onMouseLeave={() => setContent("")}
-                  style={{
-                    default: {
-                      fill: fillColor,
-                      stroke: "#ffffff",
-                      strokeWidth: 0.5,
-                      outline: "none",
-                    },
-                    hover: {
-                      fill: fillColor,
-                      stroke: "#000000",
-                      cursor: "pointer",
-                    },
-                    pressed: {
-                      fill: fillColor,
-                      stroke: "#000000",
-                    },
-                  }}
-                />
-              );
-            });
+      <div className="relative">
+        <ComposableMap 
+          id="map-tooltip" 
+          projection="geoMercator"
+          projectionConfig={{
+            scale: 147,
           }}
-        </Geographies>
-      </ComposableMap>
+        >
+          <ZoomableGroup
+            zoom={zoom}
+            center={center}
+            onMoveEnd={handleMoveEnd}
+            maxZoom={16}
+            minZoom={1}
+          >
+            <Geographies geography={geoUrl}>
+              {({ geographies }) =>
+                geographies.map((geo) => {
+                  const p = geo.properties ?? {};
+                  const iso3 = (p["ISO3166-1-Alpha-3"] || "").trim().toUpperCase();
+                  const countryName = p.name || p.ADMIN || p.NAME || iso3;
+
+                  const tariffData = tariffDataMap[iso3];
+                  const hasTariff = tariffData && tariffData.maxRate > 0;
+                  const isImportingCountry = importingCountry?.value === iso3;
+
+                  let fillColor;
+                  if (isImportingCountry) {
+                    fillColor = "#4a90e2";
+                  } else if (hasTariff) {
+                    fillColor = colorScale(tariffData.maxRate);
+                  } else {
+                    fillColor = "#f0f0f0ff";
+                  }
+
+                  // Calculate tooltip text here instead of in an event handler
+                  let tooltipText;
+                  if (isImportingCountry) {
+                    tooltipText = `${countryName} (Importing Country)`;
+                  } else if (tariffData && tariffData.maxRate > 0) {
+                    tooltipText = `${countryName}: ${tariffData.maxRate.toFixed(2)}%`;
+                  } else {
+                    tooltipText = `${countryName} (No tariff data)`;
+                  }
+
+                  return (
+                    <MemoGeography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      fillColor={fillColor}
+                      onCountryClick={handleCountryClick}
+                      tooltipContent={tooltipText}
+                    />
+                  );
+                })
+              }
+            </Geographies>
+          </ZoomableGroup>
+        </ComposableMap>
+
+        {/* Zoom Controls */}
+        <div className="absolute top-4 right-4 flex flex-col gap-2 bg-white rounded-lg shadow-lg p-2">
+          <button
+            onClick={handleZoomIn}
+            disabled={zoom >= 16}
+            className="w-10 h-10 flex items-center justify-center bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            title="Zoom in"
+          >
+            <span className="text-xl font-bold">+</span>
+          </button>
+          <button
+            onClick={handleZoomOut}
+            disabled={zoom <= 1}
+            className="w-10 h-10 flex items-center justify-center bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            title="Zoom out"
+          >
+            <span className="text-xl font-bold">−</span>
+          </button>
+          <button
+            onClick={handleResetZoom}
+            className="w-10 h-10 flex items-center justify-center bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors text-xs"
+            title="Reset zoom"
+          >
+            ↺
+          </button>
+        </div>
+
+        {/* Zoom Level Indicator */}
+        <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg px-3 py-1 text-sm">
+          Zoom: {zoom.toFixed(1)}x
+        </div>
+      </div>
     );
   };
 
@@ -332,10 +440,9 @@ const HeatMap = ({ onCountrySelect }) => {
       </div>
 
       {renderMap()}
+      
       <Tooltip
-        id="my-tooltip"
-        anchorId="map-tooltip"
-        content={content || " "}
+        id="map-tooltip"
         place="top"
         float={true}
         delayShow={0}
