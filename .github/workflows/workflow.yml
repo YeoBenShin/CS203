@@ -75,15 +75,15 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Run Snyk to check for vulnerabilities for packages
+    - name: Run Snyk to check for open source package vulnerabilities
       uses: snyk/actions/maven-3-jdk-21@master
       continue-on-error: true
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        args: --file=./tariff-backend/pom.xml --sarif-file-output=snyk.sarif
+        args: --exclude=frontend --sarif-file-output=snyk.sarif
 
-    - name: Run Snyk Code Test to check for vulnerabilities
+    - name: Run Snyk SAST
       uses: snyk/actions/maven-3-jdk-21@master
       continue-on-error: true
       env:
