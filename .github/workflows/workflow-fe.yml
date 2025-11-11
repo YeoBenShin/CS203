@@ -32,20 +32,22 @@ jobs:
             NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
             EOF
 
-        - name: Run Snyk SAST
-          uses: snyk/actions/node@master
+        - name: Set up Snyk CLI
+          uses: snyk/actions/setup@master
+        - uses: actions/setup-go@v1
+
+        - name: Snyk SAST(frontend only)
           continue-on-error: true
           env:
             SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          with:
-            args: --sarif-file-output=snyk.sarif
-            command: code test
+          working-directory: ./frontend
+          run: snyk code test --sarif-file-output=snyk-code.sarif
 
-        - name: Upload result to GitHub Code Scanning
+        - name: Upload Snyk code results to GitHub Code Scanning
           uses: github/codeql-action/upload-sarif@v3
           with:
-            sarif_file: snyk.sarif
-
+            sarif_file: frontend/snyk-code.sarif
+            category: snyk-frontend-code
         - name: Install deps & build
           working-directory: ./frontend
           run: |
