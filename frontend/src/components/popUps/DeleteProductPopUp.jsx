@@ -1,8 +1,22 @@
+import { useState } from "react";
+
 export default function DeleteProductPopUp({
     productToDelete,
     handleCancelDelete,
     handleConfirmDelete
 }) {
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const onConfirm = async () => {
+        try {
+            setIsDeleting(true);
+            // support sync or async handlers
+            await handleConfirmDelete?.();
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <div>
             <div className="flex items-center mb-4">
@@ -43,10 +57,10 @@ export default function DeleteProductPopUp({
                     Cancel
                 </button>
                 <button
-                    onClick={handleConfirmDelete}
+                    onClick={onConfirm}
                     className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
                 >
-                    Delete Product
+                    {isDeleting ? "Deleting..." : "Delete Product"}
                 </button>
             </div>
         </div>

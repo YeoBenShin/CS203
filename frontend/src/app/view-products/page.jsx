@@ -140,6 +140,7 @@ export default function ViewProductsPage() {
       description: productToEdit.description
     });
     setEditErrors([]);
+    setDeleteMessage("");
     setShowEditPopup(true);
     document.body.style.overflow = 'hidden';
   };
@@ -152,6 +153,7 @@ export default function ViewProductsPage() {
       description: "",
     });
     setEditErrors([]); // Clear edit errors when canceling
+    setDeleteMessage("");
     setIsUpdating(false);
     document.body.style.overflow = 'unset';
   };
@@ -176,6 +178,7 @@ export default function ViewProductsPage() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setEditErrors([]);
+    setDeleteMessage("");
     setIsUpdating(true);
 
     try {

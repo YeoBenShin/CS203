@@ -1,13 +1,25 @@
 import { formatRate, formatUnitOfCalculation } from "@/utils/formatDisplayHelpers";
+import { useState } from "react";
 
 export default function DeleteTariffPopUp({
     tariffToDelete,
     handleCancelDelete,
     handleConfirmDelete
 }) {
+    const [isDeleting, setIsDeleting] = useState(false);
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";
         return new Date(dateString).toLocaleDateString();
+    };
+
+    const onConfirm = async () => {
+        try {
+            setIsDeleting(true);
+            // support sync or async handlers
+            await handleConfirmDelete?.();
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (
@@ -66,10 +78,11 @@ export default function DeleteTariffPopUp({
                     Cancel
                 </button>
                 <button
-                    onClick={handleConfirmDelete}
+                    onClick={onConfirm}
+                    disabled={isDeleting}
                     className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
                 >
-                    Delete Tariff
+                    {isDeleting ? "Deleting..." : "Delete Tariff"}
                 </button>
             </div>
         </div>
