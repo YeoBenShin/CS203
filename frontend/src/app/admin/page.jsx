@@ -10,6 +10,7 @@ import FieldSelector from "../../components/FieldSelector";
 import Button from "../../components/Button";
 import fetchApi from "@/utils/fetchApi";
 import { useAuth } from "@clerk/nextjs";
+import { getTariffUnitDisplay } from "@/utils/tariffUnits";
 
 export default function AdminPage() {
   const { getToken } = useAuth();
@@ -78,7 +79,7 @@ export default function AdminPage() {
         const response = await fetchApi(token, "api/tariffs/units");
         const units = await response.json();
         const options = units.map((unit) => ({
-          label: unit === "AV" ? "Ad Valorem (AV)" : unit,
+          label: getTariffUnitDisplay(unit),
           value: unit,
         }));
         setUnitOptions(options);
@@ -97,7 +98,7 @@ export default function AdminPage() {
           "WTS", "X", "AV"
         ];
         const fallbackOptions = fallbackUnits.map((unit) => ({
-          label: unit === "AV" ? "Ad Valorem (AV)" : unit,
+          label: getTariffUnitDisplay(unit),
           value: unit,
         }));
         setUnitOptions(fallbackOptions);
