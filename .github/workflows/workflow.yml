@@ -82,6 +82,7 @@ jobs:
       continue-on-error: true
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        MAVEN_CMD: mvn
       working-directory: ./tariff-backend
       run: snyk test --file=pom.xml --sarif-file-output=snyk.sarif
 
