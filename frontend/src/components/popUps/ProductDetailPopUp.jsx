@@ -25,12 +25,12 @@ export default function ProductDetailPopUp({
                 <div className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">HS Code</label>
-                        <p className="text-sm text-gray-900">{selectedProduct.hSCode}</p>
+                        <p className="text-sm text-gray-900">{selectedProduct.hsCode}</p>
                     </div>
 
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Product Description</label>
-                        <p className="text-sm text-gray-900">{selectedProduct.productDescription || "N/A"}</p>
+                        <p className="text-sm text-gray-900">{selectedProduct.description || "N/A"}</p>
                     </div>
                 </div>
 

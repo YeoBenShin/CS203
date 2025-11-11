@@ -6,7 +6,7 @@ import ReactTable from "../../components/ReactTable";
 import Button from "../../components/Button";
 import PopUpWrapper from "../../components/popUps/PopUpWrapper";
 import ProductDetailPopUp from "../../components/popUps/ProductDetailPopUp";
-import DeleteTariffPopUp from "../../components/popUps/DeleteTariffPopUp";
+import DeleteProductPopUp from "../../components/popUps/DeleteProductPopUp";
 import LoadingPage from "../../components/LoadingPage";
 import fetchApi from "@/utils/fetchApi";
 
@@ -109,9 +109,9 @@ export default function ViewProductsPage() {
 
     try {
       const token = await getToken();
-      const response = await fetchApi(token, `api/products/${productToDelete.productID}`, "DELETE"); // is productID = hsCode
+      const response = await fetchApi(token, `api/products/${productToDelete.hsCode}`, "DELETE");
       if (response.ok) {
-        const updatedProducts = products.filter(product => product.productID !== productToDelete.productID);
+        const updatedProducts = products.filter(product => product.hsCode !== productToDelete.hsCode);
         setProducts(updatedProducts);
         showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Product deleted successfully!");
 
@@ -137,7 +137,7 @@ export default function ViewProductsPage() {
   // ----------------------------------------------------------
   const openEditPopup = () => {
     setEditForm({
-      description: rate.description
+      description: productToEdit.description
     });
     setEditErrors([]);
     setShowEditPopup(true);
@@ -167,9 +167,6 @@ export default function ViewProductsPage() {
 
   const validateEditForm = () => {
     const validationErrors = [];
-    if (editForm.hsCode.trim() === "") {
-      validationErrors.push("HS Code is required");
-    }
     if (editForm.description.trim() === "") {
       validationErrors.push("Description is required");
     }
@@ -275,7 +272,7 @@ export default function ViewProductsPage() {
         {/* Success Popup */}
         {showSuccessPopup && <SuccessMessageDisplay successMessage={successMessage} setShowSuccessPopup={setShowSuccessPopup} />}
 
-        {/* Tariff Details Popup */}
+        {/* Product Details Popup */}
         {showDetailsPopup && selectedProduct && (
           <PopUpWrapper OnClick={closeDetailsPopup}>
             <ProductDetailPopUp
@@ -292,7 +289,7 @@ export default function ViewProductsPage() {
         {/* Delete Confirmation Popup */}
         {showDeletePopup && productToDelete && (
           <PopUpWrapper OnClick={cancelDelete}>
-            <DeleteTariffPopUp
+            <DeleteProductPopUp
               productToDelete={productToDelete}
               handleCancelDelete={cancelDelete}
               handleConfirmDelete={confirmDelete}
@@ -317,7 +314,7 @@ export default function ViewProductsPage() {
             <div className="mb-3 bg-blue-50 p-2 rounded-md">
               <p className="text-sm font-medium text-gray-700 mb-1">Current Product</p>
               <div className="text-xs text-gray-600 space-y-1">
-                <p><span className="font-medium">HS Code:</span> {productToEdit.hSCode}</p>
+                <p><span className="font-medium">HS Code:</span> {productToEdit.hsCode}</p>
                 <p><span className="font-medium">Description:</span> {productToEdit.description || "N/A"}</p>
               </div>
             </div>
@@ -332,7 +329,7 @@ export default function ViewProductsPage() {
                   type="text"
                   value={editForm.description}
                   onChange={handleEditFormChange}
-                  placeholder="Product Description"
+                  placeholder="New Product Description..."
                   className="cursor-pointer shadow-sm border border-gray-300 rounded w-full py-1.5 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
