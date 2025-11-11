@@ -8,6 +8,7 @@ import { useAuth } from "@clerk/nextjs";
 
 import FieldSelector from "./FieldSelector";
 import fetchApi from "@/utils/fetchApi";
+import { getTariffUnitDisplay } from "@/utils/tariffUnits";
 
 const MemoGeography = memo(({ 
   geography, 
@@ -59,7 +60,7 @@ const HeatMap = ({ onCountrySelect }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [countryOptions, setCountryOptions] = useState([]);
-  const [selectedCountryDetails, setSelectedCountryDetails] = useState(null);
+  const [selectedCountries, setSelectedCountries] = useState([]); // Changed to array for multiple selections
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState([0, 20]);
   const { getToken } = useAuth();
@@ -257,7 +258,7 @@ const HeatMap = ({ onCountrySelect }) => {
       console.log("Clicked:", { countryName, iso3 });
 
       if (tariffData && tariffData.details) {
-        setSelectedCountryDetails({
+        const newCountryDetails = {
           countryCode: iso3,
           countryName: tariffData.countryName,
           rates: tariffData.rates,
@@ -267,10 +268,25 @@ const HeatMap = ({ onCountrySelect }) => {
           effectiveDate: tariffData.details.effectiveDate,
           expiryDate: tariffData.details.expiryDate,
           reference: tariffData.details.reference,
+        };
+
+        setSelectedCountries((prev) => {
+          // Check if country is already selected
+          const existingIndex = prev.findIndex(c => c.countryCode === iso3);
+          
+          if (existingIndex !== -1) {
+            // Country already selected, remove it (toggle off)
+            return prev.filter((_, index) => index !== existingIndex);
+          }
+          
+          // If we have 2 countries, replace the first one (FIFO)
+          if (prev.length >= 2) {
+            return [prev[1], newCountryDetails];
+          }
+          
+          // Add the new country
+          return [...prev, newCountryDetails];
         });
-      } else {
-        // Clear details if clicking a country with no data
-        setSelectedCountryDetails(null);
       }
     },
     [tariffDataMap]
@@ -342,10 +358,13 @@ const HeatMap = ({ onCountrySelect }) => {
                   const tariffData = tariffDataMap[iso3];
                   const hasTariff = tariffData && tariffData.maxRate > 0;
                   const isImportingCountry = importingCountry?.value === iso3;
+                  const isSelected = selectedCountries.some(c => c.countryCode === iso3);
 
                   let fillColor;
                   if (isImportingCountry) {
                     fillColor = "#4a90e2";
+                  } else if (isSelected) {
+                    fillColor = "#10b981"; // Green for selected countries
                   } else if (hasTariff) {
                     fillColor = colorScale(tariffData.maxRate);
                   } else {
@@ -356,6 +375,8 @@ const HeatMap = ({ onCountrySelect }) => {
                   let tooltipText;
                   if (isImportingCountry) {
                     tooltipText = `${countryName} (Importing Country)`;
+                  } else if (isSelected) {
+                    tooltipText = `${countryName} (Selected) - ${tariffData.maxRate.toFixed(2)}%`;
                   } else if (tariffData && tariffData.maxRate > 0) {
                     tooltipText = `${countryName}: ${tariffData.maxRate.toFixed(2)}%`;
                   } else {
@@ -454,6 +475,17 @@ const HeatMap = ({ onCountrySelect }) => {
         }}
       />
 
+      {/* Comparison Helper Text */}
+      {selectedCountries.length > 0 && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+          <p className="font-medium">
+            💡 Tip: {selectedCountries.length === 1 
+              ? "Click another country to compare tariff rates side by side (max 2 countries)" 
+              : "You can click on a selected country to deselect it, or click a new country to replace the oldest selection"}
+          </p>
+        </div>
+      )}
+
       {/* Configuration Panel */}
       {selectedProduct && (
         <div className="mt-4 p-4 bg-gray-50 rounded-lg">
@@ -466,61 +498,139 @@ const HeatMap = ({ onCountrySelect }) => {
       )}
 
       {/* Country Details Panel */}
-      {selectedCountryDetails && (
-        <div className="mt-4 p-4 bg-white shadow-lg rounded-lg border">
-          <div className="flex justify-between items-start">
-            <h3 className="text-lg font-bold">
-              {selectedCountryDetails.countryName}
-            </h3>
-            <button
-              onClick={() => setSelectedCountryDetails(null)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ×
-            </button>
-          </div>
+      {selectedCountries.length > 0 && (
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {selectedCountries.map((countryDetails, index) => {
+            // Calculate tariff status
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+            const effectiveDate = countryDetails.effectiveDate ? new Date(countryDetails.effectiveDate) : null;
+            const expiryDate = countryDetails.expiryDate ? new Date(countryDetails.expiryDate) : null;
+            
+            if (effectiveDate) effectiveDate.setHours(0, 0, 0, 0);
+            if (expiryDate) expiryDate.setHours(0, 0, 0, 0);
+            
+            let status = "unknown";
+            if (effectiveDate && effectiveDate <= today) {
+              if (expiryDate) {
+                status = expiryDate >= today ? "in-effect" : "expired";
+              } else {
+                status = "in-effect"; // No expiry date means it's ongoing
+              }
+            }
 
-          <div className="mt-4 space-y-4">
-            <div>
-              <h4 className="font-semibold text-gray-700">
-                Product Information
-              </h4>
-              <p>HS Code: {selectedCountryDetails.hSCode}</p>
-              <p>{selectedCountryDetails.productDescription}</p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-gray-700">Tariff Rates</h4>
-              <div className="mt-2 space-y-2">
-                {selectedCountryDetails.rates.map((rate, idx) => (
-                  <div
-                    key={idx}
-                    className="flex justify-between bg-gray-50 p-2 rounded"
-                  >
-                    <span>{rate.type}</span>
-                    <span className="font-semibold">
-                      {rate.rate.toFixed(2)}%
-                    </span>
+            return (
+              <div key={countryDetails.countryCode} className="p-4 bg-white shadow-lg rounded-lg border">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">
+                      {countryDetails.countryName}
+                    </h3>
+                    <p className="text-sm text-gray-500">Exporting to {importingCountry?.label}</p>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <button
+                    onClick={() => setSelectedCountries(prev => 
+                      prev.filter((_, i) => i !== index)
+                    )}
+                    className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                    title="Remove from comparison"
+                  >
+                    ×
+                  </button>
+                </div>
 
-            <div className="text-sm text-gray-600">
-              <div className="flex justify-between mt-2">
-                <span>Effective Date:</span>
-                <span>{selectedCountryDetails.effectiveDate}</span>
+                <div className="space-y-4">
+                  {/* Product Information */}
+                  <div className="border-b pb-3">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                      Product Information
+                    </h4>
+                    <div className="space-y-1">
+                      <p className="text-sm">
+                        <span className="font-medium text-gray-700">HS Code:</span>{" "}
+                        <span className="text-gray-900">{countryDetails.hSCode}</span>
+                      </p>
+                      <p className="text-sm">
+                        <span className="font-medium text-gray-700">Description:</span>{" "}
+                        <span className="text-gray-900">{countryDetails.productDescription}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Tariff Rates */}
+                  <div className="border-b pb-3">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                      Tariff Rates
+                    </h4>
+                    <div className="space-y-2">
+                      {countryDetails.rates.map((rate, idx) => (
+                        <div
+                          key={idx}
+                          className="flex justify-between items-center bg-gradient-to-r from-blue-50 to-transparent p-3 rounded-md border border-blue-100"
+                        >
+                          <div>
+                            <span className="text-xs font-medium text-gray-600">{getTariffUnitDisplay(rate.type)}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-lg font-bold text-blue-600">
+                              {rate.rate.toFixed(2)}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Status and Dates */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        Status & Validity
+                      </h4>
+                      {status === "in-effect" && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          In Effect
+                        </span>
+                      )}
+                      {status === "expired" && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          Expired
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Effective Date:</span>
+                        <span className="font-medium text-gray-900">
+                          {countryDetails.effectiveDate || "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Expiry Date:</span>
+                        <span className="font-medium text-gray-900">
+                          {countryDetails.expiryDate || "-"}
+                        </span>
+                      </div>
+                      {countryDetails.reference && (
+                        <div className="flex items-start justify-between pt-2 border-t">
+                          <span className="text-gray-600">Reference:</span>
+                          <span className="font-medium text-gray-900 text-right max-w-[60%]">
+                            {countryDetails.reference}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between mt-1">
-                <span>Expiry Date:</span>
-                <span>{selectedCountryDetails.expiryDate}</span>
-              </div>
-              <div className="flex justify-between mt-1">
-                <span>Reference:</span>
-                <span>{selectedCountryDetails.reference}</span>
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -13,6 +13,13 @@ export default function FieldSelector({ options, value, onChange, placeholder}) 
       onChange={onChange}
       placeholder={placeholder}
       className="text-blue"
+      menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+      menuPosition="fixed"
+      styles={{
+        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+        menu: (base) => ({ ...base, maxHeight: '300px' }),
+        menuList: (base) => ({ ...base, maxHeight: '300px' })
+      }}
     />
   );
 }
