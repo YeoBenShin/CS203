@@ -81,8 +81,7 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        args: code test --sarif-file-output=snyk.sarif
-      working-directory: ./tariff-backend
+        args: --file=pom.xml --sarif-file-output=snyk.sarif
 
     - name: Upload result to GitHub Code Scanning
       uses: github/codeql-action/upload-sarif@v3
