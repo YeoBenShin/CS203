@@ -89,7 +89,7 @@ jobs:
     - name: Upload Snyk code results to GitHub Code Scanning
       uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: frontend/snyk-be-code.sarif
+        sarif_file: tariff-backend/snyk-be-code.sarif
         category: snyk-backend-code
             
         
