@@ -81,7 +81,7 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        args: --sarif-file-output=snyk.sarif
+        args: --file=./tariff-backend/pom.xml --sarif-file-output=snyk.sarif
 
     - name: Run Snyk Code Test to check for vulnerabilities
       uses: snyk/actions/maven-3-jdk-21@master
