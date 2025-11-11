@@ -157,11 +157,20 @@ export default function AdminPage() {
       return;
     }
 
-    // Convert rates array into map structure { "AV": 0.05, "KG": 0.02 }
+    // Convert rates array into map structure with appropriate unit handling
     const tariffRates = {};
     rates.forEach((r) => {
       if (r.unit && r.unit.value && r.rate) {
-        tariffRates[r.unit.value.toUpperCase()] = parseFloat(r.rate) / 100;
+        const unitCode = r.unit.value.toUpperCase();
+        const rateValue = parseFloat(r.rate);
+        
+        // Only divide by 100 for Ad Valorem (percentage-based tariffs)
+        // All other units are absolute values (e.g., $/KG, $/M2, etc.)
+        if (unitCode === "AV") {
+          tariffRates[unitCode] = rateValue / 100;
+        } else {
+          tariffRates[unitCode] = rateValue;
+        }
       }
     });
 
@@ -257,7 +266,7 @@ export default function AdminPage() {
         {/* Tariff Rates */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Tariff Rates (%)
+            Tariff Rates
           </label>
           {rates.map((rate, index) => (
             <div key={index} className="flex space-x-2 mb-2">
@@ -273,7 +282,13 @@ export default function AdminPage() {
                 step="0.01"
                 value={rate.rate}
                 onChange={(e) => handleRateChange(index, "rate", e.target.value)}
-                placeholder={rate.unit?.value === "AV" ? "Rate (%)" : `Rate (${rate.unit?.value || "unit"}/100)`}
+                placeholder={
+                  rate.unit?.value === "AV" 
+                    ? "Rate (%)" 
+                    : rate.unit?.value 
+                      ? `Rate ($ per ${rate.unit.value})` 
+                      : "Rate"
+                }
                 className="border rounded w-1/2 py-2 px-3"
               />
               {index > 0 && (
