@@ -11,7 +11,7 @@ import CrossIcon from "./icons/CrossIcon";
 import SearchIcon from "./icons/SearchIcon";
 import { useState, useMemo, useEffect, useRef } from "react";
 
-export default function ReactTable({ columns, data, rowLevelFunction }) {
+export default function ReactTable({ columns, data, rowLevelFunction, needDateFilters = false }) {
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnFilters, setColumnFilters] = useState([]);
 
@@ -67,20 +67,21 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
         const val = isTariffInEffect(row.original) ? "Yes" : "No";
         return (
           <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${val === "Yes" ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-          {val}
+            {val}
           </span>
         );
       },
     };
 
-    return [...columns, inEffectCol];
+    return needDateFilters ? [...columns, inEffectCol] : columns;
   }, [columns, startPeriod, endPeriod, data]);
+
 
   const table = useReactTable({
     data,
     columns: columnsWithInEffect,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(), 
+    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(), // Enables sorting
     getFilteredRowModel: getFilteredRowModel(), // Enables filtering
     onColumnFiltersChange: setColumnFilters, // Enable column filters
@@ -170,6 +171,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
           </div>
 
           {/* --- NEW: period inputs --- */}
+          {needDateFilters && (
           <div className="flex items-center space-x-3">
             <label className="text-sm text-gray-600">Start</label>
             <input
@@ -185,11 +187,11 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
               onChange={(e) => setEndPeriod(e.target.value || "")}
               className={`px-3 py-2 border rounded-lg text-sm ${!endPeriod ? 'text-white' : ""}`}
             />
-            <Button 
+            <Button
               onClick={() => { setStartPeriod(new Date().toISOString().split('T')[0]); setEndPeriod(""); }}
               width=""
             >
-                Reset
+              Reset
             </Button>
             {/* <button
               onClick={() => { setStartPeriod(new Date().toISOString().split('T')[0]); setEndPeriod(""); }}
@@ -197,7 +199,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
             >
               Reset
             </button> */}
-          </div>
+          </div>)}
           {/* --- end new inputs --- */}
 
           {/* Filter Status and Clear Button */}
@@ -399,7 +401,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Button
-                onClick={table.previousPage}
+                onClick={() => { if (table.getCanPreviousPage()) table.previousPage(); }}
                 isLoading={!table.getCanPreviousPage()}
                 width=""
                 textConfig="text-sm text-gray-700 font-medium"
@@ -411,7 +413,7 @@ export default function ReactTable({ columns, data, rowLevelFunction }) {
                 Previous
               </Button>
               <Button
-                onClick={() => { table.nextPage }}
+                onClick={() => { if (table.getCanNextPage()) table.nextPage(); }}
                 isLoading={!table.getCanNextPage()}
                 width=""
                 textConfig="text-sm text-gray-700 font-medium"

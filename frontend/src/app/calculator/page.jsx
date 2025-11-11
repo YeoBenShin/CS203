@@ -558,42 +558,6 @@ export default function CalculatorPage() {
     }
   };
 
-  // Save tariff calculation - changed to placeholder 
-  const handleSave = async () => {
-    setErrorMessage([]); // Clear previous errors
-    let newErrorMsg = [];
-    if (!tariffBreakdown || tariffBreakdown.length === 0) {
-      newErrorMsg.push("No tariff information available to save.");
-      setErrorMessage(newErrorMsg);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const data = {
-        uuid: userUuid,
-        tariffs: tariffBreakdown,
-      }
-      const token = await getToken();
-      const response = await fetchApi(token, "api/watchlists", "POST", data);
-
-      if (response.ok) {
-        showSuccessPopupMessage(setSuccessMessage, setShowSuccessPopup, "Tariff saved to watchlist successfully!");
-
-      } else {
-        const errorData = await response.json();
-        newErrorMsg.push("Error saving watchlist: " + (errorData.message || "Unknown error"));
-        setErrorMessage(newErrorMsg);
-      }
-    } catch (error) {
-      let newErrorMsg = [];
-      newErrorMsg.push("Error saving tariff: " + error.message);
-      setErrorMessage(newErrorMsg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Helper functions for recent calculations persistence
   const loadRecentCalculations = () => {
     // Always return empty array during server-side rendering
@@ -784,19 +748,6 @@ export default function CalculatorPage() {
                 {loading && <LoadingSpinner />}
                 {loading ? "Calculating..." : "Calculate Tariffs"}
               </Button>
-
-              {calcResult && (
-                <Button
-                  className="w-200"
-                  onClick={handleSave}
-                  isLoading={loading}
-                  width=''
-                  colorBg="bg-green-500 hover:bg-green-600 focus:ring-green-500"
-                >
-                  {loading && <LoadingSpinner />}
-                  {loading ? "Saving..." : "Save Tariff"}
-                </Button>
-              )}
             </div>
           )}
 
@@ -861,7 +812,7 @@ export default function CalculatorPage() {
 
                     // Parenthetical rate display: AV => percent, non-AV => per-unit
                     const displayRate = isAV
-                      ? `${Number(rate).toFixed(2)}%`
+                      ? `${Number(rate).toFixed(2)*100}%`
                       : `${Number(rate).toFixed(2)}${unitCode ? ` / ${unitCode}` : ""}`;
 
                     const unitType = unitCode ? ` (${unitCode})` : "";

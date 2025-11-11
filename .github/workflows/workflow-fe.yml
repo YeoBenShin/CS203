@@ -35,7 +35,7 @@ jobs:
         - name: Install deps & build
           working-directory: ./frontend
           run: |
-            npm ci
+            npm ci --legacy-peer-deps
             npm run build
 
     push-to-ecr:

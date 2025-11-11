@@ -23,13 +23,14 @@ export default function AdminPage() {
     reference: "",
   });
 
-  const [rates, setRates] = useState([{ unit: "AV", rate: "" }]); // at least one (Ad Valorem)
+  const [rates, setRates] = useState([{ unit: { label: "Ad Valorem (AV)", value: "AV" }, rate: "" }]); // at least one (Ad Valorem)
   const [errors, setErrors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [countryOptions, setCountryOptions] = useState([]);
   const [productOptions, setProductOptions] = useState([]);
+  const [unitOptions, setUnitOptions] = useState([]);
 
   // Fetch countries
   useEffect(() => {
@@ -69,6 +70,42 @@ export default function AdminPage() {
     fetchProducts();
   }, []);
 
+  // Fetch units from UnitOfCalculation enum
+  useEffect(() => {
+    const fetchUnits = async () => {
+      try {
+        const token = await getToken();
+        const response = await fetchApi(token, "api/tariffs/units");
+        const units = await response.json();
+        const options = units.map((unit) => ({
+          label: unit === "AV" ? "Ad Valorem (AV)" : unit,
+          value: unit,
+        }));
+        setUnitOptions(options);
+      } catch (error) {
+        console.error("Failed to fetch units:", error);
+        // Fallback to hardcoded units if API fails
+        const fallbackUnits = [
+          "BBL", "C", "CAR", "CC", "CG", "CGM", "CKG", "CM", "CM2", "CM3", 
+          "CTN", "CU", "CUR", "CY", "CYK", "D", "DOZ", "DPC", "DPR", "DS", 
+          "FBM", "G", "GBQ", "GCN", "GKG", "GM", "GR", "GRL", "GRS", "GVW", 
+          "HND", "HUN", "IRC", "JWL", "K", "KCAL", "KG", "KHZ", "KM", "KM3", 
+          "KN", "KTS", "KVA", "KVAR", "KW", "KWH", "L", "LIN", "LNM", "LTR", 
+          "M", "M2", "M3", "MBQ", "MC", "MG", "MHZ", "ML", "MM", "MPA", 
+          "NA", "NO", "ODE", "PCS", "PF", "PFL", "PK", "PRS", "RPM", 
+          "SBE", "SME", "SQ", "SQM", "T", "THS", "TNV", "TON", "V", "W", 
+          "WTS", "X", "AV"
+        ];
+        const fallbackOptions = fallbackUnits.map((unit) => ({
+          label: unit === "AV" ? "Ad Valorem (AV)" : unit,
+          value: unit,
+        }));
+        setUnitOptions(fallbackOptions);
+      }
+    };
+    fetchUnits();
+  }, [getToken]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -80,7 +117,7 @@ export default function AdminPage() {
   };
 
   const addRate = () => {
-    setRates([...rates, { unit: "", rate: "" }]);
+    setRates([...rates, { unit: null, rate: "" }]);
   };
 
   const removeRate = (index) => {
@@ -122,8 +159,8 @@ export default function AdminPage() {
     // Convert rates array into map structure { "AV": 0.05, "KG": 0.02 }
     const tariffRates = {};
     rates.forEach((r) => {
-      if (r.unit && r.rate) {
-        tariffRates[r.unit.toUpperCase()] = parseFloat(r.rate) / 100;
+      if (r.unit && r.unit.value && r.rate) {
+        tariffRates[r.unit.value.toUpperCase()] = parseFloat(r.rate) / 100;
       }
     });
 
@@ -156,7 +193,7 @@ export default function AdminPage() {
           expiryDate: "",
           reference: "",
         });
-        setRates([{ unit: "AV", rate: "" }]);
+        setRates([{ unit: { label: "Ad Valorem (AV)", value: "AV" }, rate: "" }]);
       } else {
         const errText = await response.text();
         setErrors([errText]);
@@ -223,19 +260,19 @@ export default function AdminPage() {
           </label>
           {rates.map((rate, index) => (
             <div key={index} className="flex space-x-2 mb-2">
-              <input
-                type="text"
+              <FieldSelector
+                options={unitOptions}
                 value={rate.unit}
-                onChange={(e) => handleRateChange(index, "unit", e.target.value)}
-                placeholder="Unit (e.g., AV, KG, M2)"
-                className="border rounded w-1/2 py-2 px-3"
+                onChange={(selectedOption) => handleRateChange(index, "unit", selectedOption)}
+                placeholder="Select unit (e.g., AV, KG, M2)"
+                className="w-1/2"
               />
               <input
                 type="number"
                 step="0.01"
                 value={rate.rate}
                 onChange={(e) => handleRateChange(index, "rate", e.target.value)}
-                placeholder="Rate (%)"
+                placeholder={rate.unit?.value === "AV" ? "Rate (%)" : `Rate (${rate.unit?.value || "unit"}/100)`}
                 className="border rounded w-1/2 py-2 px-3"
               />
               {index > 0 && (
