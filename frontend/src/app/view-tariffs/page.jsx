@@ -384,6 +384,7 @@ export default function ViewTariffsPage() {
           ]}
           data={tariffs}
           rowLevelFunction={handleShowDetails}
+          needDateFilters={true}
         />
 
         <div className="mt-6 text-center">

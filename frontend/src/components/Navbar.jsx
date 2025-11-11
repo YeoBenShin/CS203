@@ -45,6 +45,7 @@ export default function Navbar() {
             <Link href="/calculator" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition">Tariff Calculator</Link>
             <Link href="/heatmap" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition">Tariff Heatmap</Link>
             <Link href="/view-tariffs" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition">View All Tariffs</Link>
+            <Link href="/view-products" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition">View All Products</Link>
             {role === "admin" && <Link href="/admin" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition">Add Tariff</Link>}
             {role === "admin" && <Link href="/admin/product" className="block px-4 py-3 text-black hover:bg-blue-50 hover:text-blue-600 transition rounded-b-lg">Add Product</Link>}
           </div>
