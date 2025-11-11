@@ -62,6 +62,7 @@ export default function ReactTable({ columns, data, rowLevelFunction, needDateFi
       id: "inEffect",
       header: "In Effect",
       enableSorting: true,
+      accessorFn: (row) => (isTariffInEffect(row) ? "Yes" : "No"),
       filterFn: "includesString",
       cell: ({ row }) => {
         const val = isTariffInEffect(row.original) ? "Yes" : "No";
