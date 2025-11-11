@@ -75,19 +75,23 @@ jobs:
         distribution: 'temurin'
         cache: maven
     
-    - name: Run Snyk SAST
-      uses: snyk/actions/maven-3-jdk-21@master
+    - name: Set up Snyk CLI
+      uses: snyk/actions/setup@master
+    - uses: actions/setup-go@v1
+
+    - name: Snyk SAST(backend only)
       continue-on-error: true
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --sarif-file-output=snyk.sarif
-        command: code test
+      working-directory: ./tariff-backend
+      run: snyk code test --sarif-file-output=snyk-be-code.sarif
 
-    - name: Upload result to GitHub Code Scanning
+    - name: Upload Snyk code results to GitHub Code Scanning
       uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: snyk.sarif
+        sarif_file: frontend/snyk-be-code.sarif
+        category: snyk-backend-code
+            
         
     - name: Build with Maven
       run: mvn -B package --file pom.xml
