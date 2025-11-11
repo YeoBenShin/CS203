@@ -8,6 +8,7 @@ import { useAuth } from "@clerk/nextjs";
 
 import FieldSelector from "./FieldSelector";
 import fetchApi from "@/utils/fetchApi";
+import { getTariffUnitDisplay } from "@/utils/tariffUnits";
 
 const MemoGeography = memo(({ 
   geography, 
@@ -568,7 +569,7 @@ const HeatMap = ({ onCountrySelect }) => {
                           className="flex justify-between items-center bg-gradient-to-r from-blue-50 to-transparent p-3 rounded-md border border-blue-100"
                         >
                           <div>
-                            <span className="text-xs font-medium text-gray-600">{rate.type}</span>
+                            <span className="text-xs font-medium text-gray-600">{getTariffUnitDisplay(rate.type)}</span>
                           </div>
                           <div className="text-right">
                             <span className="text-lg font-bold text-blue-600">
