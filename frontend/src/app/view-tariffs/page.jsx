@@ -176,6 +176,7 @@ export default function ViewTariffsPage() {
       })) || [],
     });
     setEditErrors([]);
+    setDeleteMessage("");
     setShowEditPopup(true);
     document.body.style.overflow = 'hidden';
   };
@@ -190,6 +191,7 @@ export default function ViewTariffsPage() {
       reference: ""
     });
     setEditErrors([]); // Clear edit errors when canceling
+    setDeleteMessage("");
     setIsUpdating(false);
     document.body.style.overflow = 'unset';
   };
@@ -243,6 +245,7 @@ export default function ViewTariffsPage() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setEditErrors([]);
+    setDeleteMessage("");
     setIsUpdating(true);
 
     try {
