@@ -11,7 +11,7 @@ export default function HeatmapPage() {
             Global Tariff <span className="text-blue-600">Heatmap</span>
           </h1>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-            Explore tariff rates worldwide with our interactive visualization.
+            Explore tariff rates worldwide with our interactive visualisation.
             Discover which countries have the highest and lowest import duties at a glance.
           </p>
         </div>
@@ -46,8 +46,8 @@ export default function HeatmapPage() {
             </div>
           </div>
           <p className="text-m text-gray-600 text-center">
-            Colour intensity represents relative tariff size — how a country's tariff size compares to others.
-            <br /> Stronger colour intensity indicates a relatively larger tariff.
+            Colour intensity shows each country's relative tariff impact — how its tariffs compare with others.
+            <br /> Darker shades represent countries with higher tariff impacts.
           </p>
         </div>
 
