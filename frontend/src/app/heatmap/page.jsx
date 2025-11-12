@@ -11,32 +11,44 @@ export default function HeatmapPage() {
             Global Tariff <span className="text-blue-600">Heatmap</span>
           </h1>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-            Explore tariff rates worldwide with our interactive visualization. 
+            Explore tariff rates worldwide with our interactive visualization.
             Discover which countries have the highest and lowest import duties at a glance.
           </p>
         </div>
 
-        {/* Legend Section */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8 max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Understanding the Heatmap</h2>
-          <div className="flex flex-wrap justify-center items-center gap-6">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-white rounded border-2 border-gray-300"></div>
-              <span className="text-gray-700 font-medium">Low Tariff Rates (0-5%)</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded border border-red-300" style={{ backgroundColor: '#fca5a5' }}></div>
-              <span className="text-gray-700 font-medium">Medium Tariff Rates (5-15%)</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded border border-red-500" style={{ backgroundColor: '#f87171' }}></div>
-              <span className="text-gray-700 font-medium">High Tariff Rates (15-30%)</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded border border-red-700" style={{ backgroundColor: '#dc2626' }}></div>
-              <span className="text-gray-700 font-medium">Very High Tariff Rates (30%+)</span>
+
+          <div className="grid md:grid-cols-2 gap-6 items-start">
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                <span className="font-medium text-gray-700">Low</span>
+                <span className="text-xs text-gray-400">(relative)</span>
+                <span className="font-medium text-gray-700">High</span>
+              </div>
+
+              <div className="h-6 rounded-md overflow-hidden border mb-2 border-gray-200">
+                <div
+                  className="h-full w-full"
+                  style={{
+                    background: "linear-gradient(90deg, #ffffff 0%, #ffefeb 25%, #fca5a5 50%, #f87171 75%, #dc2626 100%)"
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                <span>0</span>
+                <span>25</span>
+                <span>50</span>
+                <span>75</span>
+                <span>100</span>
+              </div>
             </div>
           </div>
+          <p className="text-m text-gray-600 text-center">
+            Colour intensity represents relative tariff size — how a country's tariff size compares to others.
+            <br /> Stronger colour intensity indicates a relatively larger tariff.
+          </p>
         </div>
 
         {/* Heatmap Container */}

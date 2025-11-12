@@ -232,21 +232,62 @@ const HeatMap = ({ onCountrySelect }) => {
     return map;
   }, [tariffs]);
 
-  // Memoize maxTariffValue calculation
-  const maxTariffValue = useMemo(() => 
-    Math.max(
-      0,
-      ...Object.values(tariffDataMap).map((t) => t.maxRate)
-    )
-  , [tariffDataMap]);
+  // Compute normalized percentile scores per country (per-type percentiles, combine by max)
+  const computeNormalizedScores = (tariffMap) => {
+    // filling up the dict with arrays of rates per type
+    const byType = {};
+    for (const [iso, t] of Object.entries(tariffMap)) {
+      (t.rates || []).forEach((r) => {
+        const type = r.type || "UNKNOWN";
+        byType[type] = byType[type] || [];
+        byType[type].push(r.rate);
+      });
+    }
 
-  // Memoize the color scale - gradient from white to red
-  const colorScale = useMemo(() => 
-    scaleLinear()
-      .domain([0, maxTariffValue || 1]) // Use || 1 to prevent domain [0, 0]
-      .range(["#ffffff", "#dc2626"]) // White to red gradient
-      .clamp(true)
-  , [maxTariffValue]);
+    // For each type create a percentile function
+    const percentileFns = {};
+    for (const [type, values] of Object.entries(byType)) { // type = 'AV', values = [5, 10, 15, ...]
+      const sorted = [...values].sort((a, b) => a - b);
+      percentileFns[type] = (v) => {
+        if (!sorted.length) return 0;
+        return sorted.filter((x) => x <= v).length / sorted.length; // calculate the number of values less than or equal to v, returning a fraction
+      };
+    }
+
+    // Compute country score (combine percentiles using max across types present)
+    const scores = {};
+    for (const [iso, t] of Object.entries(tariffMap)) {
+      const rates = t.rates || [];
+      const pVals = rates
+        .map((r) => {
+          const fn = percentileFns[r.type];
+          return fn ? fn(r.rate) : null;
+        })
+        .filter((v) => v !== null && !isNaN(v)); // returns an array of size 1
+      if (!pVals.length) {
+        scores[iso] = 0;
+      } else {
+       // simple average
+        const sum = pVals.reduce((s, v) => s + v, 0);
+        const avg = sum / pVals.length;
+        // clamp to [0,1] just in case
+        scores[iso] = Math.max(0, Math.min(1, avg));
+      }
+    }
+    return scores;
+  };
+
+  const normalizedScores = useMemo(() => computeNormalizedScores(tariffDataMap), [tariffDataMap]);
+
+  // Memoize the color scale - now domain is [0..1] because we use percentile scores
+  const colorScale = useMemo(
+    () =>
+      scaleLinear()
+        .domain([0, 1])
+        .range(["#ffffff", "#dc2626"])
+        .clamp(true),
+    []
+  );
 
   const handleCountryClick = useCallback(
     (geo) => {
@@ -370,7 +411,8 @@ const HeatMap = ({ onCountrySelect }) => {
                   if (isImportingCountry) {
                     fillColor = "#4a90e2";
                   } else if (hasTariff) {
-                    fillColor = colorScale(tariffData.maxRate);
+                    const score = normalizedScores[iso3] ?? 0; // 0..1
+                    fillColor = score > 0 ? colorScale(score) : "#e5e7eb";
                   } else {
                     fillColor = "#e5e7eb"; // Light gray for countries with no data
                   }
@@ -383,6 +425,9 @@ const HeatMap = ({ onCountrySelect }) => {
                     tooltipText = `${countryName} (Selected)${listTariffRates(tariffData.rates)}`;
                   } else if (tariffData && tariffData.maxRate > 0) {
                     tooltipText = `${countryName}${listTariffRates(tariffData.rates)}`;
+                    // const score = normalizedScores[iso3] ?? 0;
+                    // const pct = Math.round(score * 100);
+                    // tooltipText = `${countryName} — ${pct}th percentile${listTariffRates(tariffData.rates)}`;
                   } else {
                     tooltipText = `${countryName} (No tariff data)`;
                   }
