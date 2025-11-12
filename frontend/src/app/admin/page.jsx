@@ -206,7 +206,11 @@ export default function AdminPage() {
         setRates([{ unit: { label: "Ad Valorem (AV)", value: "AV" }, rate: "" }]);
       } else {
         const errText = await response.text();
-        setErrors([errText]);
+        if (errText.includes("more than 3 tariff rates")) {
+          setErrors(["You can only add up to 3 tariff rates at once."]);
+        } else {
+          setErrors([`Error ${response.status}: ${errText}`]);
+        }
       }
     } catch (err) {
       console.error(err);
