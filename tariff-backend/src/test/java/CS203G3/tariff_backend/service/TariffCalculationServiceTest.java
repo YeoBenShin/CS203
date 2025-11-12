@@ -69,115 +69,60 @@ class TariffCalculationServiceTest {
         assertEquals(new BigDecimal("0.05"), result.getTotalTariffRate());
     }
 
-//     @Test
-//     void calculate_WithEmptyTariffList_ReturnsZeroTariff() {
-//         // Arrange - empty list already set in setUp
+    @Test
+    void calculate_WithEmptyTariffList_ReturnsZeroTariff() {
+        // Arrange - empty list already set in setUp
 
-//         // Act
-//         CalculationResult result = tariffCalculationService.calculate(tariffRates, productValue);
+        // Act
+        CalculationResult result = tariffCalculationService.calculate(tariffRates, productValue);
 
-//         // Assert
-//         assertNotNull(result);
-//         assertEquals(BigDecimal.ZERO, result.getTotalTariffCost());
-//         assertEquals(productValue, result.getTotalCost());
-//         assertEquals(BigDecimal.ZERO, result.getTotalTariffRate());
-//     }
+        // Assert
+        assertNotNull(result);
+        assertEquals(new BigDecimal("0.00"), result.getTotalTariffCost());
+        assertEquals(productValue, result.getTotalCost());
+        assertEquals(BigDecimal.ZERO, result.getTotalTariffRate());
+    }
 
-//     @Test
-//     void calculate_WithZeroProductValue_ReturnsZeroTariffCost() {
-//         // Arrange
-//         TariffCalculationMap tariff = new TariffCalculationMap();
-//         tariff.setRate(new BigDecimal("10.00"));
-//         tariff.setUnit("PERCENTAGE");
-//         tariffRates.add(tariff);
-//         productValue = BigDecimal.ZERO;
+    @Test
+    void calculate_WithZeroProductValue_ReturnsZeroTariffCost() {
+        // Arrange
+        TariffCalculationMap tariff = new TariffCalculationMap(UnitOfCalculation.AV, new BigDecimal("0.10"), BigDecimal.ZERO);
 
-//         // Act
-//         CalculationResult result = tariffCalculationService.calculate(tariffRates, productValue);
+        tariffRates.add(tariff);
+        productValue = BigDecimal.ZERO;
 
-//         // Assert
-//         assertNotNull(result);
-//         assertEquals(BigDecimal.ZERO, result.getTotalTariffCost());
-//         assertEquals(BigDecimal.ZERO, result.getTotalCost());
-//     }
+        // Act
+        CalculationResult result = tariffCalculationService.calculate(tariffRates, productValue);
 
-//     @Test
-//     void calculate_WithNullTariffList_ThrowsException() {
-//         // Arrange
-//         tariffRates = null;
+        // Assert
+        assertNotNull(result);
+        assertEquals(new BigDecimal("0.00"), result.getTotalTariffCost());
+        assertEquals(new BigDecimal("0.00"), result.getTotalCost());
+    }
 
-//         // Act & Assert
-//         assertThrows(NullPointerException.class, () -> {
-//             tariffCalculationService.calculate(tariffRates, productValue);
-//         });
-//     }
+    @Test
+    void calculate_WithNullTariffList_ThrowsException() {
+        // Arrange
+        tariffRates = null;
 
-//     @Test
-//     void calculate_WithNullProductValue_ThrowsException() {
-//         // Arrange
-//         TariffCalculationMap tariff = new TariffCalculationMap();
-//         tariff.setRate(new BigDecimal("10.00"));
-//         tariffRates.add(tariff);
-//         productValue = null;
+        // Act & Assert
+        assertThrows(NullPointerException.class, () -> {
+            tariffCalculationService.calculate(tariffRates, productValue);
+        });
+    }
 
-//         // Act & Assert
-//         assertThrows(NullPointerException.class, () -> {
-//             tariffCalculationService.calculate(tariffRates, productValue);
-//         });
-//     }
+    @Test
+    void calculate_WithNullProductValue_ThrowsException() {
+        // Arrange
+        TariffCalculationMap tariff = new TariffCalculationMap(UnitOfCalculation.AV, new BigDecimal(0.10), null);
 
-//     @Test
-//     void calculate_WithHighTariffRate_ReturnsCorrectCalculation() {
-//         // Arrange
-//         TariffCalculationMap tariff = new TariffCalculationMap();
-//         tariff.setRate(new BigDecimal("50.00")); // 50% tariff
-//         tariff.setUnit("PERCENTAGE");
-//         tariffRates.add(tariff);
+        tariffRates.add(tariff);
+        productValue = null;
 
-//         // Act
-//         CalculationResult result = tariffCalculationService.calculate(tariffRates, productValue);
+        // Act & Assert
+        assertThrows(NullPointerException.class, () -> {
+            tariffCalculationService.calculate(tariffRates, productValue);
+        });
+    }
 
-//         // Assert
-//         assertNotNull(result);
-//         assertEquals(new BigDecimal("500.00"), result.getTotalTariffCost()); // 50% of 1000
-//         assertEquals(new BigDecimal("1500.00"), result.getTotalCost()); // 1000 + 500
-//         assertEquals(new BigDecimal("50.00"), result.getTotalTariffRate());
-//     }
-
-//     @Test
-//     void calculate_WithDecimalTariffRate_ReturnsCorrectCalculation() {
-//         // Arrange
-//         TariffCalculationMap tariff = new TariffCalculationMap();
-//         tariff.setRate(new BigDecimal("2.50")); // 2.5% tariff
-//         tariff.setUnit("PERCENTAGE");
-//         tariffRates.add(tariff);
-
-//         // Act
-//         CalculationResult result = tariffCalculationService.calculate(tariffRates, productValue);
-
-//         // Assert
-//         assertNotNull(result);
-//         assertEquals(new BigDecimal("25.00"), result.getTotalTariffCost()); // 2.5% of 1000
-//         assertEquals(new BigDecimal("1025.00"), result.getTotalCost()); // 1000 + 25
-//         assertEquals(new BigDecimal("2.50"), result.getTotalTariffRate());
-//     }
-
-//     @Test
-//     void calculate_WithLargeProductValue_ReturnsCorrectCalculation() {
-//         // Arrange
-//         TariffCalculationMap tariff = new TariffCalculationMap();
-//         tariff.setRate(new BigDecimal("10.00"));
-//         tariff.setUnit("PERCENTAGE");
-//         tariffRates.add(tariff);
-//         productValue = new BigDecimal("1000000.00"); // 1 million
-
-//         // Act
-//         CalculationResult result = tariffCalculationService.calculate(tariffRates, productValue);
-
-//         // Assert
-//         assertNotNull(result);
-//         assertEquals(new BigDecimal("100000.00"), result.getTotalTariffCost()); // 10% of 1M
-//         assertEquals(new BigDecimal("1100000.00"), result.getTotalCost());
-//         assertEquals(new BigDecimal("10.00"), result.getTotalTariffRate());
-//     }
 }

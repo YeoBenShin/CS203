@@ -16,6 +16,10 @@ public class TariffCalculationServiceImpl implements TariffCalculationService {
 
     @Override
     public CalculationResult calculate(List<TariffCalculationMap> tariffRates, BigDecimal productValue) {
+        if (tariffRates == null || productValue == null) {
+            throw new NullPointerException();
+        }
+        
         List<TariffBreakdown> breakdownList = new ArrayList<>();
         BigDecimal netTotal = productValue;
 
