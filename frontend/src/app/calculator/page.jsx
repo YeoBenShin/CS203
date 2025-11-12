@@ -528,7 +528,7 @@ export default function CalculatorPage() {
           country: selectedExportCountry.label.split(' - ')[1], // Get country name
           totalCost: responseData.totalCost,
           totalTariffCost: responseData.totalTariffCost,
-          totalTariffRate: (responseData.totalTariffRate ?? 0).toFixed(2),
+          totalTariffRate: (responseData.totalTariffRate ?? 0).toFixed(3),
           date: formatDate(new Date())
         };
 
@@ -739,10 +739,8 @@ export default function CalculatorPage() {
           {readyToCalculate && tariffUnitsLoaded && (
             <div className="flex gap-4 mb-8">
               <Button
-                className="w-200"
                 onClick={handleCalculate}
                 isLoading={loading}
-                width=''
                 colorBg="bg-blue-500 hover:bg-blue-600 focus:ring-blue-500"
               >
                 {loading && <LoadingSpinner />}
@@ -812,8 +810,8 @@ export default function CalculatorPage() {
 
                     // Parenthetical rate display: AV => percent, non-AV => per-unit
                     const displayRate = isAV
-                      ? `${Number(rate).toFixed(2)*100}%`
-                      : `${Number(rate).toFixed(2)}${unitCode ? ` / ${unitCode}` : ""}`;
+                      ? `${Number(rate).toFixed(3)*100}%`
+                      : `${Number(rate).toFixed(3)}${unitCode ? ` / ${unitCode}` : ""}`;
 
                     const unitType = unitCode ? ` (${unitCode})` : "";
 
@@ -861,7 +859,7 @@ export default function CalculatorPage() {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-green-600 ">Total Cost: ${calc.totalCost.toFixed(2)}</p>
-                      <p className="text-xs text-red-600">Tariff Rate: {calc.totalTariffRate}%</p>
+                      <p className="text-xs text-red-600">Tariff Rate: {calc.totalTariffRate * 100}%</p>
                       <div>
                         <p className="text-xs text-red-600">Tariff Cost: ${calc.totalTariffCost}</p>
                       </div>
