@@ -240,11 +240,11 @@ const HeatMap = ({ onCountrySelect }) => {
     )
   , [tariffDataMap]);
 
-  // Memoize the color scale
+  // Memoize the color scale - gradient from white to red
   const colorScale = useMemo(() => 
     scaleLinear()
       .domain([0, maxTariffValue || 1]) // Use || 1 to prevent domain [0, 0]
-      .range(["#ffeda0", "#f03b20"])
+      .range(["#ffffff", "#dc2626"]) // White to red gradient
       .clamp(true)
   , [maxTariffValue]);
 
@@ -369,12 +369,10 @@ const HeatMap = ({ onCountrySelect }) => {
                   let fillColor;
                   if (isImportingCountry) {
                     fillColor = "#4a90e2";
-                  } else if (isSelected) {
-                    fillColor = "#10b981"; // Green for selected countries
                   } else if (hasTariff) {
                     fillColor = colorScale(tariffData.maxRate);
                   } else {
-                    fillColor = "#f0f0f0ff";
+                    fillColor = "#e5e7eb"; // Light gray for countries with no data
                   }
 
                   // Calculate tooltip text here instead of in an event handler

@@ -21,19 +21,19 @@ export default function HeatmapPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Understanding the Heatmap</h2>
           <div className="flex flex-wrap justify-center items-center gap-6">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-green-200 rounded border border-green-400"></div>
+              <div className="w-8 h-8 bg-white rounded border-2 border-gray-300"></div>
               <span className="text-gray-700 font-medium">Low Tariff Rates (0-5%)</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-yellow-300 rounded border border-yellow-500"></div>
+              <div className="w-8 h-8 rounded border border-red-300" style={{ backgroundColor: '#fca5a5' }}></div>
               <span className="text-gray-700 font-medium">Medium Tariff Rates (5-15%)</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-orange-400 rounded border border-orange-600"></div>
+              <div className="w-8 h-8 rounded border border-red-500" style={{ backgroundColor: '#f87171' }}></div>
               <span className="text-gray-700 font-medium">High Tariff Rates (15-30%)</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-red-600 rounded border border-red-800"></div>
+              <div className="w-8 h-8 rounded border border-red-700" style={{ backgroundColor: '#dc2626' }}></div>
               <span className="text-gray-700 font-medium">Very High Tariff Rates (30%+)</span>
             </div>
           </div>
