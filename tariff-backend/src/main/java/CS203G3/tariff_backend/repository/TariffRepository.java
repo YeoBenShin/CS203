@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -66,4 +68,7 @@ public interface TariffRepository extends JpaRepository<Tariff, Long> {
         @Param("effectiveDate") Date effectiveDate,
         @Param("expiryDate") Date expiryDate
     );
+
+    @Query("SELECT t.tariffID FROM Tariff t WHERE t.product.hSCode = :hSCode")
+    List<Long> findTariffIdByProduct_HsCode(String hSCode);
 }

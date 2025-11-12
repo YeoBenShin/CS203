@@ -8,14 +8,17 @@ import org.springframework.transaction.annotation.Transactional;
 import CS203G3.tariff_backend.exception.ResourceNotFoundException;
 import CS203G3.tariff_backend.model.Product;
 import CS203G3.tariff_backend.repository.ProductRepository;
+import CS203G3.tariff_backend.repository.TariffRepository;
 
 
 @Service
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
+    private final TariffRepository tariffRepository;
 
-    public ProductServiceImpl(ProductRepository productRepository) {
+    public ProductServiceImpl(ProductRepository productRepository, TariffRepository tariffRepository) {
         this.productRepository = productRepository;
+        this.tariffRepository = tariffRepository;
     }
 
     @Override
@@ -60,6 +63,8 @@ public class ProductServiceImpl implements ProductService {
         if (!productRepository.existsById(hSCode)) {
             throw new ResourceNotFoundException("Product", hSCode);
         }
+        List<Long> tariffIds = tariffRepository.findTariffIdByProduct_HsCode(hSCode);
+        tariffIds.forEach(tariffId -> { tariffRepository.deleteById(tariffId); });
         productRepository.deleteById(hSCode);
     }
 }

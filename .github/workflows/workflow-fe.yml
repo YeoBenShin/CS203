@@ -22,6 +22,12 @@ env:
 jobs:
     build:
         runs-on: ubuntu-latest
+
+        permissions:
+          security-events: write
+          actions: read
+          contents: read
+
         steps:
         - uses: actions/checkout@v4
 
@@ -31,6 +37,23 @@ jobs:
             NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
             NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
             EOF
+
+        - name: Set up Snyk CLI
+          uses: snyk/actions/setup@master
+        - uses: actions/setup-go@v1
+
+        - name: Snyk SAST(frontend only)
+          continue-on-error: true
+          env:
+            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          working-directory: ./frontend
+          run: snyk code test --sarif-file-output=snyk-fe-code.sarif
+
+        - name: Upload Snyk code results to GitHub Code Scanning
+          uses: github/codeql-action/upload-sarif@v3
+          with:
+            sarif_file: frontend/snyk-fe-code.sarif
+            category: snyk-frontend-code
 
         - name: Install deps & build
           working-directory: ./frontend
