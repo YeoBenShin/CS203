@@ -573,7 +573,7 @@ const HeatMap = ({ onCountrySelect }) => {
                           </div>
                           <div className="text-right">
                             <span className="text-lg font-bold text-blue-600">
-                              {rate.rate.toFixed(2)}%
+                              {rate.type == 'AV' ? rate.rate.toFixed(2) + "%" : "$" + rate.rate.toFixed(2) + " / " + rate.type}
                             </span>
                           </div>
                         </div>
