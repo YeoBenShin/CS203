@@ -314,6 +314,12 @@ const HeatMap = ({ onCountrySelect }) => {
     setZoom(position.zoom);
   }, []);
 
+  const listTariffRates = (rates) => {
+    return rates
+      .map((rate) => `\n${getTariffUnitDisplay(rate.type)}: ${rate.type == 'AV' ? (rate.rate * 100).toFixed(2) + "%" : "$" + rate.rate.toFixed(2) + "/" + rate.type}`)
+      .join("");
+  }
+
   const renderMap = () => {
     if (loading)
       return <div className="text-center py-4">Loading tariff data...</div>;
@@ -376,9 +382,9 @@ const HeatMap = ({ onCountrySelect }) => {
                   if (isImportingCountry) {
                     tooltipText = `${countryName} (Importing Country)`;
                   } else if (isSelected) {
-                    tooltipText = `${countryName} (Selected) - ${tariffData.maxRate.toFixed(2)}%`;
+                    tooltipText = `${countryName} (Selected)${listTariffRates(tariffData.rates)}`;
                   } else if (tariffData && tariffData.maxRate > 0) {
-                    tooltipText = `${countryName}: ${tariffData.maxRate.toFixed(2)}%`;
+                    tooltipText = `${countryName}${listTariffRates(tariffData.rates)}`;
                   } else {
                     tooltipText = `${countryName} (No tariff data)`;
                   }
@@ -472,6 +478,7 @@ const HeatMap = ({ onCountrySelect }) => {
         style={{
           zIndex: 1000,
           transition: "all 0.1s ease-out",
+          whiteSpace: "pre-line",
         }}
       />
 
@@ -573,7 +580,7 @@ const HeatMap = ({ onCountrySelect }) => {
                           </div>
                           <div className="text-right">
                             <span className="text-lg font-bold text-blue-600">
-                              {rate.type == 'AV' ? rate.rate.toFixed(2) + "%" : "$" + rate.rate.toFixed(2) + " / " + rate.type}
+                              {rate.type == 'AV' ? (rate.rate * 100).toFixed(2) + "%" : "$" + rate.rate.toFixed(2) + "/" + rate.type}
                             </span>
                           </div>
                         </div>
