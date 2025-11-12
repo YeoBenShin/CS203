@@ -739,10 +739,8 @@ export default function CalculatorPage() {
           {readyToCalculate && tariffUnitsLoaded && (
             <div className="flex gap-4 mb-8">
               <Button
-                className="w-200"
                 onClick={handleCalculate}
                 isLoading={loading}
-                width=''
                 colorBg="bg-blue-500 hover:bg-blue-600 focus:ring-blue-500"
               >
                 {loading && <LoadingSpinner />}
