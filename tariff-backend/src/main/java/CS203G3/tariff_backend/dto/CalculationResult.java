@@ -1,6 +1,7 @@
 package CS203G3.tariff_backend.dto;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 
@@ -59,7 +60,8 @@ public class CalculationResult {
       if (tariffs != null) {
         return tariffs.stream()
             .map(TariffBreakdown::getTariffCost)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+            .reduce(BigDecimal.ZERO, BigDecimal::add)
+            .setScale(2, RoundingMode.HALF_UP);
       }
       return BigDecimal.ZERO;
     }
