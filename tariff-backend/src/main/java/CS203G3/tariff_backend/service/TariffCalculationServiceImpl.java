@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import CS203G3.tariff_backend.dto.CalculationResult;
 import CS203G3.tariff_backend.dto.TariffBreakdown;
 import CS203G3.tariff_backend.dto.TariffCalculationMap;
-import CS203G3.tariff_backend.model.UnitOfCalculation;
 
 @Service
 public class TariffCalculationServiceImpl implements TariffCalculationService {
@@ -20,38 +19,21 @@ public class TariffCalculationServiceImpl implements TariffCalculationService {
         List<TariffBreakdown> breakdownList = new ArrayList<>();
         BigDecimal netTotal = productValue;
 
-        final BigDecimal hundred = BigDecimal.valueOf(100);
-        final RoundingMode RM = RoundingMode.HALF_UP;
-
         for (TariffCalculationMap tMap : tariffRates) {
-            BigDecimal rate = tMap.getRate() != null ? tMap.getRate() : BigDecimal.ZERO;
-            BigDecimal subCost;
+            BigDecimal subCost = tMap.getRate().multiply(tMap.getValue()).setScale(2, RoundingMode.HALF_UP);
+            TariffBreakdown breakdown = new TariffBreakdown(tMap.getUnitOfCalculation(), tMap.getRate(), subCost);
 
-            if (tMap.getUnitOfCalculation() == UnitOfCalculation.AV) {
-                BigDecimal base = productValue != null ? productValue : BigDecimal.ZERO;
-                subCost = base.multiply(rate).divide(hundred, 6, RM).setScale(2, RM);
-            } else {
-                BigDecimal qty = tMap.getValue() != null ? tMap.getValue() : BigDecimal.ZERO;
-                subCost = qty.multiply(rate).setScale(2, RM);
-            }
-
-            TariffBreakdown breakdown = new TariffBreakdown(
-                tMap.getUnitOfCalculation(),
-                rate,
-                subCost
-            );
             breakdownList.add(breakdown);
             netTotal = netTotal.add(subCost);
         }
 
-
         CalculationResult result = new CalculationResult(
-                netTotal,
-                null,
-                null,
-                null,
-                null,
-                breakdownList
+            netTotal.setScale(2, RoundingMode.HALF_UP),
+            null, // tariffName
+            null, // effectiveDate
+            null, // expiryDate
+            null, // reference
+            breakdownList
         );
         return result;
     }

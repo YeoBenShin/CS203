@@ -118,6 +118,10 @@ export default function AdminPage() {
   };
 
   const addRate = () => {
+    if (rates.length >= 3) {
+      setErrors(["Maximum of 3 tariff rates allowed per tariff entry."]);
+      return;
+    }
     setRates([...rates, { unit: null, rate: "" }]);
   };
 
@@ -136,6 +140,16 @@ export default function AdminPage() {
     if (!form.product) validationErrors.push("Please select a product.");
     if (rates.length === 0 || !rates.some((r) => r.rate))
       validationErrors.push("Please enter at least one tariff rate.");
+    if (rates.length > 3)
+      validationErrors.push("Maximum of 3 tariff rates allowed per tariff entry.");
+    
+    // Check for duplicate tariff units
+    const selectedUnits = rates.filter((r) => r.unit && r.unit.value).map((r) => r.unit.value);
+    const uniqueUnits = new Set(selectedUnits);
+    if (selectedUnits.length !== uniqueUnits.size) {
+      validationErrors.push("Cannot select the same tariff unit type more than once.");
+    }
+    
     if (!form.effectiveDate) validationErrors.push("Please enter an effective date.");
     if (form.effectiveDate && form.expiryDate) {
       const eff = new Date(form.effectiveDate);
@@ -206,7 +220,11 @@ export default function AdminPage() {
         setRates([{ unit: { label: "Ad Valorem (AV)", value: "AV" }, rate: "" }]);
       } else {
         const errText = await response.text();
-        setErrors([errText]);
+        if (errText.includes("more than 3 tariff rates")) {
+          setErrors(["You can only add up to 3 tariff rates at once."]);
+        } else {
+          setErrors([`Error ${response.status}: ${errText}`]);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -266,54 +284,66 @@ export default function AdminPage() {
         {/* Tariff Rates */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Tariff Rates
+            Tariff Rates {rates.length >= 3 && <span className="text-gray-500 text-xs">(Maximum 3)</span>}
           </label>
-          {rates.map((rate, index) => (
-            <div key={index} className="flex space-x-2 mb-2">
-              <FieldSelector
-                options={unitOptions}
-                value={rate.unit}
-                onChange={(selectedOption) => handleRateChange(index, "unit", selectedOption)}
-                placeholder="Select unit (e.g., AV, KG, M2)"
-                className="w-1/2"
-              />
-              <input
-                type="number"
-                step="0.01"
-                value={rate.rate}
-                onChange={(e) => handleRateChange(index, "rate", e.target.value)}
-                placeholder={
-                  rate.unit?.value === "AV" 
-                    ? "Rate (%)" 
-                    : rate.unit?.value 
-                      ? `Rate ($ per ${rate.unit.value})` 
-                      : "Rate"
-                }
-                className="border rounded w-1/2 py-2 px-3"
-              />
-              {index > 0 && (
-                <button
-                  type="button"
-                  onClick={() => removeRate(index)}
-                  className="text-red-500 font-bold"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={addRate}
-            className="text-blue-500 text-sm mt-2"
-          >
-            + Add another rate
-          </button>
+          {rates.map((rate, index) => {
+            // Filter out already selected units for this dropdown
+            const selectedUnits = rates
+              .map((r, i) => (i !== index && r.unit ? r.unit.value : null))
+              .filter(Boolean);
+            const availableOptions = unitOptions.filter(
+              (opt) => !selectedUnits.includes(opt.value)
+            );
+            
+            return (
+              <div key={index} className="flex space-x-2 mb-2">
+                <FieldSelector
+                  options={availableOptions}
+                  value={rate.unit}
+                  onChange={(selectedOption) => handleRateChange(index, "unit", selectedOption)}
+                  placeholder="Select unit (e.g., AV, KG, M2)"
+                  className="w-1/2"
+                />
+                <input
+                  type="number"
+                  step="0.01"
+                  value={rate.rate}
+                  onChange={(e) => handleRateChange(index, "rate", e.target.value)}
+                  placeholder={
+                    rate.unit?.value === "AV" 
+                      ? "Rate (%)" 
+                      : rate.unit?.value 
+                        ? `Rate ($ per ${rate.unit.value})` 
+                        : "Rate"
+                  }
+                  className="border rounded w-1/2 py-2 px-3"
+                />
+                {index > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => removeRate(index)}
+                    className="text-red-500 font-bold"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            );
+          })}
+          {rates.length < 3 && (
+            <button
+              type="button"
+              onClick={addRate}
+              className="text-blue-500 text-sm mt-2"
+            >
+              + Add another rate
+            </button>
+          )}
         </div>
 
         {/* Dates */}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
+          <label className={`block text-gray-700 text-sm font-bold mb-2`}>
             Effective Date *
           </label>
           <input
@@ -321,7 +351,7 @@ export default function AdminPage() {
             name="effectiveDate"
             value={form.effectiveDate}
             onChange={handleChange}
-            className="border rounded w-full py-2 px-3"
+            className={`border rounded w-full py-2 px-3 ${form.effectiveDate ? "text-gray-700" : "text-white"}`}
           />
         </div>
         <div className="mb-4">
@@ -333,7 +363,7 @@ export default function AdminPage() {
             name="expiryDate"
             value={form.expiryDate}
             onChange={handleChange}
-            className="border rounded w-full py-2 px-3"
+            className={`border rounded w-full py-2 px-3 ${form.expiryDate ? "text-gray-700" : "text-white"}`}
           />
         </div>
 
