@@ -2,50 +2,60 @@ package CS203G3.tariff_backend.service;
 
 import CS203G3.tariff_backend.dto.TariffCreateDto;
 import CS203G3.tariff_backend.dto.TariffDto;
+import CS203G3.tariff_backend.exception.ResourceAlreadyExistsException;
+import CS203G3.tariff_backend.exception.ResourceNotFoundException;
 import CS203G3.tariff_backend.model.*;
 import CS203G3.tariff_backend.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class TariffServiceTests {
 
-    @MockBean
+    @Mock
     private TariffRepository tariffRepository;
 
-    @MockBean
+    @Mock
     private TariffRateRepository tariffRateRepository;
 
-    @MockBean
+    @Mock
     private CountryRepository countryRepository;
 
-    @MockBean
+    @Mock
     private ProductRepository productRepository;
 
-    @MockBean
+    @Mock
     private TariffCalculationService tariffCalculationService;
 
-    @MockBean
+    @Mock
     private CountryPairRepository countryPairRepository;
 
-    @Autowired
-    private TariffService tariffService;
+    @InjectMocks
+    private TariffServiceImpl tariffService;
 
     private Country exporter;
     private Country importer;
@@ -58,15 +68,6 @@ public class TariffServiceTests {
 
     @BeforeEach
     void setUp() {
-        tariffService = new TariffServiceImpl(
-            tariffRepository,
-            tariffRateRepository,
-            countryRepository,
-            productRepository,
-            tariffCalculationService,
-            countryPairRepository
-        );
-
         // Set up countries and country pair
         exporter = new Country("US", "United States", "NA");
         importer = new Country("SG", "Singapore", "SEA");
@@ -102,79 +103,77 @@ public class TariffServiceTests {
     @Test
     void getAllTariffRates_ReturnsAllTariffs() {
         // Arrange
-        when(tariffRateRepository.findAll()).thenReturn(Arrays.asList(tariffRate));
+        List<TariffRate> tariffRates = Arrays.asList(tariffRate);
+        when(tariffRateRepository.findAll()).thenReturn(tariffRates);
 
         // Act
         List<TariffDto> result = tariffService.getAllTariffRates();
 
         // Assert
         assertNotNull(result);
-        assertFalse(result.isEmpty());
         assertEquals(1, result.size());
+        
         TariffDto resultDto = result.get(0);
-        assertNotNull(resultDto.getTariffRates());
-        assertFalse(resultDto.getTariffRates().isEmpty());
-        assertEquals(UnitOfCalculation.AV, resultDto.getTariffRates().get(0).getUnitOfCalculation());
         assertEquals(product.getHSCode(), resultDto.gethSCode());
         assertEquals(exporter.getIsoCode(), resultDto.getExporterCode());
         assertEquals(importer.getIsoCode(), resultDto.getImporterCode());
+        assertEquals(1, resultDto.getTariffRates().size());
+        assertEquals(UnitOfCalculation.AV, resultDto.getTariffRates().get(0).getUnitOfCalculation());
+        assertEquals(new BigDecimal("10.0"), resultDto.getTariffRates().get(0).getRate());
+        
+        // Verify interaction
+        verify(tariffRateRepository, times(1)).findAll();
+        verifyNoMoreInteractions(tariffRateRepository);
     }
 
     @Test
     void getTariffById_WhenExists_ReturnsTariff() {
         // Arrange
-        when(tariffRateRepository.findAllByTariff_TariffID(1L)).thenReturn(Arrays.asList(tariffRate));
+        Long tariffId = 1L;
+        List<TariffRate> tariffRates = Arrays.asList(tariffRate);
+        when(tariffRateRepository.findAllByTariff_TariffID(tariffId)).thenReturn(tariffRates);
 
         // Act
-        List<TariffDto> result = tariffService.getTariffById(1L);
+        List<TariffDto> result = tariffService.getTariffById(tariffId);
 
         // Assert
         assertNotNull(result);
-        assertFalse(result.isEmpty());
         assertEquals(1, result.size());
+        
         TariffDto resultDto = result.get(0);
         assertEquals(product.getHSCode(), resultDto.gethSCode());
         assertEquals(exporter.getIsoCode(), resultDto.getExporterCode());
         assertEquals(importer.getIsoCode(), resultDto.getImporterCode());
         assertEquals(tariffRate.getTariffRate(), resultDto.getTariffRates().get(0).getRate());
+        assertEquals(effectiveDate, resultDto.getEffectiveDate());
+        assertEquals(expiryDate, resultDto.getExpiryDate());
+        
+        // Verify interaction
+        verify(tariffRateRepository, times(1)).findAllByTariff_TariffID(tariffId);
+        verifyNoMoreInteractions(tariffRateRepository);
     }
 
     @Test
     void getTariffById_WhenNotExists_ReturnsEmptyList() {
         // Arrange
-        when(tariffRateRepository.findAllByTariff_TariffID(999L)).thenReturn(List.of());
+        Long nonExistentId = 999L;
+        when(tariffRateRepository.findAllByTariff_TariffID(nonExistentId))
+            .thenReturn(Collections.emptyList());
 
         // Act
-        List<TariffDto> result = tariffService.getTariffById(999L);
+        List<TariffDto> result = tariffService.getTariffById(nonExistentId);
 
         // Assert
         assertNotNull(result);
         assertTrue(result.isEmpty());
+        
+        // Verify interaction
+        verify(tariffRateRepository, times(1)).findAllByTariff_TariffID(nonExistentId);
+        verifyNoMoreInteractions(tariffRateRepository);
     }
 
-    @Test
     void createTariff_WithValidData_CreatesAndReturnsTariff() {
         // Arrange
-        when(productRepository.findById(product.getHSCode())).thenReturn(Optional.of(product));
-        when(countryRepository.findById(exporter.getIsoCode())).thenReturn(Optional.of(exporter));
-        when(countryRepository.findById(importer.getIsoCode())).thenReturn(Optional.of(importer));
-        when(countryPairRepository.findSingleByExporterAndImporter(exporter.getIsoCode(), importer.getIsoCode())).thenReturn(countryPair);
-        when(tariffRepository.save(any(Tariff.class))).thenAnswer(invocation -> {
-            Tariff savedTariff = invocation.getArgument(0);
-            savedTariff.setTariffID(1L); // Simulate DB auto-generated ID
-            return savedTariff;
-        });
-        when(tariffRateRepository.save(any(TariffRate.class))).thenAnswer(invocation -> {
-            TariffRate savedRate = invocation.getArgument(0);
-            savedRate.setTariffRateID(1L); // Simulate DB auto-generated ID
-            TariffRate newRate = new TariffRate();
-            newRate.setTariffRateID(savedRate.getTariffRateID());
-            newRate.setTariffRate(savedRate.getTariffRate());
-            newRate.setUnitOfCalculation(savedRate.getUnitOfCalculation());
-            newRate.setTariff(savedRate.getTariff());
-            return newRate;
-        });
-
         TariffCreateDto createDto = new TariffCreateDto();
         createDto.setExporter(exporter.getIsoCode());
         createDto.setImporter(importer.getIsoCode());
@@ -183,26 +182,124 @@ public class TariffServiceTests {
         createDto.setExpiryDate(expiryDate);
         createDto.setReference("TEST-REF-001");
         
-        // Add a tariff rate using Map<UnitOfCalculation, BigDecimal>
         Map<UnitOfCalculation, BigDecimal> rates = new HashMap<>();
         rates.put(UnitOfCalculation.AV, new BigDecimal("10.0"));
         createDto.setTariffRates(rates);
+
+        // Stub repository methods
+        when(productRepository.findById(product.getHSCode()))
+            .thenReturn(Optional.of(product));
+        
+        when(countryPairRepository.findSingleByExporterAndImporter(
+            exporter.getIsoCode(), importer.getIsoCode()))
+            .thenReturn(countryPair);
+        
+        when(tariffRepository.findByProductAndCountryPairAndEffectiveDateAndExpiryDate(
+            eq(product), eq(countryPair), eq(effectiveDate), eq(expiryDate)))
+            .thenReturn(Optional.empty());
+        
+        // Stub save to simulate auto-generated ID
+        when(tariffRepository.save(any(Tariff.class))).thenAnswer(invocation -> {
+            Tariff savedTariff = invocation.getArgument(0);
+            savedTariff.setTariffID(1L);
+            return savedTariff;
+        });
+        
+        when(tariffRateRepository.save(any(TariffRate.class))).thenAnswer(invocation -> {
+            TariffRate savedRate = invocation.getArgument(0);
+            savedRate.setTariffRateID(1L);
+            return savedRate;
+        });
 
         // Act
         TariffDto result = tariffService.createTariff(createDto);
 
         // Assert
         assertNotNull(result);
-        assertNotNull(result.getTariffRates());
-        assertFalse(result.getTariffRates().isEmpty());
         assertEquals(product.getHSCode(), result.gethSCode());
         assertEquals(exporter.getIsoCode(), result.getExporterCode());
         assertEquals(importer.getIsoCode(), result.getImporterCode());
         assertEquals(effectiveDate, result.getEffectiveDate());
         assertEquals(expiryDate, result.getExpiryDate());
         assertEquals("TEST-REF-001", result.getReference());
+        
+        assertNotNull(result.getTariffRates());
         assertEquals(1, result.getTariffRates().size());
         assertEquals(new BigDecimal("10.0"), result.getTariffRates().get(0).getRate());
         assertEquals(UnitOfCalculation.AV, result.getTariffRates().get(0).getUnitOfCalculation());
+        
+        // Verify all interactions
+        verify(productRepository, times(1)).findById(product.getHSCode());
+        verify(countryPairRepository, times(1))
+            .findSingleByExporterAndImporter(exporter.getIsoCode(), importer.getIsoCode());
+        verify(tariffRepository, times(1))
+            .findByProductAndCountryPairAndEffectiveDateAndExpiryDate(
+                eq(product), eq(countryPair), eq(effectiveDate), eq(expiryDate));
+        verify(tariffRepository, times(1)).save(any(Tariff.class));
+        verify(tariffRateRepository, times(1)).save(any(TariffRate.class));
     }
+
+    @Test
+    void createTariff_WithDuplicateTariff_ThrowsException() {
+        // Arrange
+        TariffCreateDto createDto = new TariffCreateDto();
+        createDto.setExporter(exporter.getIsoCode());
+        createDto.setImporter(importer.getIsoCode());
+        createDto.setHSCode(product.getHSCode());
+        createDto.setEffectiveDate(effectiveDate);
+        createDto.setExpiryDate(expiryDate);
+        
+        // Add tariff rates to pass validation
+        Map<UnitOfCalculation, BigDecimal> rates = new HashMap<>();
+        rates.put(UnitOfCalculation.AV, new BigDecimal("10.0"));
+        createDto.setTariffRates(rates);
+        
+        when(productRepository.findById(product.getHSCode()))
+            .thenReturn(Optional.of(product));
+        
+        when(countryPairRepository.findSingleByExporterAndImporter(
+            exporter.getIsoCode(), importer.getIsoCode()))
+            .thenReturn(countryPair);
+        
+        // Tariff already exists
+        when(tariffRepository.findByProductAndCountryPairAndEffectiveDateAndExpiryDate(
+            any(), any(), any(), any()))
+            .thenReturn(Optional.of(tariff));
+
+        // Act & Assert
+        assertThrows(ResourceAlreadyExistsException.class, 
+            () -> tariffService.createTariff(createDto));
+        
+        // Verify save was never called
+        verify(tariffRepository, never()).save(any(Tariff.class));
+        verify(tariffRateRepository, never()).save(any(TariffRate.class));
+    }
+    
+    @Test
+    void createTariff_WithInvalidProduct_ThrowsException() {
+        // Arrange
+        TariffCreateDto createDto = new TariffCreateDto();
+        createDto.setExporter(exporter.getIsoCode());
+        createDto.setImporter(importer.getIsoCode());
+        createDto.setHSCode("INVALID");
+        createDto.setEffectiveDate(effectiveDate);
+        createDto.setExpiryDate(expiryDate);
+        
+        // Add tariff rates to pass validation
+        Map<UnitOfCalculation, BigDecimal> rates = new HashMap<>();
+        rates.put(UnitOfCalculation.AV, new BigDecimal("10.0"));
+        createDto.setTariffRates(rates);
+        
+        when(productRepository.findById("INVALID"))
+            .thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, 
+            () -> tariffService.createTariff(createDto));
+        
+        // Verify subsequent repositories were never called
+        verify(productRepository, times(1)).findById("INVALID");
+        verify(tariffRepository, never()).save(any(Tariff.class));
+    }
+
 }
