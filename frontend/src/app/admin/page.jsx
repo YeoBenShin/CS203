@@ -313,7 +313,7 @@ export default function AdminPage() {
 
         {/* Dates */}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
+          <label className={`block text-gray-700 text-sm font-bold mb-2`}>
             Effective Date *
           </label>
           <input
@@ -321,7 +321,7 @@ export default function AdminPage() {
             name="effectiveDate"
             value={form.effectiveDate}
             onChange={handleChange}
-            className="border rounded w-full py-2 px-3"
+            className={`border rounded w-full py-2 px-3 ${form.effectiveDate ? "text-gray-700" : "text-white"}`}
           />
         </div>
         <div className="mb-4">
@@ -333,7 +333,7 @@ export default function AdminPage() {
             name="expiryDate"
             value={form.expiryDate}
             onChange={handleChange}
-            className="border rounded w-full py-2 px-3"
+            className={`border rounded w-full py-2 px-3 ${form.expiryDate ? "text-gray-700" : "text-white"}`}
           />
         </div>
 

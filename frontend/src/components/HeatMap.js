@@ -31,20 +31,20 @@ const MemoGeography = memo(({
       style={{
         default: {
           fill: fillColor,
-          stroke: "#ffffff",
+          stroke: "#ffffff50",
           strokeWidth: 0.5,
           outline: "none",
         },
         hover: {
           fill: fillColor,
           stroke: "#000000",
-          strokeWidth: 1,
+          strokeWidth: 0.2,
           cursor: "pointer",
         },
         pressed: {
           fill: fillColor,
           stroke: "#000000",
-          strokeWidth: 1,
+          strokeWidth: 0.2,
         },
       }}
     />
