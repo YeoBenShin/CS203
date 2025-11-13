@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -20,6 +21,7 @@ import CS203G3.tariff_backend.repository.UserRepository;
 import CS203G3.tariff_backend.model.User;
 
 @Configuration
+@Profile("!test")
 public class SecurityConfig {
 
     @Value("${clerk.jwk-set-uri}")
