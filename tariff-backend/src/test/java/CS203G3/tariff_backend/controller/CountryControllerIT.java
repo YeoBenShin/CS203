@@ -90,337 +90,238 @@ class CountryControllerIT {
 
     // ==================== GET COUNTRY BY ID ====================
 
-    // @Test
-    // void getCountryById_WithValidId_ReturnsCountry() {
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //     .when()
-    //         .get("/US")
-    //     .then()
-    //         .statusCode(200)
-    //         .body("isoCode", equalTo("US"))
-    //         .body("name", equalTo("United States"))
-    //         .body("region", equalTo("NA"));
-    // }
-
-    // @Test
-    // void getCountryById_WithInvalidId_ReturnsNotFound() {
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //     .when()
-    //         .get("/INVALID")
-    //     .then()
-    //         .statusCode(404);
-    // }
-
-    // @Test
-    // void getCountryById_WithNullId_ReturnsBadRequest() {
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //     .when()
-    //         .get("/null")
-    //     .then()
-    //         .statusCode(404);
-    // }
-
-    // // ==================== CREATE COUNTRY ====================
+    @Test
+    void getCountryById_WithValidId_ReturnsCountry() {
+        given()
+            .contentType(ContentType.JSON)
+        .when()
+            .get("/US")
+        .then()
+            .statusCode(200)
+            .body("isoCode", equalTo("US"))
+            .body("name", equalTo("United States"))
+            .body("region", equalTo("NA"));
+    }
 
     @Test
-    void createCountry_WithValidData_ReturnsCreated() {
+    void getCountryById_WithInvalidId_ReturnsNotFound() {
+        given()
+            .contentType(ContentType.JSON)
+        .when()
+            .get("/INVALID")
+        .then()
+            .statusCode(404);
+    }
+
+    @Test
+    void getCountryById_WithNullId_ReturnsBadRequest() {
+        given()
+            .contentType(ContentType.JSON)
+        .when()
+            .get("/null")
+        .then()
+            .statusCode(404);
+    }
+
+    // ==================== UPDATE COUNTRY ====================
+
+    @Test
+    void updateCountry_WithValidData_ReturnsUpdatedCountry() {
         // Arrange
-        Country newCountry = new Country("JP", "Japan", "EA");
+        Country updatedCountry = new Country("US", "United States of America", "North America");
 
         // Act & Assert
         given()
-            .header("Authorization", "Bearer " + testToken)
+            .contentType(ContentType.JSON)
+            .body(updatedCountry)
+        .when()
+            .put("/US")
+        .then()
+            .statusCode(200)
+            .body("isoCode", equalTo("US"))
+            .body("name", equalTo("United States of America"))
+            .body("region", equalTo("North America"));
+
+        // Verify in database
+        Country fromDb = countryRepository.findById("US").orElseThrow();
+        assert fromDb.getName().equals("United States of America");
+        assert fromDb.getRegion().equals("North America");
+    }
+
+    @Test
+    void updateCountry_WithInvalidId_ReturnsNotFound() {
+        // Arrange
+        Country updatedCountry = new Country("INVALID", "Invalid Country", "NA");
+
+        // Act & Assert
+        given()
+            .contentType(ContentType.JSON)
+            .body(updatedCountry)
+        .when()
+            .put("/INVALID")
+        .then()
+            .statusCode(404);
+    }
+
+    @Test
+    void updateCountry_WithPartialUpdate_UpdatesOnlyProvidedFields() {
+        // Arrange - only update name
+        Country partialUpdate = new Country("US", "USA", "NA");
+
+        // Act & Assert
+        given()
+            .contentType(ContentType.JSON)
+            .body(partialUpdate)
+        .when()
+            .put("/US")
+        .then()
+            .statusCode(200)
+            .body("name", equalTo("USA"))
+            .body("region", equalTo("NA"));
+    }
+
+    // ==================== DELETE COUNTRY ====================
+
+    @Test
+    void deleteCountry_WithValidId_ReturnsNoContent() {
+        given()
+        .when()
+            .delete("/US")
+        .then()
+            .statusCode(204);
+
+        // Verify deleted from database
+        assert !countryRepository.existsById("US");
+    }
+
+    @Test
+    void deleteCountry_WithInvalidId_ReturnsNotFound() {
+        given()
+        .when()
+            .delete("/INVALID")
+        .then()
+            .statusCode(404);
+    }
+
+    @Test
+    void deleteCountry_AlreadyDeleted_ReturnsNotFound() {
+        // Arrange - delete first time
+        countryRepository.deleteById("US");
+
+        // Act & Assert - try to delete again
+        given()
+        .when()
+            .delete("/US")
+        .then()
+            .statusCode(404);
+    }
+
+    @Test
+    void deleteCountry_WithDependentData_ReturnsConflict() {
+        // This test assumes you have foreign key constraints
+        // and the country is referenced by other entities (e.g., CountryPair)
+        // Adjust based on your actual constraint behavior
+        
+        // For now, this is a placeholder - implement when you have FK constraints
+        // given()
+        // .when()
+        //     .delete("/US")
+        // .then()
+        //     .statusCode(409); // Conflict due to FK constraint
+    }
+
+    // ==================== CROSS-ORIGIN TESTS ====================
+
+    @Test
+    void getAllCountries_WithCorsHeaders_ReturnsCorrectHeaders() {
+        given()
+            .header("Origin", "http://localhost:3000")
+            .contentType(ContentType.JSON)
+        .when()
+            .get()
+        .then()
+            .statusCode(200)
+            .header("Access-Control-Allow-Origin", "http://localhost:3000");
+    }
+
+    // ==================== EDGE CASES ====================
+
+    @Test
+    void createCountry_WithWhitespaceInFields_TrimsProperly() {
+        // Arrange
+        Country countryWithWhitespace = new Country("JP", "  Japan  ", "  EA  ");
+
+        // Act & Assert
+        given()
+            .contentType(ContentType.JSON)
+            .body(countryWithWhitespace)
+        .when()
+            .post()
+        .then()
+            .statusCode(201);
+
+        // Verify trimming happened (if your service does trimming)
+        Country fromDb = countryRepository.findById("JP").orElseThrow();
+        // Add assertions based on whether your service trims
+    }
+
+    @Test
+    void getAllCountries_WithMultipleRequests_ReturnsConsistentResults() {
+        // Test idempotency
+        for (int i = 0; i < 3; i++) {
+            given()
+                .contentType(ContentType.JSON)
+            .when()
+                .get()
+            .then()
+                .statusCode(200)
+                .body("size()", equalTo(2));
+        }
+    }
+
+    @Test
+    void createAndDeleteCountry_FullLifecycle_WorksCorrectly() {
+        // Create
+        Country newCountry = new Country("CA", "Canada", "NA");
+        
+        given()
             .contentType(ContentType.JSON)
             .body(newCountry)
         .when()
             .post()
         .then()
-            .statusCode(201)
-            .body("isoCode", equalTo("JP"))
-            .body("name", equalTo("Japan"))
-            .body("region", equalTo("EA"));
+            .statusCode(201);
 
-        // Verify in database
-        assert countryRepository.existsById("JP");
+        // Verify exists
+        given()
+        .when()
+            .get("/CA")
+        .then()
+            .statusCode(200);
+
+        // Update
+        Country updated = new Country("CA", "Canada Updated", "North America");
+        given()
+            .contentType(ContentType.JSON)
+            .body(updated)
+        .when()
+            .put("/CA")
+        .then()
+            .statusCode(200)
+            .body("name", equalTo("Canada Updated"));
+
+        // Delete
+        given()
+        .when()
+            .delete("/CA")
+        .then()
+            .statusCode(204);
+
+        // Verify deleted
+        given()
+        .when()
+            .get("/CA")
+        .then()
+            .statusCode(404);
     }
-
-    // @Test
-    // void createCountry_WithDuplicateId_ReturnsConflict() {
-    //     // Arrange - country with US already exists
-    //     Country duplicateCountry = new Country("US", "United States Copy", "NA");
-
-    //     // Act & Assert
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //         .body(duplicateCountry)
-    //     .when()
-    //         .post()
-    //     .then()
-    //         .statusCode(409); // Conflict
-    // }
-
-    // @Test
-    // void createCountry_WithMissingFields_ReturnsBadRequest() {
-    //     // Arrange - missing required fields
-    //     String invalidJson = "{\"isoCode\": \"JP\"}";
-
-    //     // Act & Assert
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //         .body(invalidJson)
-    //     .when()
-    //         .post()
-    //     .then()
-    //         .statusCode(400);
-    // }
-
-    // @Test
-    // void createCountry_WithInvalidIsoCode_ReturnsBadRequest() {
-    //     // Arrange - ISO code should be 2-3 characters
-    //     Country invalidCountry = new Country("TOOLONG", "Too Long", "NA");
-
-    //     // Act & Assert
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //         .body(invalidCountry)
-    //     .when()
-    //         .post()
-    //     .then()
-    //         .statusCode(400);
-    // }
-
-    // @Test
-    // void createCountry_WithNullIsoCode_ReturnsBadRequest() {
-    //     // Arrange
-    //     Country invalidCountry = new Country(null, "No ISO Code", "NA");
-
-    //     // Act & Assert
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //         .body(invalidCountry)
-    //     .when()
-    //         .post()
-    //     .then()
-    //         .statusCode(400);
-    // }
-
-    // // ==================== UPDATE COUNTRY ====================
-
-    // @Test
-    // void updateCountry_WithValidData_ReturnsUpdatedCountry() {
-    //     // Arrange
-    //     Country updatedCountry = new Country("US", "United States of America", "North America");
-
-    //     // Act & Assert
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //         .body(updatedCountry)
-    //     .when()
-    //         .put("/US")
-    //     .then()
-    //         .statusCode(200)
-    //         .body("isoCode", equalTo("US"))
-    //         .body("name", equalTo("United States of America"))
-    //         .body("region", equalTo("North America"));
-
-    //     // Verify in database
-    //     Country fromDb = countryRepository.findById("US").orElseThrow();
-    //     assert fromDb.getName().equals("United States of America");
-    //     assert fromDb.getRegion().equals("North America");
-    // }
-
-    // @Test
-    // void updateCountry_WithInvalidId_ReturnsNotFound() {
-    //     // Arrange
-    //     Country updatedCountry = new Country("INVALID", "Invalid Country", "NA");
-
-    //     // Act & Assert
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //         .body(updatedCountry)
-    //     .when()
-    //         .put("/INVALID")
-    //     .then()
-    //         .statusCode(404);
-    // }
-
-    // @Test
-    // void updateCountry_WithMismatchedId_ReturnsBadRequest() {
-    //     // Arrange - path ID doesn't match body ID
-    //     Country updatedCountry = new Country("JP", "Japan", "EA");
-
-    //     // Act & Assert
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //         .body(updatedCountry)
-    //     .when()
-    //         .put("/US")
-    //     .then()
-    //         .statusCode(400);
-    // }
-
-    // @Test
-    // void updateCountry_WithPartialUpdate_UpdatesOnlyProvidedFields() {
-    //     // Arrange - only update name
-    //     Country partialUpdate = new Country("US", "USA", "NA");
-
-    //     // Act & Assert
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //         .body(partialUpdate)
-    //     .when()
-    //         .put("/US")
-    //     .then()
-    //         .statusCode(200)
-    //         .body("name", equalTo("USA"))
-    //         .body("region", equalTo("NA"));
-    // }
-
-    // // ==================== DELETE COUNTRY ====================
-
-    // @Test
-    // void deleteCountry_WithValidId_ReturnsNoContent() {
-    //     given()
-    //     .when()
-    //         .delete("/US")
-    //     .then()
-    //         .statusCode(204);
-
-    //     // Verify deleted from database
-    //     assert !countryRepository.existsById("US");
-    // }
-
-    // @Test
-    // void deleteCountry_WithInvalidId_ReturnsNotFound() {
-    //     given()
-    //     .when()
-    //         .delete("/INVALID")
-    //     .then()
-    //         .statusCode(404);
-    // }
-
-    // @Test
-    // void deleteCountry_AlreadyDeleted_ReturnsNotFound() {
-    //     // Arrange - delete first time
-    //     countryRepository.deleteById("US");
-
-    //     // Act & Assert - try to delete again
-    //     given()
-    //     .when()
-    //         .delete("/US")
-    //     .then()
-    //         .statusCode(404);
-    // }
-
-    // @Test
-    // void deleteCountry_WithDependentData_ReturnsConflict() {
-    //     // This test assumes you have foreign key constraints
-    //     // and the country is referenced by other entities (e.g., CountryPair)
-    //     // Adjust based on your actual constraint behavior
-        
-    //     // For now, this is a placeholder - implement when you have FK constraints
-    //     // given()
-    //     // .when()
-    //     //     .delete("/US")
-    //     // .then()
-    //     //     .statusCode(409); // Conflict due to FK constraint
-    // }
-
-    // // ==================== CROSS-ORIGIN TESTS ====================
-
-    // @Test
-    // void getAllCountries_WithCorsHeaders_ReturnsCorrectHeaders() {
-    //     given()
-    //         .header("Origin", "http://localhost:3000")
-    //         .contentType(ContentType.JSON)
-    //     .when()
-    //         .get()
-    //     .then()
-    //         .statusCode(200)
-    //         .header("Access-Control-Allow-Origin", "http://localhost:3000");
-    // }
-
-    // // ==================== EDGE CASES ====================
-
-    // @Test
-    // void createCountry_WithWhitespaceInFields_TrimsProperly() {
-    //     // Arrange
-    //     Country countryWithWhitespace = new Country("JP", "  Japan  ", "  EA  ");
-
-    //     // Act & Assert
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //         .body(countryWithWhitespace)
-    //     .when()
-    //         .post()
-    //     .then()
-    //         .statusCode(201);
-
-    //     // Verify trimming happened (if your service does trimming)
-    //     Country fromDb = countryRepository.findById("JP").orElseThrow();
-    //     // Add assertions based on whether your service trims
-    // }
-
-    // @Test
-    // void getAllCountries_WithMultipleRequests_ReturnsConsistentResults() {
-    //     // Test idempotency
-    //     for (int i = 0; i < 3; i++) {
-    //         given()
-    //             .contentType(ContentType.JSON)
-    //         .when()
-    //             .get()
-    //         .then()
-    //             .statusCode(200)
-    //             .body("size()", equalTo(2));
-    //     }
-    // }
-
-    // @Test
-    // void createAndDeleteCountry_FullLifecycle_WorksCorrectly() {
-    //     // Create
-    //     Country newCountry = new Country("CA", "Canada", "NA");
-        
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //         .body(newCountry)
-    //     .when()
-    //         .post()
-    //     .then()
-    //         .statusCode(201);
-
-    //     // Verify exists
-    //     given()
-    //     .when()
-    //         .get("/CA")
-    //     .then()
-    //         .statusCode(200);
-
-    //     // Update
-    //     Country updated = new Country("CA", "Canada Updated", "North America");
-    //     given()
-    //         .contentType(ContentType.JSON)
-    //         .body(updated)
-    //     .when()
-    //         .put("/CA")
-    //     .then()
-    //         .statusCode(200)
-    //         .body("name", equalTo("Canada Updated"));
-
-    //     // Delete
-    //     given()
-    //     .when()
-    //         .delete("/CA")
-    //     .then()
-    //         .statusCode(204);
-
-    //     // Verify deleted
-    //     given()
-    //     .when()
-    //         .get("/CA")
-    //     .then()
-    //         .statusCode(404);
-    // }
 }
